@@ -15,7 +15,9 @@ export interface ImageFile {
   previewUrl: string;
 }
 
-// --- New Types for Story Creator ---
+// --- Story Creator Types ---
+
+export type ActiveTab = 'editor' | 'storyboard' | 'publishingKit';
 
 export interface Character {
   id: string;

@@ -3,7 +3,7 @@ import { Sidebar } from './Sidebar';
 import { MainContent } from './MainContent';
 import { ConfirmationModal } from '../ConfirmationModal';
 import { useLocalization } from '../../i18n';
-import type { Character, StoryboardScene, DirectingSettings, PublishingKitData } from '../../types';
+import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab } from '../../types';
 import { generateStoryboard, generatePublishingKit } from '../../services/storyCreatorService';
 
 interface StoryCreatorProps {
@@ -28,10 +28,9 @@ interface StoryCreatorProps {
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
     publishingKit: PublishingKitData | null;
     setPublishingKit: React.Dispatch<React.SetStateAction<PublishingKitData | null>>;
+    activeTab: ActiveTab;
+    setActiveTab: (tab: ActiveTab) => void;
 }
-
-
-type ActiveTab = 'editor' | 'storyboard' | 'publishingKit';
 
 export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
     const { t } = useLocalization();
@@ -39,13 +38,13 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         activeStoryApiKey, onManageKeysClick, onProceedToVideo, 
         characters, setCharacters, storyboard, setStoryboard,
         logline, setLogline, scenario, setScenario, sceneCount, setSceneCount,
-        directingSettings, onNewStory, publishingKit, setPublishingKit
+        directingSettings, onNewStory, publishingKit, setPublishingKit,
+        activeTab, setActiveTab
     } = props;
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [isGeneratingKit, setIsGeneratingKit] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<ActiveTab>('editor');
 
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmProps, setConfirmProps] = useState({ title: '', message: '', onConfirm: () => {} });
@@ -70,7 +69,6 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             t('storyCreator.confirmNewStoryMessage') as string,
             () => {
                 onNewStory();
-                setActiveTab('editor');
             }
         );
     };
@@ -108,7 +106,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         } finally {
             setIsGenerating(false);
         }
-    }, [activeStoryApiKey, logline, scenario, sceneCount, characters, directingSettings, onManageKeysClick, t, setStoryboard, setPublishingKit]);
+    }, [activeStoryApiKey, logline, scenario, sceneCount, characters, directingSettings, onManageKeysClick, t, setStoryboard, setPublishingKit, setActiveTab]);
 
     const handleGeneratePublishingKit = useCallback(async () => {
         if (!activeStoryApiKey) {
@@ -130,7 +128,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             setIsGeneratingKit(false);
         }
 
-    }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit]);
+    }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit, setActiveTab]);
 
     return (
         <div className="flex flex-col md:flex-row gap-6">

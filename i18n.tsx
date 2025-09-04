@@ -65,7 +65,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Please enter a prompt.",
     alertSetStoryApiKey: "Please set an active Story API Key before generating.",
     alertSetVideoApiKey: "Please set an active Professional Video API key before generating a video.",
-    backToStoryCreator: "Back to Story Creator",
+    backToStoryboard: "Back to Storyboard",
     storyCreator: {
       newStory: "New Story",
       characterGarage: "Character Garage",
@@ -231,7 +231,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Silakan masukkan prompt.",
     alertSetStoryApiKey: "Silakan atur Kunci API Cerita yang aktif sebelum melanjutkan.",
     alertSetVideoApiKey: "Silakan atur Kunci API Video Profesional yang aktif sebelum membuat video.",
-    backToStoryCreator: "Kembali ke Editor Cerita",
+    backToStoryboard: "Kembali ke Papan Cerita",
     storyCreator: {
       newStory: "Cerita Baru",
       characterGarage: "Garasi Impianmu",
@@ -398,7 +398,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Por favor, introduce un prompt.",
     alertSetStoryApiKey: "Por favor, establece una clave API de Historia activa antes de generar.",
     alertSetVideoApiKey: "Por favor, establece una clave API de Video Profesional activa antes de generar un video.",
-    backToStoryCreator: "Volver al Creador de Historias",
+    backToStoryboard: "Volver al Guion Gráfico",
     storyCreator: {
       newStory: "Nueva Historia",
       characterGarage: "Garaje de Personajes",
@@ -564,7 +564,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "请输入提示。",
     alertSetStoryApiKey: "生成前，请设置有效的故事API密钥。",
     alertSetVideoApiKey: "生成视频前，请设置有效的专业视频API密钥。",
-    backToStoryCreator: "返回故事创建器",
+    backToStoryboard: "返回故事板",
     storyCreator: {
       newStory: "新故事",
       characterGarage: "角色车库",
@@ -730,7 +730,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "कृपया एक प्रॉम्प्ट दर्ज करें।",
     alertSetStoryApiKey: "उत्पन्न करने से पहले कृपया एक सक्रिय कहानी API कुंजी सेट करें।",
     alertSetVideoApiKey: "वीडियो बनाने से पहले कृपया एक सक्रिय पेशेवर वीडियो API कुंजी सेट करें।",
-    backToStoryCreator: "कहानी निर्माता पर वापस जाएं",
+    backToStoryboard: "स्टोरीबोर्ड पर वापस जाएं",
     storyCreator: {
       newStory: "नई कहानी",
       characterGarage: "चरित्र गैराज",
@@ -896,7 +896,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "يرجى إدخال موجه.",
     alertSetStoryApiKey: "يرجى تعيين مفتاح API نشط للقصة قبل الإنشاء.",
     alertSetVideoApiKey: "يرجى تعيين مفتاح API نشط للفيديو الاحترافي قبل إنشاء مقطع فيديو.",
-    backToStoryCreator: "العودة إلى منشئ القصة",
+    backToStoryboard: "العودة إلى لوحة القصة",
     storyCreator: {
       newStory: "قصة جديدة",
       characterGarage: "مرآب الشخصيات",
@@ -1062,7 +1062,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Por favor, insira um comando.",
     alertSetStoryApiKey: "Defina uma chave de API de História ativa antes de gerar.",
     alertSetVideoApiKey: "Por favor, defina uma chave de API de Vídeo Profissional ativa antes de gerar um vídeo.",
-    backToStoryCreator: "Voltar para o Criador de Histórias",
+    backToStoryboard: "Voltar para o Storyboard",
     storyCreator: {
       newStory: "Nova História",
       characterGarage: "Garagem de Personagens",
@@ -1228,7 +1228,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "অনুগ্রহ করে একটি প্রম্পট লিখুন।",
     alertSetStoryApiKey: "তৈরি করার আগে অনুগ্রহ করে একটি সক্রিয় গল্পের API কী সেট করুন।",
     alertSetVideoApiKey: "ভিডিও তৈরি করার আগে অনুগ্রহ করে একটি সক্রিয় পেশাদার ভিডিও API কী সেট করুন।",
-    backToStoryCreator: "গল্প নির্মাতার কাছে ফিরে যান",
+    backToStoryboard: "স্টোরিবোর্ডে ফিরে যান",
     storyCreator: {
       newStory: "নতুন গল্প",
       characterGarage: "চরিত্রের গ্যারেজ",
@@ -1394,7 +1394,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Пожалуйста, введите запрос.",
     alertSetStoryApiKey: "Пожалуйста, установите активный ключ API для историй перед созданием.",
     alertSetVideoApiKey: "Пожалуйста, установите активный профессиональный ключ API для видео перед созданием видео.",
-    backToStoryCreator: "Вернуться в Создатель историй",
+    backToStoryboard: "Вернуться к раскадровке",
     storyCreator: {
       newStory: "Новая история",
       characterGarage: "Гараж персонажей",
@@ -1560,7 +1560,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "プロンプトを入力してください。",
     alertSetStoryApiKey: "生成する前に、アクティブなストーリーAPIキーを設定してください。",
     alertSetVideoApiKey: "ビデオを生成する前に、アクティブなプロフェッショナルビデオAPIキーを設定してください。",
-    backToStoryCreator: "ストーリークリエーターに戻る",
+    backToStoryboard: "ストーリーボードに戻る",
     storyCreator: {
       newStory: "新しいストーリー",
       characterGarage: "キャラクターガレージ",
@@ -1726,7 +1726,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Bitte geben Sie einen Prompt ein.",
     alertSetStoryApiKey: "Bitte legen Sie vor dem Generieren einen aktiven Story-API-Schlüssel fest.",
     alertSetVideoApiKey: "Bitte legen Sie vor dem Generieren eines Videos einen aktiven professionellen Video-API-Schlüssel fest.",
-    backToStoryCreator: "Zurück zum Story Creator",
+    backToStoryboard: "Zurück zum Storyboard",
     storyCreator: {
       newStory: "Neue Geschichte",
       characterGarage: "Charakter-Garage",
@@ -1892,7 +1892,7 @@ const translations: { [key in Language]: Translations } = {
     alertEnterPrompt: "Veuillez entrer une instruction.",
     alertSetStoryApiKey: "Veuillez définir une clé API d'histoire active avant la génération.",
     alertSetVideoApiKey: "Veuillez définir une clé API vidéo professionnelle active avant de générer une vidéo.",
-    backToStoryCreator: "Retour au créateur d'histoires",
+    backToStoryboard: "Retour au storyboard",
     storyCreator: {
       newStory: "Nouvelle histoire",
       characterGarage: "Garage des personnages",

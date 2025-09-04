@@ -5,7 +5,7 @@ import { Loader } from './components/Loader';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { StoryCreator } from './components/story-creator/StoryCreator';
-import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData } from './types';
+import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab } from './types';
 import { generateVideo } from './services/geminiService';
 import { useLocalization } from './i18n';
 
@@ -53,6 +53,7 @@ export default function App() {
   const [sceneCount, setSceneCount] = useState(3);
   const [directingSettings, setDirectingSettings] = useState<DirectingSettings>(initialDirectingSettings);
   const [publishingKit, setPublishingKit] = useState<PublishingKitData | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>('editor');
 
 
   useEffect(() => {
@@ -168,7 +169,6 @@ export default function App() {
   const handleBackToStoryCreator = () => {
     setVideoUrl(null);
     setError(null);
-    // Do not reset promptForVideo, it's tied to the video generator view
     setView('story-creator');
     window.scrollTo(0, 0);
   };
@@ -181,6 +181,7 @@ export default function App() {
       setDirectingSettings(initialDirectingSettings);
       setPublishingKit(null);
       setError(null);
+      setActiveTab('editor');
   };
   
   const handleUpdateScene = (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => {
@@ -220,7 +221,6 @@ export default function App() {
       <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
         {view === 'story-creator' && (
            <StoryCreator
-              // Pass down all the state and setters
               activeStoryApiKey={activeStoryApiKey}
               onManageKeysClick={() => setKeyManagerConfig({ type: 'story' })}
               onProceedToVideo={handleProceedToVideoGenerator}
@@ -240,6 +240,8 @@ export default function App() {
               onUpdateScene={handleUpdateScene}
               publishingKit={publishingKit}
               setPublishingKit={setPublishingKit}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
            />
         )}
 
@@ -249,7 +251,7 @@ export default function App() {
                 onClick={handleBackToStoryCreator}
                 className="mb-6 inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
               >
-                  &larr; {t('backToStoryCreator')}
+                  &larr; {t('backToStoryboard')}
               </button>
             <div className="bg-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border border-base-300">
               <VideoGeneratorForm 
