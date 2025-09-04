@@ -6,10 +6,11 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 
 
 interface HeaderProps {
-    onManageKeysClick: () => void;
+    onManageStoryKeysClick: () => void;
+    onManageVideoKeysClick: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onManageKeysClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onManageStoryKeysClick, onManageVideoKeysClick }) => {
   const { t } = useLocalization();
 
   return (
@@ -31,12 +32,20 @@ export const Header: React.FC<HeaderProps> = ({ onManageKeysClick }) => {
       <div className="flex items-center gap-2 sm:gap-4">
         <LanguageSwitcher />
         <button 
-            onClick={onManageKeysClick}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
-            aria-label={t('manageApiKeys') as string}
+            onClick={onManageStoryKeysClick}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
+            aria-label={t('manageStoryApiKeys') as string}
         >
-            <KeyIcon className="h-5 w-5" />
-            <span className="hidden sm:inline">{t('manageApiKeys')}</span>
+            <KeyIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('manageStoryApiKeys')}</span>
+        </button>
+         <button 
+            onClick={onManageVideoKeysClick}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
+            aria-label={t('manageVideoApiKeys') as string}
+        >
+            <KeyIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">{t('manageVideoApiKeys')}</span>
         </button>
       </div>
     </header>

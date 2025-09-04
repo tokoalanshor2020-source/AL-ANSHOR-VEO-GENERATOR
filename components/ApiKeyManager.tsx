@@ -5,8 +5,10 @@ import { KeyIcon } from './icons/KeyIcon';
 import { TrashIcon } from './icons/TrashIcon';
 import { useLocalization } from '../i18n';
 
+type KeyManagerType = 'story' | 'video';
 
 interface ApiKeyManagerProps {
+  keyType: KeyManagerType;
   currentKeys: string[];
   activeKey: string | null;
   onKeysChange: (keys: string[]) => void;
@@ -47,7 +49,7 @@ const ApiKeyItem: React.FC<{
     )
 }
 
-export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ currentKeys, activeKey, onKeysChange, onActiveKeyChange, onClose }) => {
+export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKeys, activeKey, onKeysChange, onActiveKeyChange, onClose }) => {
   const [newKey, setNewKey] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,13 +92,18 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ currentKeys, activ
     }
   }
 
+  const title = t(keyType === 'story' ? 'storyApiKeyManagerTitle' : 'videoApiKeyManagerTitle');
+  const addNewKeyLabel = t(keyType === 'story' ? 'addNewStoryKeyLabel' : 'addNewVideoKeyLabel');
+  const savedKeysLabel = t(keyType === 'story' ? 'savedStoryKeysLabel' : 'savedVideoKeysLabel');
+
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
       <div className="bg-base-200 rounded-2xl shadow-2xl w-full max-w-md border border-base-300 transform transition-all">
         <div className="flex items-center justify-between p-4 border-b border-base-300">
             <div className="flex items-center gap-3">
                 <KeyIcon className="h-6 w-6 text-brand-light" />
-                <h2 className="text-lg font-semibold text-gray-100">{t('apiKeyManagerTitle')}</h2>
+                <h2 className="text-lg font-semibold text-gray-100">{title}</h2>
             </div>
           <button onClick={onClose} className="text-gray-400 hover:text-white">
             <XCircleIcon className="h-6 w-6" />
@@ -104,7 +111,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ currentKeys, activ
         </div>
 
         <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-            <h3 className="text-sm font-medium text-gray-300">{t('addNewKeyLabel')}</h3>
+            <h3 className="text-sm font-medium text-gray-300">{addNewKeyLabel}</h3>
             <form onSubmit={handleAddKey} className="flex items-start gap-2">
                 <div className="flex-grow">
                     <input
@@ -128,7 +135,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ currentKeys, activ
             <div className="border-t border-base-300 my-4"></div>
 
             <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">{t('savedKeysLabel')}</h3>
+                <h3 className="text-sm font-medium text-gray-300 mb-2">{savedKeysLabel}</h3>
                  {currentKeys.length > 0 ? (
                     <ul className="space-y-2">
                         {currentKeys.map(key => (

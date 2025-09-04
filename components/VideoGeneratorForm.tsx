@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { GeneratorOptions, ImageFile } from '../types';
 import { UploadIcon } from './icons/UploadIcon';
 import { XCircleIcon } from './icons/XCircleIcon';
@@ -8,8 +8,9 @@ import { useLocalization } from '../i18n';
 interface VideoGeneratorFormProps {
   isGenerating: boolean;
   onSubmit: (options: GeneratorOptions) => void;
-  hasActiveApiKey: boolean;
+  hasActiveVideoApiKey: boolean;
   onManageKeysClick: () => void;
+  initialPrompt?: string;
 }
 
 const Label: React.FC<{ htmlFor?: string; children: React.ReactNode }> = ({ htmlFor, children }) => (
@@ -35,13 +36,18 @@ const RadioButton: React.FC<{ id: string; name: string; value: string; label: st
     </div>
 );
 
-export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({ isGenerating, onSubmit, hasActiveApiKey, onManageKeysClick }) => {
-  const [prompt, setPrompt] = useState<string>('');
+export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({ isGenerating, onSubmit, hasActiveVideoApiKey, onManageKeysClick, initialPrompt = '' }) => {
+  const [prompt, setPrompt] = useState<string>(initialPrompt);
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [aspectRatio, setAspectRatio] = useState<GeneratorOptions['aspectRatio']>('16:9');
   const [enableSound, setEnableSound] = useState<boolean>(true);
   const [resolution, setResolution] = useState<'720p' | '1080p'>('1080p');
   const { t } = useLocalization();
+  
+  useEffect(() => {
+    setPrompt(initialPrompt);
+  }, [initialPrompt]);
+
 
   const handleImageChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -72,8 +78,8 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({ isGenera
       alert(t('alertEnterPrompt'));
       return;
     }
-    if (!hasActiveApiKey) {
-        alert(t('alertSetApiKey'));
+    if (!hasActiveVideoApiKey) {
+        alert(t('alertSetVideoApiKey'));
         onManageKeysClick();
         return;
     }
@@ -174,15 +180,15 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({ isGenera
 
 
       <div>
-        {!hasActiveApiKey && (
+        {!hasActiveVideoApiKey && (
              <div className="text-center bg-yellow-900/50 border border-yellow-700 text-yellow-200 p-3 rounded-lg mb-4 text-sm flex items-center justify-center gap-2">
                 <KeyIcon className="h-5 w-5" />
-                <span>{t('apiKeyMissingWarning')}</span>
+                <span>{t('videoKeyMissingWarning')}</span>
             </div>
         )}
         <button
           type="submit"
-          disabled={isGenerating || !prompt.trim() || !hasActiveApiKey}
+          disabled={isGenerating || !prompt.trim() || !hasActiveVideoApiKey}
           className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-brand-secondary disabled:bg-base-300 disabled:cursor-not-allowed disabled:text-gray-500 transition-colors"
         >
           {isGenerating ? t('generatingButton') : t('generateButton')}
