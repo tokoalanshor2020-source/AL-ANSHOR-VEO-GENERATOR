@@ -83,22 +83,28 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
 
             <div>
                 <h3 className="text-2xl font-bold text-cyan-300 mb-2">Thumbnail Ideas</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                     {kitData.thumbnail_concepts.map((concept, index) => (
-                        <div key={index} className="bg-base-300/50 p-4 rounded-lg border border-base-300 space-y-3">
-                             <h4 className="font-bold text-amber-400">{concept.concept_title}</h4>
-                             <p className="text-sm text-gray-400">{concept.concept_description}</p>
-                            <div className="aspect-video bg-base-300 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600">
+                        <div key={index} className="bg-base-300/50 p-4 rounded-lg border border-base-300 flex flex-col">
+                             <h4 className="font-bold text-amber-400 flex-shrink-0">{concept.concept_title}</h4>
+                             <p className="text-sm text-gray-400 mt-1 mb-3 flex-shrink-0">{concept.concept_description}</p>
+                            <div className="aspect-video bg-base-300 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 flex-shrink-0">
                                 {thumbImageUrls[index] ? <img src={thumbImageUrls[index] as string} alt="Generated thumbnail" className="w-full h-full object-cover rounded-lg"/> : generatingThumb === index ? 'Generating...' : '...'}
                             </div>
-                             <div className="relative">
-                                <pre className="p-2 text-xs bg-base-300 rounded whitespace-pre-wrap">{concept.image_prompt}</pre>
-                                <CopyButton textToCopy={concept.image_prompt} />
-                             </div>
-                             <button disabled={generatingThumb !== null} onClick={() => handleGenerateThumbnail(concept.image_prompt, concept.cta_overlay_text, index)} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50">
-                                {generatingThumb === index ? "Generating..." : "Generate Thumbnail"}
-                             </button>
-                              {thumbImageUrls[index] && <a href={thumbImageUrls[index] as string} download={`thumbnail_${index + 1}.png`} className="block text-center w-full bg-brand-primary hover:bg-brand-dark text-white font-semibold py-2 rounded-lg">Download</a>}
+                            
+                            <div className="mt-3 flex-grow flex flex-col">
+                                <pre className="flex-grow p-2 text-xs bg-base-300 rounded whitespace-pre-wrap font-mono overflow-auto">{concept.image_prompt}</pre>
+                                <div className="mt-2">
+                                    <CopyButton textToCopy={concept.image_prompt} />
+                                </div>
+                            </div>
+                            
+                            <div className="mt-auto pt-3 space-y-2">
+                                <button disabled={generatingThumb !== null} onClick={() => handleGenerateThumbnail(concept.image_prompt, concept.cta_overlay_text, index)} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
+                                    {generatingThumb === index ? "Generating..." : "Generate Thumbnail"}
+                                </button>
+                                {thumbImageUrls[index] && <a href={thumbImageUrls[index] as string} download={`thumbnail_${index + 1}.png`} className="block text-center w-full bg-brand-primary hover:bg-brand-dark text-white font-semibold py-2 rounded-lg flex-shrink-0">Download</a>}
+                            </div>
                         </div>
                     ))}
                 </div>

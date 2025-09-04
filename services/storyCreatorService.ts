@@ -438,22 +438,33 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
 
 export const generateThumbnail = async (apiKey: string, prompt: string): Promise<ThumbnailData> => {
     const ai = getAiInstance(apiKey);
-
-    const augmentedPrompt = `${prompt}, cinematic, 16:9 aspect ratio, high detail, professional photography`;
+    
+    // Add a clearer instruction to the AI.
+    const fullPrompt = `Generate a YouTube thumbnail image based on the following description. The image should be vibrant, high-contrast, and suitable for a video thumbnail. Description: ${prompt}`;
 
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image-preview',
         contents: {
-            parts: [
-                { text: augmentedPrompt },
-            ],
+            parts: [{ text: fullPrompt }],
         },
         config: {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
         },
     });
 
+    if (response.promptFeedback?.blockReason) {
+        throw new Error(`Prompt was blocked by safety settings: ${response.promptFeedback.blockReason}`);
+    }
+
+    if (!response.candidates || response.candidates.length === 0) {
+        throw new Error("Image generation failed. The model returned no candidates, possibly due to the safety policy.");
+    }
+
+    let textResponse = '';
     for (const part of response.candidates[0].content.parts) {
+        if (part.text) {
+            textResponse += part.text;
+        }
         if (part.inlineData?.data && part.inlineData?.mimeType) {
             return {
                 base64: part.inlineData.data,
@@ -461,9 +472,15 @@ export const generateThumbnail = async (apiKey: string, prompt: string): Promise
             };
         }
     }
+    
+    // If we're here, no image was found. Check if the model gave a text explanation.
+    if (textResponse) {
+        throw new Error(`Image generation failed. The model responded with text: "${textResponse}"`);
+    }
 
     throw new Error("Image generation succeeded but no image data was returned in the response parts.");
 };
+
 
 export const createImageWithOverlay = (imageData: ThumbnailData, text: string): Promise<string> => {
     return new Promise((resolve, reject) => {
