@@ -1,0 +1,5 @@
+{
+  "name": "AL ANSHOR VEO GENERATOR",
+  "description": "An advanced web application under AL ANSHOR to generate high-quality videos from text prompts and reference images using Google's VEO model. Customize aspect ratio, sound, and resolution for the perfect video output.",
+  "requestFramePermissions": []
+}
