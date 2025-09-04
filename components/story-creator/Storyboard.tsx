@@ -25,6 +25,36 @@ interface SceneCardProps {
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
 }
 
+const PromptDisplay: React.FC<{
+    title: string;
+    content: string;
+    onProceedToVideo: (prompt: string) => void;
+}> = ({ title, content, onProceedToVideo }) => {
+    const { t } = useLocalization();
+    const isError = content.toLowerCase().startsWith('error');
+
+    return (
+        <div className="bg-base-300/50 p-3 rounded-lg flex flex-col h-full">
+            <h5 className="text-md font-bold text-gray-300 mb-2 flex-shrink-0">{title}</h5>
+            <div className="relative flex-grow min-h-[120px]">
+                <pre className="absolute inset-0 p-2 rounded bg-base-300 text-gray-300 whitespace-pre-wrap break-words font-mono text-xs overflow-auto">
+                    {content}
+                </pre>
+            </div>
+            {!isError && (
+                <div className="mt-3 flex-shrink-0">
+                    <button
+                        onClick={() => onProceedToVideo(content)}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+                    >
+                        {t('storyCreator.useThisPrompt')}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, activeApiKey, characters, directingSettings, onUpdateScene }) => {
     const { t } = useLocalization();
     const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
@@ -62,18 +92,6 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, a
         }
     };
     
-    const PromptDisplay: React.FC<{ title: string, content: string }> = ({ title, content }) => (
-        <div>
-            <h5 className="text-md font-bold text-gray-300 mb-2">{title}</h5>
-            <div className="relative">
-                <pre className="prompt-output p-3 rounded-lg bg-base-300 border border-gray-600 text-gray-300 whitespace-pre-wrap word-wrap-break-word font-mono text-sm">
-                    {content}
-                </pre>
-            </div>
-        </div>
-    );
-
-
     return (
         <div className="bg-base-200/50 border border-base-300 p-4 rounded-xl shadow-md">
             <div className="flex items-start gap-4">
@@ -117,15 +135,22 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, a
                          {isGeneratingCinematic ? '...' : t('storyCreator.generateCinematicPrompt')}
                     </button>
                  </div>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    {blueprint && <PromptDisplay title={t('storyCreator.resultBlueprint') as string} content={blueprint} />}
-                    {cinematicPrompt && <PromptDisplay title={t('storyCreator.resultCinematic') as string} content={cinematicPrompt} />}
-                </div>
-                {cinematicPrompt && !cinematicPrompt.startsWith('Error') && (
-                     <div className="mt-4 text-center">
-                        <button onClick={() => onProceedToVideo(cinematicPrompt)} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
-                           {t('storyCreator.useThisPrompt')}
-                        </button>
+                {(blueprint || cinematicPrompt) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 items-stretch">
+                        {blueprint && (
+                            <PromptDisplay
+                                title={t('storyCreator.resultBlueprint') as string}
+                                content={blueprint}
+                                onProceedToVideo={onProceedToVideo}
+                            />
+                        )}
+                        {cinematicPrompt && (
+                            <PromptDisplay
+                                title={t('storyCreator.resultCinematic') as string}
+                                content={cinematicPrompt}
+                                onProceedToVideo={onProceedToVideo}
+                            />
+                        )}
                     </div>
                 )}
             </div>
