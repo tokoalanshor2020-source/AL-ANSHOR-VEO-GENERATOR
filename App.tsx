@@ -89,7 +89,7 @@ export default function App() {
   }, [activeApiKey, t]);
 
   return (
-    <div className="min-h-screen bg-base-100 font-sans text-gray-200 flex flex-col items-center p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-base-100 font-sans text-gray-200">
       {isKeyModalOpen && (
         <ApiKeyManager
           currentKeys={apiKeys}
@@ -99,8 +99,16 @@ export default function App() {
           onClose={() => setIsKeyModalOpen(false)}
         />
       )}
-      <div className="w-full max-w-4xl">
-        <Header onManageKeysClick={() => setIsKeyModalOpen(true)} />
+      
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-10 w-full border-b border-base-300 bg-base-100/90 backdrop-blur-sm">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <Header onManageKeysClick={() => setIsKeyModalOpen(true)} />
+          </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8">
         <main className="mt-8">
           <div className="bg-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border border-base-300">
             <VideoGeneratorForm 
@@ -124,10 +132,11 @@ export default function App() {
             <VideoPlayer videoUrl={videoUrl} prompt={promptForPlayer} />
           )}
         </main>
+        
+        <footer className="w-full mt-12 pb-8 text-center text-gray-500 text-sm">
+          <p>Powered by Google's VEO Model</p>
+        </footer>
       </div>
-       <footer className="w-full max-w-4xl mt-12 text-center text-gray-500 text-sm">
-        <p>Powered by Google's VEO Model</p>
-      </footer>
     </div>
   );
 }

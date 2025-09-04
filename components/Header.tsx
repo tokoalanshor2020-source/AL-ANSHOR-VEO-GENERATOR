@@ -13,7 +13,7 @@ export const Header: React.FC<HeaderProps> = ({ onManageKeysClick }) => {
   const { t } = useLocalization();
 
   return (
-    <header className="flex items-center justify-between w-full">
+    <header className="flex items-center justify-between w-full py-4">
         <div className="flex items-center gap-3">
              <div className="p-3 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full shadow-lg">
                 <VideoIcon className="h-8 w-8 text-white" />
