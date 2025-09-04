@@ -83,6 +83,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "e.g., Sundanese",
       storyEditor: "Story Editor",
       storyboard: "Storyboard",
+      publishingKit: "Publishing Kit",
       needIdea: "Need a Story Idea?",
       ideaDescription: "Use the Smart Director to create a ready-to-air script outline!",
       openSmartDirector: "Open Smart Director",
@@ -113,7 +114,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Bright Sunny", cloudy: "Cloudy", rainy: "Rainy", },
         cameraStyleSet: { standardGroup: "🎥 Standard Styles", standard_cinematic: "Standard Cinematic", fpv_drone_dive: "FPV Drone Dive", },
         narratorLanguageSet: { no_narrator: "Without Narrator", id: "Indonesian", en: "English", custom_language: "Type your own language...", }
-      }
+      },
+       publishingKitSection: {
+        title: "Magic Broadcast Kit",
+        description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
+        generateButton: "Create Everything!",
+        generatingButton: "Creating...",
+      },
     },
     characterWorkshop: {
         titleCreate: "AI Character Workshop",
@@ -242,6 +249,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "Contoh: Bahasa Sunda",
       storyEditor: "Editor Cerita",
       storyboard: "Papan Cerita",
+      publishingKit: "Kit Siaran",
       needIdea: "Butuh Ide Cerita?",
       ideaDescription: "Gunakan Sutradara Cerdas untuk membuat kerangka naskah yang siap tayang!",
       openSmartDirector: "Buka Sutradara Cerdas",
@@ -272,7 +280,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Cerah Terik", cloudy: "Berawan", rainy: "Hujan", },
         cameraStyleSet: { standardGroup: "🎥 Gaya Standar", standard_cinematic: "Sinematik Standar", fpv_drone_dive: "FPV Drone Dive", },
         narratorLanguageSet: { no_narrator: "Tanpa Narator", id: "Bahasa Indonesia", en: "English (Bahasa Inggris)", custom_language: "Ketik Bahasa Sendiri...", }
-      }
+      },
+       publishingKitSection: {
+        title: "Kit Siaran Ajaib",
+        description: "Cerita sudah siap! Sekarang, buat semua aset untuk diunggah ke YouTube dengan satu klik.",
+        generateButton: "Buatkan Semuanya!",
+        generatingButton: "Membuat...",
+      },
     },
     characterWorkshop: {
         titleCreate: "Bengkel Karakter AI",
@@ -402,6 +416,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "Ej: Catalán",
       storyEditor: "Editor de Historias",
       storyboard: "Guion Gráfico",
+      publishingKit: "Kit de Publicación",
       needIdea: "¿Necesitas una idea para una historia?",
       ideaDescription: "¡Usa el Director Inteligente para crear un borrador de guion listo para usar!",
       openSmartDirector: "Abrir Director Inteligente",
@@ -432,7 +447,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Soleado Brillante", cloudy: "Nublado", rainy: "Lluvioso" },
         cameraStyleSet: { standardGroup: "🎥 Estilos Estándar", standard_cinematic: "Cinemático Estándar", fpv_drone_dive: "Picado de Dron FPV" },
         narratorLanguageSet: { no_narrator: "Sin Narrador", id: "Indonesio", en: "Inglés", custom_language: "Escribe tu propio idioma..." }
-      }
+      },
+       publishingKitSection: {
+        title: "Kit de Transmisión Mágica",
+        description: "¡La historia está lista! Ahora, crea todos los recursos para subir a YouTube con un solo clic.",
+        generateButton: "¡Crear Todo!",
+        generatingButton: "Creando...",
+      },
     },
     characterWorkshop: {
       titleCreate: "Taller de Personajes con IA",
@@ -561,6 +582,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "例如：粤语",
       storyEditor: "故事编辑器",
       storyboard: "故事板",
+      publishingKit: "发布工具包",
       needIdea: "需要故事灵感吗？",
       ideaDescription: "使用智能导筒创建一个准备播出的剧本大纲！",
       openSmartDirector: "打开智能导筒",
@@ -591,7 +613,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "晴朗", cloudy: "多云", rainy: "雨天" },
         cameraStyleSet: { standardGroup: "🎥 标准风格", standard_cinematic: "标准电影", fpv_drone_dive: "FPV无人机俯冲" },
         narratorLanguageSet: { no_narrator: "无旁白", id: "印尼语", en: "英语", custom_language: "输入您自己的语言..." }
-      }
+      },
+       publishingKitSection: {
+        title: "魔法广播套件",
+        description: "故事准备好了！现在，一键创建所有上传到YouTube的资源。",
+        generateButton: "全部创建！",
+        generatingButton: "创建中...",
+      },
     },
     characterWorkshop: {
       titleCreate: "AI 角色工作室",
@@ -720,6 +748,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "जैसे, पंजाबी",
       storyEditor: "कहानी संपादक",
       storyboard: "स्टोरीबोर्ड",
+      publishingKit: "प्रकाशन किट",
       needIdea: "कहानी का विचार चाहिए?",
       ideaDescription: "प्रसारण के लिए तैयार स्क्रिप्ट की रूपरेखा बनाने के लिए स्मार्ट डायरेक्टर का उपयोग करें!",
       openSmartDirector: "स्मार्ट डायरेक्टर खोलें",
@@ -750,7 +779,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "तेज धूप", cloudy: "बादल छाए हुए", rainy: "बरसात" },
         cameraStyleSet: { standardGroup: "🎥 मानक शैलियाँ", standard_cinematic: "मानक सिनेमैटिक", fpv_drone_dive: "FPV ड्रोन डाइव" },
         narratorLanguageSet: { no_narrator: "बिना कथावाचक के", id: "इंडोनेशियाई", en: "अंग्रेज़ी", custom_language: "अपनी भाषा टाइप करें..." }
-      }
+      },
+       publishingKitSection: {
+        title: "मैजिक ब्रॉडकास्ट किट",
+        description: "कहानी तैयार है! अब, एक क्लिक में यूट्यूब पर अपलोड करने के लिए सभी संपत्ति बनाएं।",
+        generateButton: "सब कुछ बनाएं!",
+        generatingButton: "बना रहा है...",
+      },
     },
     characterWorkshop: {
       titleCreate: "AI चरित्र कार्यशाला",
@@ -879,6 +914,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "مثال: الأردية",
       storyEditor: "محرر القصة",
       storyboard: "لوحة القصة",
+      publishingKit: "مجموعة النشر",
       needIdea: "هل تحتاج إلى فكرة قصة؟",
       ideaDescription: "استخدم المخرج الذكي لإنشاء مخطط نصي جاهز للبث!",
       openSmartDirector: "افتح المخرج الذكي",
@@ -909,7 +945,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "مشمس مشرق", cloudy: "غائم", rainy: "ممطر" },
         cameraStyleSet: { standardGroup: "🎥 أنماط قياسية", standard_cinematic: "سينمائي قياسي", fpv_drone_dive: "غوص طائرة بدون طيار FPV" },
         narratorLanguageSet: { no_narrator: "بدون راوي", id: "الإندونيسية", en: "الإنجليزية", custom_language: "اكتب لغتك الخاصة..." }
-      }
+      },
+       publishingKitSection: {
+        title: "مجموعة البث السحرية",
+        description: "القصة جاهزة! الآن، أنشئ جميع الأصول للتحميل على يوتيوب بنقرة واحدة.",
+        generateButton: "أنشئ كل شيء!",
+        generatingButton: "جاري الإنشاء...",
+      },
     },
     characterWorkshop: {
       titleCreate: "ورشة عمل شخصيات الذكاء الاصطناعي",
@@ -1038,6 +1080,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "Ex: Galego",
       storyEditor: "Editor de Histórias",
       storyboard: "Storyboard",
+      publishingKit: "Kit de Publicação",
       needIdea: "Precisa de uma ideia para a história?",
       ideaDescription: "Use o Diretor Inteligente para criar um esboço de roteiro pronto para o ar!",
       openSmartDirector: "Abrir Diretor Inteligente",
@@ -1068,7 +1111,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Ensolarado", cloudy: "Nublado", rainy: "Chuvoso" },
         cameraStyleSet: { standardGroup: "🎥 Estilos Padrão", standard_cinematic: "Cinemático Padrão", fpv_drone_dive: "Mergulho de Drone FPV" },
         narratorLanguageSet: { no_narrator: "Sem Narrador", id: "Indonésio", en: "Inglês", custom_language: "Digite seu próprio idioma..." }
-      }
+      },
+       publishingKitSection: {
+        title: "Kit de Transmissão Mágica",
+        description: "A história está pronta! Agora, crie todos os recursos para enviar ao YouTube com um clique.",
+        generateButton: "Criar Tudo!",
+        generatingButton: "Criando...",
+      },
     },
     characterWorkshop: {
       titleCreate: "Oficina de Personagens com IA",
@@ -1197,6 +1246,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "যেমন, অসমীয়া",
       storyEditor: "গল্প সম্পাদক",
       storyboard: "স্টোরিবোর্ড",
+      publishingKit: "প্রকাশনা কিট",
       needIdea: "গল্পের ধারণা প্রয়োজন?",
       ideaDescription: "সম্প্রচারের জন্য প্রস্তুত একটি স্ক্রিপ্ট আউটলাইন তৈরি করতে স্মার্ট ডিরেক্টর ব্যবহার করুন!",
       openSmartDirector: "স্মার্ট ডিরেক্টর খুলুন",
@@ -1227,7 +1277,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "উজ্জ্বল রোদ", cloudy: "মেঘলা", rainy: "বৃষ্টি" },
         cameraStyleSet: { standardGroup: "🎥 স্ট্যান্ডার্ড স্টাইল", standard_cinematic: "স্ট্যান্ডার্ড সিনেমাটিক", fpv_drone_dive: "FPV ড্রোন ডাইভ" },
         narratorLanguageSet: { no_narrator: "বর্ণনাকারী ছাড়া", id: "ইন্দোনেশিয়ান", en: "ইংরেজি", custom_language: "আপনার নিজের ভাষা টাইপ করুন..." }
-      }
+      },
+       publishingKitSection: {
+        title: "ম্যাজিক ব্রডকাস্ট কিট",
+        description: "গল্প প্রস্তুত! এখন, এক ক্লিকে ইউটিউবে আপলোড করার জন্য সমস্ত সম্পদ তৈরি করুন।",
+        generateButton: "সবকিছু তৈরি করুন!",
+        generatingButton: "তৈরি হচ্ছে...",
+      },
     },
     characterWorkshop: {
       titleCreate: "AI চরিত্র কর্মশালা",
@@ -1356,6 +1412,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "Например, украинский",
       storyEditor: "Редактор историй",
       storyboard: "Раскадровка",
+      publishingKit: "Издательский комплект",
       needIdea: "Нужна идея для истории?",
       ideaDescription: "Используйте Умного режиссера, чтобы создать готовый к эфиру набросок сценария!",
       openSmartDirector: "Открыть Умного режиссера",
@@ -1386,7 +1443,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Ясно", cloudy: "Облачно", rainy: "Дождь" },
         cameraStyleSet: { standardGroup: "🎥 Стандартные стили", standard_cinematic: "Стандартный кинематографический", fpv_drone_dive: "Погружение с FPV-дрона" },
         narratorLanguageSet: { no_narrator: "Без рассказчика", id: "Индонезийский", en: "Английский", custom_language: "Введите свой язык..." }
-      }
+      },
+       publishingKitSection: {
+        title: "Волшебный вещательный комплект",
+        description: "История готова! Теперь создайте все ресурсы для загрузки на YouTube одним щелчком мыши.",
+        generateButton: "Создать все!",
+        generatingButton: "Создание...",
+      },
     },
     characterWorkshop: {
       titleCreate: "Мастерская персонажей ИИ",
@@ -1515,6 +1578,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "例：関西弁",
       storyEditor: "ストーリーエディター",
       storyboard: "ストーリーボード",
+      publishingKit: "パブリッシングキット",
       needIdea: "ストーリーのアイデアが必要ですか？",
       ideaDescription: "スマートディレクターを使って、すぐに放送できる脚本の概要を作成しましょう！",
       openSmartDirector: "スマートディレクターを開く",
@@ -1545,7 +1609,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "晴れ", cloudy: "曇り", rainy: "雨" },
         cameraStyleSet: { standardGroup: "🎥 標準スタイル", standard_cinematic: "標準シネマティック", fpv_drone_dive: "FPVドローンダイブ" },
         narratorLanguageSet: { no_narrator: "ナレーターなし", id: "インドネシア語", en: "英語", custom_language: "独自の言語を入力..." }
-      }
+      },
+       publishingKitSection: {
+        title: "魔法の放送キット",
+        description: "物語の準備ができました！ワンクリックでYouTubeにアップロードするためのすべてのアセットを作成します。",
+        generateButton: "すべて作成！",
+        generatingButton: "作成中...",
+      },
     },
     characterWorkshop: {
       titleCreate: "AIキャラクターワークショップ",
@@ -1674,6 +1744,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "z.B. Bayerisch",
       storyEditor: "Story-Editor",
       storyboard: "Storyboard",
+      publishingKit: "Veröffentlichungs-Kit",
       needIdea: "Brauchen Sie eine Story-Idee?",
       ideaDescription: "Nutzen Sie den Smart Director, um einen sendefertigen Drehbuchentwurf zu erstellen!",
       openSmartDirector: "Smart Director öffnen",
@@ -1704,7 +1775,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Sonnig", cloudy: "Bewölkt", rainy: "Regnerisch" },
         cameraStyleSet: { standardGroup: "🎥 Standard-Stile", standard_cinematic: "Standard-Kino", fpv_drone_dive: "FPV-Drohnen-Tauchflug" },
         narratorLanguageSet: { no_narrator: "Ohne Erzähler", id: "Indonesisch", en: "Englisch", custom_language: "Eigene Sprache eingeben..." }
-      }
+      },
+       publishingKitSection: {
+        title: "Magisches Sende-Kit",
+        description: "Die Geschichte ist fertig! Erstellen Sie jetzt mit einem Klick alle Assets für den Upload auf YouTube.",
+        generateButton: "Alles erstellen!",
+        generatingButton: "Wird erstellt...",
+      },
     },
     characterWorkshop: {
       titleCreate: "KI-Charakter-Werkstatt",
@@ -1833,6 +1910,7 @@ const translations: { [key in Language]: Translations } = {
       customLanguagePlaceholder: "Ex: Alsacien",
       storyEditor: "Éditeur d'histoire",
       storyboard: "Storyboard",
+      publishingKit: "Kit de publication",
       needIdea: "Besoin d'une idée d'histoire ?",
       ideaDescription: "Utilisez le Réalisateur Intelligent pour créer une ébauche de scénario prête à être diffusée !",
       openSmartDirector: "Ouvrir le Réalisateur Intelligent",
@@ -1863,7 +1941,13 @@ const translations: { [key in Language]: Translations } = {
         weatherSet: { sunny: "Ensoleillé", cloudy: "Nuageux", rainy: "Pluvieux" },
         cameraStyleSet: { standardGroup: "🎥 Styles standard", standard_cinematic: "Cinématique standard", fpv_drone_dive: "Plongée de drone FPV" },
         narratorLanguageSet: { no_narrator: "Sans narrateur", id: "Indonésien", en: "Anglais", custom_language: "Entrez votre propre langue..." }
-      }
+      },
+       publishingKitSection: {
+        title: "Kit de Diffusion Magique",
+        description: "L'histoire est prête ! Maintenant, créez tous les assets pour les télécharger sur YouTube en un seul clic.",
+        generateButton: "Tout créer !",
+        generatingButton: "Création...",
+      },
     },
     characterWorkshop: {
       titleCreate: "Atelier de personnages IA",

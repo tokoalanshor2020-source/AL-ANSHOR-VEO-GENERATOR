@@ -3,8 +3,8 @@ import { Sidebar } from './Sidebar';
 import { MainContent } from './MainContent';
 import { ConfirmationModal } from '../ConfirmationModal';
 import { useLocalization } from '../../i18n';
-import type { Character, StoryboardScene, DirectingSettings } from '../../types';
-import { generateStoryboard } from '../../services/storyCreatorService';
+import type { Character, StoryboardScene, DirectingSettings, PublishingKitData } from '../../types';
+import { generateStoryboard, generatePublishingKit } from '../../services/storyCreatorService';
 
 interface StoryCreatorProps {
     activeStoryApiKey: string | null;
@@ -26,10 +26,12 @@ interface StoryCreatorProps {
     setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
     onNewStory: () => void;
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
+    publishingKit: PublishingKitData | null;
+    setPublishingKit: React.Dispatch<React.SetStateAction<PublishingKitData | null>>;
 }
 
 
-type ActiveTab = 'editor' | 'storyboard';
+type ActiveTab = 'editor' | 'storyboard' | 'publishingKit';
 
 export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
     const { t } = useLocalization();
@@ -37,10 +39,11 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         activeStoryApiKey, onManageKeysClick, onProceedToVideo, 
         characters, setCharacters, storyboard, setStoryboard,
         logline, setLogline, scenario, setScenario, sceneCount, setSceneCount,
-        directingSettings, onNewStory
+        directingSettings, onNewStory, publishingKit, setPublishingKit
     } = props;
 
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingKit, setIsGeneratingKit] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<ActiveTab>('editor');
 
@@ -86,6 +89,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         setIsGenerating(true);
         setError(null);
         setStoryboard([]);
+        setPublishingKit(null);
 
         try {
             const scenes = await generateStoryboard(activeStoryApiKey, {
@@ -104,7 +108,29 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         } finally {
             setIsGenerating(false);
         }
-    }, [activeStoryApiKey, logline, scenario, sceneCount, characters, directingSettings, onManageKeysClick, t, setStoryboard]);
+    }, [activeStoryApiKey, logline, scenario, sceneCount, characters, directingSettings, onManageKeysClick, t, setStoryboard, setPublishingKit]);
+
+    const handleGeneratePublishingKit = useCallback(async () => {
+        if (!activeStoryApiKey) {
+            alert(t('alertSetStoryApiKey'));
+            onManageKeysClick();
+            return;
+        }
+        setIsGeneratingKit(true);
+        setError(null);
+        try {
+            const kit = await generatePublishingKit(activeStoryApiKey, { storyboard, characters, logline });
+            setPublishingKit(kit);
+            setActiveTab('publishingKit');
+        } catch (e) {
+            console.error(e);
+            setError(e instanceof Error ? e.message : 'An unknown error occurred');
+            setActiveTab('publishingKit');
+        } finally {
+            setIsGeneratingKit(false);
+        }
+
+    }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit]);
 
     return (
         <div className="flex flex-col md:flex-row gap-6">
@@ -115,6 +141,9 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
                 setDirectingSettings={props.setDirectingSettings}
                 onNewStory={handleNewStoryClick}
                 activeApiKey={activeStoryApiKey}
+                storyboard={storyboard}
+                onGeneratePublishingKit={handleGeneratePublishingKit}
+                isGeneratingKit={isGeneratingKit}
             />
             <MainContent
                 logline={logline}
@@ -134,6 +163,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 onUpdateScene={props.onUpdateScene}
+                publishingKit={publishingKit}
             />
             {isConfirmOpen && (
                 <ConfirmationModal

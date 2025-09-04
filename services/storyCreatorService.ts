@@ -1,5 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import type { Character, DirectingSettings, StoryboardScene, StoryIdea } from '../types';
+import { GoogleGenAI, Type, Modality } from "@google/genai";
+import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData } from '../types';
 
 interface StoryboardOptions {
     logline: string;
@@ -28,6 +28,17 @@ export interface StoryIdeaOptions {
     contentFormat: string;
     characterName: string;
     theme: string;
+}
+
+export interface PublishingKitOptions {
+    storyboard: StoryboardScene[];
+    characters: Character[];
+    logline: string;
+}
+
+interface ThumbnailData {
+    base64: string;
+    mimeType: string;
 }
 
 
@@ -355,4 +366,136 @@ export const generateStoryIdeas = async (apiKey: string, options: StoryIdeaOptio
 
     const parsedResult = safeJsonParse(response.text);
     return parsedResult.ideas || [];
+};
+
+const publishingKitSchema = {
+    type: Type.OBJECT,
+    properties: {
+        youtube_title_id: { type: Type.STRING },
+        youtube_title_en: { type: Type.STRING },
+        youtube_description_id: { type: Type.STRING },
+        youtube_description_en: { type: Type.STRING },
+        youtube_tags_id: { type: Type.ARRAY, items: { type: Type.STRING } },
+        youtube_tags_en: { type: Type.ARRAY, items: { type: Type.STRING } },
+        affiliate_links: {
+            type: Type.OBJECT,
+            properties: {
+                primary_character_template: { type: Type.STRING },
+                all_characters_template: { type: Type.STRING }
+            },
+            required: ["primary_character_template", "all_characters_template"]
+        },
+        thumbnail_concepts: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    concept_title: { type: Type.STRING },
+                    concept_description: { type: Type.STRING },
+                    image_prompt: { type: Type.STRING },
+                    cta_overlay_text: { type: Type.STRING }
+                },
+                required: ["concept_title", "concept_description", "image_prompt", "cta_overlay_text"]
+            }
+        }
+    },
+    required: ["youtube_title_id", "youtube_title_en", "youtube_description_id", "youtube_description_en", "youtube_tags_id", "youtube_tags_en", "affiliate_links", "thumbnail_concepts"]
+};
+
+export const generatePublishingKit = async (apiKey: string, options: PublishingKitOptions): Promise<PublishingKitData> => {
+    const ai = getAiInstance(apiKey);
+    const { storyboard, characters, logline } = options;
+
+    const fullStoryNarration = storyboard.map(scene => scene.sound_design.narration_script).filter(Boolean).join('\n\n');
+    const characterInfo = characters.map(c => c.name).join(', ');
+    const primaryCharacter = characters.length > 0 ? characters[0].name : "mainan ini";
+
+    const prompt = `Anda adalah ahli strategi konten YouTube. Berdasarkan data berikut, buatlah "Kit Siaran" lengkap.
+
+    **Naskah Narasi:** ${fullStoryNarration}
+    **Judul Asli:** "${logline}"
+    **Karakter Utama:** "${primaryCharacter}"
+    **Semua Karakter:** "${characterInfo}"
+
+    Buat aset berikut dalam format JSON:
+    1.  youtube_title_id & youtube_title_en
+    2.  youtube_description_id & youtube_description_en (dengan timestamps jika memungkinkan)
+    3.  youtube_tags_id (array Bahasa Indonesia) & youtube_tags_en (array Bahasa Inggris)
+    4.  affiliate_links: objek dengan 'primary_character_template' dan 'all_characters_template'. Gunakan placeholder [MASUKKAN LINK ANDA].
+    5.  thumbnail_concepts: array berisi DUA objek. Setiap objek harus punya 'concept_title', 'concept_description', 'image_prompt' (prompt detail untuk AI gambar, dalam Bahasa Inggris), dan 'cta_overlay_text' (contoh: "TONTON SEKARANG!").`;
+    
+     const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: publishingKitSchema
+        }
+    });
+
+    return safeJsonParse(response.text);
+};
+
+export const generateThumbnail = async (apiKey: string, prompt: string): Promise<ThumbnailData> => {
+    const ai = getAiInstance(apiKey);
+
+    const augmentedPrompt = `${prompt}, cinematic, 16:9 aspect ratio, high detail, professional photography`;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: {
+            parts: [
+                { text: augmentedPrompt },
+            ],
+        },
+        config: {
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData?.data && part.inlineData?.mimeType) {
+            return {
+                base64: part.inlineData.data,
+                mimeType: part.inlineData.mimeType,
+            };
+        }
+    }
+
+    throw new Error("Image generation succeeded but no image data was returned in the response parts.");
+};
+
+export const createImageWithOverlay = (imageData: ThumbnailData, text: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error("Could not create canvas context"));
+
+        const img = new Image();
+        img.onload = () => {
+            canvas.width = 1280;
+            canvas.height = 720;
+            ctx.drawImage(img, 0, 0, 1280, 720);
+
+            const fontSize = 80;
+            ctx.font = `900 ${fontSize}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 5;
+            ctx.shadowOffsetY = 5;
+
+            const gradient = ctx.createLinearGradient(0, canvas.height - fontSize, 0, canvas.height);
+            gradient.addColorStop(0, '#FFFFFF');
+            gradient.addColorStop(1, '#FBBF24'); // Amber-400
+            ctx.fillStyle = gradient;
+            
+            ctx.fillText(text.toUpperCase(), canvas.width / 2, canvas.height - 40);
+            
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => reject(new Error("Failed to load image for canvas overlay."));
+        img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    });
 };

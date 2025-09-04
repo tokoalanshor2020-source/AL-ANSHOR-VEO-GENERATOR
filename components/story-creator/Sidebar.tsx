@@ -1,7 +1,8 @@
 import React from 'react';
 import { CharacterGarage } from './CharacterGarage';
 import { DirectingDesk } from './DirectingDesk';
-import type { Character, DirectingSettings } from '../../types';
+import { PublishingKitSection } from './PublishingKitSection';
+import type { Character, DirectingSettings, StoryboardScene } from '../../types';
 import { useLocalization } from '../../i18n';
 
 interface SidebarProps {
@@ -11,6 +12,9 @@ interface SidebarProps {
     setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
     onNewStory: () => void;
     activeApiKey: string | null;
+    storyboard: StoryboardScene[];
+    onGeneratePublishingKit: () => void;
+    isGeneratingKit: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = (props) => {
@@ -31,6 +35,12 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
             <DirectingDesk
                 settings={props.directingSettings}
                 setSettings={props.setDirectingSettings}
+            />
+            <PublishingKitSection 
+                storyboard={props.storyboard}
+                onGenerate={props.onGeneratePublishingKit}
+                isGenerating={props.isGeneratingKit}
+                activeApiKey={props.activeApiKey}
             />
         </aside>
     );

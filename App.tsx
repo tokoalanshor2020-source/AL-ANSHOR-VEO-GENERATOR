@@ -5,7 +5,7 @@ import { Loader } from './components/Loader';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { StoryCreator } from './components/story-creator/StoryCreator';
-import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings } from './types';
+import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData } from './types';
 import { generateVideo } from './services/geminiService';
 import { useLocalization } from './i18n';
 
@@ -52,6 +52,7 @@ export default function App() {
   const [scenario, setScenario] = useState('');
   const [sceneCount, setSceneCount] = useState(3);
   const [directingSettings, setDirectingSettings] = useState<DirectingSettings>(initialDirectingSettings);
+  const [publishingKit, setPublishingKit] = useState<PublishingKitData | null>(null);
 
 
   useEffect(() => {
@@ -178,6 +179,7 @@ export default function App() {
       setSceneCount(3);
       setStoryboard([]);
       setDirectingSettings(initialDirectingSettings);
+      setPublishingKit(null);
       setError(null);
   };
   
@@ -236,6 +238,8 @@ export default function App() {
               setDirectingSettings={setDirectingSettings}
               onNewStory={handleNewStoryReset}
               onUpdateScene={handleUpdateScene}
+              publishingKit={publishingKit}
+              setPublishingKit={setPublishingKit}
            />
         )}
 
