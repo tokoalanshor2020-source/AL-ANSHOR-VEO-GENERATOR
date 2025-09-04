@@ -39,6 +39,63 @@
 </script>
 </head>
   <body class="bg-base-100 text-gray-200">
+    <script>
+      (function() {
+        const DEV_MODE_PARAM = 'dev';
+
+        const isDevMode = () => {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(DEV_MODE_PARAM) === 'true';
+          } catch (e) {
+            return false;
+          }
+        };
+
+        if (isDevMode()) {
+          console.log('DEV MODE: Anti-inspection measures are disabled.');
+          return;
+        }
+
+        const showOverlay = () => {
+          const overlayStyle = `position:fixed;top:0;left:0;width:100%;height:100%;background-color:#0f172a;color:#e2e8f0;display:flex;justify-content:center;align-items:center;text-align:center;font-family:sans-serif;font-size:1.5rem;z-index:2147483647;padding:20px;`;
+          const headingStyle = `color:#f87171;margin-bottom:1rem;font-size:2rem;`;
+          const textStyle = `font-size:1.1rem;color:#cbd5e1;line-height:1.5;`;
+          
+          document.body.innerHTML = `<div style="${overlayStyle}"><div><h1 style="${headingStyle}">Security Alert</h1><p style="${textStyle}">For security reasons, this application cannot be inspected.<br>Please close developer tools and refresh the page to continue.</p></div></div>`;
+        };
+
+        // Disable context menu and common keyboard shortcuts
+        document.addEventListener('contextmenu', (e) => e.preventDefault(), { capture: true });
+        document.addEventListener('keydown', (e) => {
+          if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+            (e.ctrlKey && e.key.toUpperCase() === 'U')
+          ) {
+            e.preventDefault();
+          }
+        }, { capture: true });
+
+        // Detect DevTools using the debugger timing trick
+        const detectDevTools = () => {
+          const threshold = 160;
+          const startTime = new Date();
+          debugger;
+          const endTime = new Date();
+          if (endTime.getTime() - startTime.getTime() > threshold) {
+            showOverlay();
+          }
+        };
+
+        // Run the check periodically to catch DevTools being opened after page load.
+        setInterval(detectDevTools, 1000);
+        
+        // Run an initial check immediately on script load.
+        detectDevTools();
+
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
