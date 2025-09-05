@@ -3,23 +3,22 @@ import type { Character, DirectingSettings, StoryboardScene } from '../../types'
 import { useLocalization } from '../../i18n';
 import { CameraReelsIcon } from '../icons/CameraReelsIcon';
 import { generateBlueprintPrompt, generateCinematicPrompt } from '../../services/storyCreatorService';
+import { FailoverParams } from '../../services/geminiService';
 
-interface StoryboardProps {
+interface StoryboardProps extends FailoverParams {
     isGenerating: boolean;
     storyboard: StoryboardScene[];
     error: string | null;
     onProceedToVideo: (prompt: string) => void;
-    activeApiKey: string | null;
     characters: Character[];
     directingSettings: DirectingSettings;
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
 }
 
-interface SceneCardProps {
+interface SceneCardProps extends FailoverParams {
     scene: StoryboardScene;
     index: number;
     onProceedToVideo: (prompt: string) => void;
-    activeApiKey: string | null;
     characters: Character[];
     directingSettings: DirectingSettings;
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
@@ -37,7 +36,7 @@ const PromptDisplay: React.FC<{
         <div className="bg-base-300/50 p-3 rounded-lg flex flex-col h-full">
             <h5 className="text-md font-bold text-gray-300 mb-2 flex-shrink-0">{title}</h5>
             <div className="relative flex-grow min-h-[120px]">
-                <pre className="absolute inset-0 p-2 rounded bg-base-300 text-gray-300 whitespace-pre-wrap break-words font-mono text-xs overflow-auto">
+                <pre className="absolute inset-0 p-2 rounded bg-base-300 text-gray-300 whitespace-pre-wrap font-mono text-xs overflow-auto">
                     {content}
                 </pre>
             </div>
@@ -55,7 +54,7 @@ const PromptDisplay: React.FC<{
     );
 };
 
-const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, activeApiKey, characters, directingSettings, onUpdateScene }) => {
+const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, activeKey, allKeys, onKeyUpdate, characters, directingSettings, onUpdateScene }) => {
     const { t } = useLocalization();
     const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
     const [isGeneratingCinematic, setIsGeneratingCinematic] = useState(false);
@@ -64,11 +63,13 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, a
     const blueprint = scene.blueprintPrompt || '';
     const cinematicPrompt = scene.cinematicPrompt || '';
 
+    const failoverParams: FailoverParams = { allKeys, activeKey, onKeyUpdate };
+
     const handleGenerateBlueprint = async () => {
-        if (!activeApiKey) return;
+        if (!activeKey) return;
         setIsGeneratingBlueprint(true);
         try {
-            const result = await generateBlueprintPrompt(activeApiKey, scene, characters, directingSettings);
+            const result = await generateBlueprintPrompt(failoverParams, scene, characters, directingSettings);
             onUpdateScene(index, { blueprintPrompt: result });
         } catch (e) {
             const errorMessage = `Error: ${e instanceof Error ? e.message : 'Unknown error'}`;
@@ -79,10 +80,10 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, a
     };
 
     const handleGenerateCinematic = async () => {
-         if (!activeApiKey) return;
+         if (!activeKey) return;
         setIsGeneratingCinematic(true);
         try {
-            const result = await generateCinematicPrompt(activeApiKey, scene, characters, directingSettings);
+            const result = await generateCinematicPrompt(failoverParams, scene, characters, directingSettings);
             onUpdateScene(index, { cinematicPrompt: result });
         } catch (e) {
             const errorMessage = `Error: ${e instanceof Error ? e.message : 'Unknown error'}`;
@@ -159,7 +160,7 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, a
 };
 
 
-export const Storyboard: React.FC<StoryboardProps> = ({ isGenerating, storyboard, error, ...rest }) => {
+export const Storyboard: React.FC<StoryboardProps> = ({ isGenerating, storyboard, error, allKeys, activeKey, onKeyUpdate, ...rest }) => {
     const { t } = useLocalization();
 
     if (isGenerating) {
@@ -183,7 +184,14 @@ export const Storyboard: React.FC<StoryboardProps> = ({ isGenerating, storyboard
     return (
         <div className="p-6 space-y-6">
             {storyboard.map((scene, index) => (
-                <SceneCard key={index} scene={scene} index={index} {...rest} />
+                <SceneCard 
+                    key={index} 
+                    scene={scene} 
+                    index={index} 
+                    allKeys={allKeys}
+                    activeKey={activeKey}
+                    onKeyUpdate={onKeyUpdate}
+                    {...rest} />
             ))}
         </div>
     );

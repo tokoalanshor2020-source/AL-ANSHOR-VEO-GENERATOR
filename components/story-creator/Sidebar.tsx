@@ -9,6 +9,8 @@ interface SidebarProps {
     setCharacters: React.Dispatch<React.SetStateAction<Character[]>>;
     onNewStory: () => void;
     activeApiKey: string | null;
+    allStoryApiKeys: string[];
+    onStoryKeyUpdate: (key: string) => void;
     storyboard: StoryboardScene[];
     onGeneratePublishingKit: () => void;
     isGeneratingKit: boolean;
@@ -28,6 +30,8 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                 characters={props.characters}
                 setCharacters={props.setCharacters}
                 activeApiKey={props.activeApiKey}
+                allStoryApiKeys={props.allStoryApiKeys}
+                onStoryKeyUpdate={props.onStoryKeyUpdate}
             />
             <PublishingKitSection 
                 storyboard={props.storyboard}

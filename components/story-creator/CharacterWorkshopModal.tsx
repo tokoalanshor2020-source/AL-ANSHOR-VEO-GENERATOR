@@ -4,6 +4,7 @@ import { useLocalization } from '../../i18n';
 import { developCharacter, generateActionDna } from '../../services/storyCreatorService';
 import { UploadIcon } from '../icons/UploadIcon';
 import { TagInput } from './TagInput';
+import { FailoverParams } from '../../services/geminiService';
 
 interface CharacterWorkshopModalProps {
     isOpen: boolean;
@@ -11,9 +12,11 @@ interface CharacterWorkshopModalProps {
     onSave: (character: Character) => void;
     initialCharacter: Character | null;
     activeApiKey: string | null;
+    allStoryApiKeys: string[];
+    onStoryKeyUpdate: (key: string) => void;
 }
 
-export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ isOpen, onClose, onSave, initialCharacter, activeApiKey }) => {
+export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ isOpen, onClose, onSave, initialCharacter, activeApiKey, allStoryApiKeys, onStoryKeyUpdate }) => {
     const { t } = useLocalization();
     
     const [isProcessingAi, setIsProcessingAi] = useState(false);
@@ -64,6 +67,12 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
         }
     }, [imageFile]);
 
+    const getFailoverParams = (): FailoverParams => ({
+        allKeys: allStoryApiKeys,
+        activeKey: activeApiKey,
+        onKeyUpdate: onStoryKeyUpdate,
+    });
+
     const handleDesignWithAi = async () => {
         if (!activeApiKey) return;
         if (!imageFile && !idea.trim()) {
@@ -73,7 +82,8 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
 
         setIsProcessingAi(true);
         try {
-            const devData = await developCharacter(activeApiKey, {
+            const failoverParams = getFailoverParams();
+            const devData = await developCharacter(failoverParams, {
                 idea,
                 imageBase64: imageFile?.base64 ?? null,
                 imageType: imageFile?.mimeType ?? null,
@@ -86,7 +96,7 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
             setKeyFeatures(devData.key_features);
             
             // Also generate action DNA
-            const dnaSuggestions = await generateActionDna(activeApiKey, devData);
+            const dnaSuggestions = await generateActionDna(failoverParams, devData);
             setActionDNA(dnaSuggestions);
 
         } catch (e) {

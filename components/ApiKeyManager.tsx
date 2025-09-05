@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { validateApiKey } from '../services/apiKeyService';
 import { XCircleIcon } from './icons/XCircleIcon';
 import { KeyIcon } from './icons/KeyIcon';
@@ -6,6 +6,7 @@ import { TrashIcon } from './icons/TrashIcon';
 import { useLocalization } from '../i18n';
 
 type KeyManagerType = 'story' | 'video';
+type KeyStatus = 'valid' | 'invalid' | 'checking' | 'unchecked';
 
 interface ApiKeyManagerProps {
   keyType: KeyManagerType;
@@ -16,16 +17,29 @@ interface ApiKeyManagerProps {
   onClose: () => void;
 }
 
+const StatusBadge: React.FC<{ status: KeyStatus }> = ({ status }) => {
+    const statusMap = {
+        valid: { text: 'VALID', className: 'bg-green-500/20 text-green-300 ring-green-500/30' },
+        invalid: { text: 'INVALID', className: 'bg-red-500/20 text-red-300 ring-red-500/30' },
+        checking: { text: 'CHECKING...', className: 'bg-yellow-500/20 text-yellow-300 ring-yellow-500/30 animate-pulse' },
+        unchecked: { text: 'UNCHECKED', className: 'bg-gray-500/20 text-gray-400 ring-gray-500/30' }
+    };
+    const { text, className } = statusMap[status] || statusMap.unchecked;
+    return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${className}`}>{text}</span>;
+};
+
+
 const ApiKeyItem: React.FC<{
     apiKey: string;
     isActive: boolean;
+    status: KeyStatus;
     onSelect: () => void;
     onDelete: () => void;
-}> = ({ apiKey, isActive, onSelect, onDelete }) => {
+}> = ({ apiKey, isActive, status, onSelect, onDelete }) => {
     const displayKey = `${apiKey.substring(0, 4)}...${apiKey.substring(apiKey.length - 4)}`;
     return (
-        <li className="flex items-center justify-between p-3 bg-base-300 rounded-lg">
-            <div className="flex items-center">
+        <li className={`flex items-center justify-between p-3 bg-base-300 rounded-lg transition-all border ${isActive ? 'border-brand-primary' : 'border-transparent'}`}>
+            <div className="flex items-center gap-3">
                  <input
                     type="radio"
                     name="active-api-key"
@@ -34,9 +48,10 @@ const ApiKeyItem: React.FC<{
                     onChange={onSelect}
                     className="h-4 w-4 text-brand-primary bg-base-100 border-gray-500 focus:ring-brand-secondary"
                 />
-                <label htmlFor={`key-${apiKey}`} className="ml-3 font-mono text-sm text-gray-300 cursor-pointer">
+                <label htmlFor={`key-${apiKey}`} className="font-mono text-sm text-gray-300 cursor-pointer">
                     {displayKey}
                 </label>
+                 <StatusBadge status={status} />
             </div>
             <button
                 onClick={onDelete}
@@ -55,27 +70,56 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
   const [error, setError] = useState<string | null>(null);
   const { t } = useLocalization();
 
+  const [keyStatuses, setKeyStatuses] = useState<{ [key: string]: KeyStatus }>({});
+
+  const runAllValidations = useCallback(async () => {
+    const initialStatuses: { [key: string]: KeyStatus } = {};
+    currentKeys.forEach(key => { initialStatuses[key] = 'checking'; });
+    setKeyStatuses(initialStatuses);
+    
+    const validationPromises = currentKeys.map(async (key) => {
+        const isValid = await validateApiKey(key);
+        return { key, status: isValid ? 'valid' : 'invalid' } as const;
+    });
+
+    for await (const result of validationPromises) {
+         setKeyStatuses(prev => ({ ...prev, [result.key]: result.status }));
+    }
+   }, [currentKeys]);
+   
+   useEffect(() => {
+        if(currentKeys.length > 0){
+            runAllValidations();
+        }
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [currentKeys]);
+
+
   const handleAddKey = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (!newKey.trim()) {
+    const trimmedKey = newKey.trim();
+    if (!trimmedKey) {
         setError(t('errorKeyEmpty') as string);
         return;
     }
-    if (currentKeys.includes(newKey)) {
+    if (currentKeys.includes(trimmedKey)) {
         setError(t('errorKeyExists') as string);
         return;
     }
 
     setIsValidating(true);
-    const isValid = await validateApiKey(newKey);
+    setKeyStatuses(prev => ({ ...prev, [trimmedKey]: 'checking' }));
+    const isValid = await validateApiKey(trimmedKey);
     setIsValidating(false);
 
+    setKeyStatuses(prev => ({ ...prev, [trimmedKey]: isValid ? 'valid' : 'invalid' }));
+
     if (isValid) {
-        const updatedKeys = [...currentKeys, newKey];
+        const updatedKeys = [...currentKeys, trimmedKey];
         onKeysChange(updatedKeys);
         if (!activeKey) {
-            onActiveKeyChange(newKey);
+            onActiveKeyChange(trimmedKey);
         }
         setNewKey('');
     } else {
@@ -86,8 +130,13 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
   const handleDeleteKey = (keyToDelete: string) => {
     const updatedKeys = currentKeys.filter(k => k !== keyToDelete);
     onKeysChange(updatedKeys);
+     setKeyStatuses(prev => {
+        const newStatuses = { ...prev };
+        delete newStatuses[keyToDelete];
+        return newStatuses;
+    });
     if (activeKey === keyToDelete) {
-        const newActiveKey = updatedKeys.length > 0 ? updatedKeys[0] : null;
+        const newActiveKey = updatedKeys.length > 0 ? updatedKeys.find(k => keyStatuses[k] === 'valid') || updatedKeys[0] : null;
         onActiveKeyChange(newActiveKey);
     }
   }
@@ -135,7 +184,10 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
             <div className="border-t border-base-300 my-4"></div>
 
             <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">{savedKeysLabel}</h3>
+                 <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-sm font-medium text-gray-300">{savedKeysLabel}</h3>
+                    <button onClick={runAllValidations} className="text-xs font-semibold py-1 px-3 rounded-lg bg-base-300 hover:bg-gray-700">Re-validate All</button>
+                </div>
                  {currentKeys.length > 0 ? (
                     <ul className="space-y-2">
                         {currentKeys.map(key => (
@@ -143,6 +195,7 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
                              key={key}
                              apiKey={key}
                              isActive={key === activeKey}
+                             status={keyStatuses[key] || 'unchecked'}
                              onSelect={() => onActiveKeyChange(key)}
                              onDelete={() => handleDeleteKey(key)}
                            />

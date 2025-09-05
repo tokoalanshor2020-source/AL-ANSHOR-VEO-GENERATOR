@@ -5,9 +5,12 @@ import { ConfirmationModal } from '../ConfirmationModal';
 import { useLocalization } from '../../i18n';
 import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab } from '../../types';
 import { generateStoryboard, generatePublishingKit } from '../../services/storyCreatorService';
+import { FailoverParams } from '../../services/geminiService';
 
 interface StoryCreatorProps {
+    allStoryApiKeys: string[];
     activeStoryApiKey: string | null;
+    onStoryKeyUpdate: (key: string) => void;
     onManageKeysClick: () => void;
     onProceedToVideo: (prompt: string) => void;
     
@@ -35,7 +38,7 @@ interface StoryCreatorProps {
 export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
     const { t } = useLocalization();
     const { 
-        activeStoryApiKey, onManageKeysClick, onProceedToVideo, 
+        allStoryApiKeys, activeStoryApiKey, onStoryKeyUpdate, onManageKeysClick, onProceedToVideo, 
         characters, setCharacters, storyboard, setStoryboard,
         logline, setLogline, scenario, setScenario, sceneCount, setSceneCount,
         directingSettings, setDirectingSettings, onNewStory, publishingKit, setPublishingKit,
@@ -48,6 +51,12 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
 
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmProps, setConfirmProps] = useState({ title: '', message: '', onConfirm: () => {} });
+
+    const getFailoverParams = (): FailoverParams => ({
+        allKeys: allStoryApiKeys,
+        activeKey: activeStoryApiKey,
+        onKeyUpdate: onStoryKeyUpdate,
+    });
 
     const showConfirmation = (title: string, message: string, onConfirm: () => void) => {
         setConfirmProps({ title, message, onConfirm });
@@ -90,7 +99,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         setPublishingKit(null);
 
         try {
-            const scenes = await generateStoryboard(activeStoryApiKey, {
+            const scenes = await generateStoryboard(getFailoverParams(), {
                 logline,
                 scenario,
                 sceneCount,
@@ -108,7 +117,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         } finally {
             setIsGenerating(false);
         }
-    }, [activeStoryApiKey, logline, scenario, sceneCount, characters, directingSettings, onManageKeysClick, t, setStoryboard, setPublishingKit, setActiveTab]);
+    }, [activeStoryApiKey, logline, scenario, sceneCount, characters, directingSettings, onManageKeysClick, t, setStoryboard, setPublishingKit, setActiveTab, allStoryApiKeys, onStoryKeyUpdate]);
 
     const handleGeneratePublishingKit = useCallback(async () => {
         if (!activeStoryApiKey) {
@@ -119,7 +128,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         setIsGeneratingKit(true);
         setError(null);
         try {
-            const kit = await generatePublishingKit(activeStoryApiKey, { storyboard, characters, logline });
+            const kit = await generatePublishingKit(getFailoverParams(), { storyboard, characters, logline });
             setPublishingKit(kit);
             setActiveTab('publishingKit');
         } catch (e) {
@@ -132,7 +141,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             setIsGeneratingKit(false);
         }
 
-    }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit, setActiveTab]);
+    }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit, setActiveTab, allStoryApiKeys, onStoryKeyUpdate]);
 
     return (
         <div className="flex flex-col md:flex-row gap-6">
@@ -144,8 +153,12 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
                 storyboard={storyboard}
                 onGeneratePublishingKit={handleGeneratePublishingKit}
                 isGeneratingKit={isGeneratingKit}
+                // FIX: Pass missing allStoryApiKeys and onStoryKeyUpdate props
+                allStoryApiKeys={allStoryApiKeys}
+                onStoryKeyUpdate={onStoryKeyUpdate}
             />
             <MainContent
+                {...props}
                 logline={logline}
                 setLogline={setLogline}
                 scenario={scenario}

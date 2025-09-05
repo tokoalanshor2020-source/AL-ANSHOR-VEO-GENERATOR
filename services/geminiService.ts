@@ -26,63 +26,132 @@ const makeApiCallWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 3
     throw new Error('errorRateLimit');
 };
 
+const isApiKeyInvalidError = (error: any): boolean => {
+    if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        // Look for common API key error messages from Google AI SDK
+        return message.includes('api key not valid') ||
+               message.includes('permission denied') ||
+               message.includes('api_key_invalid') ||
+               // Also check for generic 400/403 which are often auth related
+               (message.includes('[400') || message.includes('[403'));
+    }
+    return false;
+};
 
-export const generateVideo = async (apiKey: string, options: GeneratorOptions): Promise<string> => {
-    if (!apiKey) {
-        throw new Error("API Key is missing. Please add a valid API key.");
+export const executeWithFailover = async <T>({
+    allKeys,
+    activeKey,
+    onKeyUpdate,
+    apiExecutor,
+}: {
+    allKeys: string[];
+    activeKey: string | null;
+    onKeyUpdate: (newKey: string) => void;
+    apiExecutor: (apiKey: string) => Promise<T>;
+}): Promise<T> => {
+    if (!activeKey || allKeys.length === 0) {
+        throw new Error("No active API key available to make a request.");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const orderedKeys = [
+        activeKey,
+        ...allKeys.filter(k => k !== activeKey && k.trim() !== '')
+    ];
 
-    const augmentedPrompt = `
-      ${options.prompt}
+    let lastError: Error | null = null;
 
-      ---
-      Video generation parameters:
-      - Aspect Ratio: ${options.aspectRatio}
-      - Resolution: ${options.resolution}
-      - Sound: ${options.enableSound ? 'enabled' : 'disabled'}
-    `;
-
-    const requestPayload: any = {
-        model: 'veo-2.0-generate-001',
-        prompt: augmentedPrompt,
-        config: {
-            numberOfVideos: 1,
+    for (const key of orderedKeys) {
+        try {
+            const result = await apiExecutor(key);
+            // Success! If we used a fallback key, update the active key in the app state.
+            if (key !== activeKey) {
+                console.log(`Successfully used fallback key starting with ${key.substring(0, 4)}. Updating active key.`);
+                onKeyUpdate(key);
+            }
+            return result;
+        } catch (error) {
+            if (isApiKeyInvalidError(error)) {
+                console.warn(`API key starting with ${key.substring(0, 4)}... failed, trying next.`);
+                lastError = error as Error;
+                // Continue to the next key in the loop
+            } else {
+                // It's a different kind of error (e.g., rate limit, bad prompt, server error),
+                // so we shouldn't try other keys. Re-throw it.
+                throw error;
+            }
         }
-    };
-
-    if (options.image) {
-        requestPayload.image = {
-            imageBytes: options.image.base64,
-            mimeType: options.image.mimeType,
-        };
-    }
-    
-    let operation = await makeApiCallWithRetry(() => ai.models.generateVideos(requestPayload));
-
-    while (!operation.done) {
-        await delay(10000); // Poll every 10 seconds
-        operation = await makeApiCallWithRetry(() => ai.operations.getVideosOperation({ operation }), 5);
     }
 
-    if (operation.error) {
-        throw new Error(`Video generation failed: ${operation.error.message}`);
-    }
+    // If the loop completes, all keys have failed.
+    throw new Error(`All available API keys failed. Last error: ${lastError?.message || 'Unknown error'}`);
+};
 
-    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+export interface FailoverParams {
+    allKeys: string[];
+    activeKey: string | null;
+    onKeyUpdate: (newKey: string) => void;
+}
 
-    if (!downloadLink) {
-        throw new Error("Video generation completed, but no download link was found.");
-    }
-    
-    const videoResponse = await fetch(`${downloadLink}&key=${apiKey}`);
-    if (!videoResponse.ok) {
-        const errorBody = await videoResponse.text();
-        throw new Error(`Failed to fetch video from URI. Status: ${videoResponse.statusText}. Body: ${errorBody}`);
-    }
+export const generateVideo = async ({ allKeys, activeKey, onKeyUpdate, options }: FailoverParams & { options: GeneratorOptions }): Promise<string> => {
+     return executeWithFailover({
+        allKeys,
+        activeKey,
+        onKeyUpdate,
+        apiExecutor: async (apiKey) => {
+            const ai = new GoogleGenAI({ apiKey });
 
-    const videoBlob = await videoResponse.blob();
-    
-    return URL.createObjectURL(videoBlob);
+            const augmentedPrompt = `
+              ${options.prompt}
+        
+              ---
+              Video generation parameters:
+              - Aspect Ratio: ${options.aspectRatio}
+              - Resolution: ${options.resolution}
+              - Sound: ${options.enableSound ? 'enabled' : 'disabled'}
+            `;
+        
+            const requestPayload: any = {
+                model: 'veo-2.0-generate-001',
+                prompt: augmentedPrompt,
+                config: {
+                    numberOfVideos: 1,
+                }
+            };
+        
+            if (options.image) {
+                requestPayload.image = {
+                    imageBytes: options.image.base64,
+                    mimeType: options.image.mimeType,
+                };
+            }
+            
+            let operation = await makeApiCallWithRetry(() => ai.models.generateVideos(requestPayload));
+        
+            while (!operation.done) {
+                await delay(10000); // Poll every 10 seconds
+                operation = await makeApiCallWithRetry(() => ai.operations.getVideosOperation({ operation }), 5);
+            }
+        
+            if (operation.error) {
+                throw new Error(`Video generation failed: ${operation.error.message}`);
+            }
+        
+            const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+        
+            if (!downloadLink) {
+                throw new Error("Video generation completed, but no download link was found.");
+            }
+            
+            const videoResponse = await fetch(`${downloadLink}&key=${apiKey}`);
+            if (!videoResponse.ok) {
+                const errorBody = await videoResponse.text();
+                throw new Error(`Failed to fetch video from URI. Status: ${videoResponse.statusText}. Body: ${errorBody}`);
+            }
+        
+            const videoBlob = await videoResponse.blob();
+            
+            return URL.createObjectURL(videoBlob);
+        }
+    });
 };

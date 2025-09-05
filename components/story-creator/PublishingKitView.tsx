@@ -2,10 +2,10 @@ import React, { useState, useCallback, useEffect } from 'react';
 import type { PublishingKitData, Character, StoryboardScene } from '../../types';
 import { useLocalization, Language, languageMap } from '../../i18n';
 import { generateLocalizedPublishingAssets, generateThumbnail, createImageWithOverlay } from '../../services/storyCreatorService';
+import { FailoverParams } from '../../services/geminiService';
 
-interface PublishingKitViewProps {
+interface PublishingKitViewProps extends FailoverParams {
     kitData: PublishingKitData;
-    activeApiKey: string | null;
     characters: Character[];
     storyboard: StoryboardScene[];
     logline: string;
@@ -46,7 +46,7 @@ const AspectRatioSelector: React.FC<{ selected: string; onChange: (value: string
     );
 };
 
-export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, activeApiKey, characters, storyboard, logline }) => {
+export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, activeKey, allKeys, onKeyUpdate, characters, storyboard, logline }) => {
     const { language, t } = useLocalization();
     
     const [assets, setAssets] = useState<{ [key: string]: LocalizedAsset }>({});
@@ -59,6 +59,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     const [thumbImageUrl, setThumbImageUrl] = useState<string | null>(null);
     const [aspectRatio, setAspectRatio] = useState<string>('16:9');
 
+    const failoverParams: FailoverParams = { allKeys, activeKey, onKeyUpdate };
 
     useEffect(() => {
         const initialAssets: { [key: string]: LocalizedAsset } = {
@@ -96,12 +97,12 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     }, [selectedLang]);
 
     const generateLocalizedAssets = useCallback(async (langToGen: Language) => {
-        if (!assets[langToGen] && activeApiKey) {
+        if (!assets[langToGen] && activeKey) {
             setIsGenerating(true);
             setError(null);
             try {
                 const result = await generateLocalizedPublishingAssets(
-                    activeApiKey,
+                    failoverParams,
                     { storyboard, characters, logline },
                     languageMap[langToGen]
                 );
@@ -114,7 +115,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                 setIsGenerating(false);
             }
         }
-    }, [activeApiKey, assets, characters, logline, storyboard, t]);
+    }, [activeKey, assets, characters, logline, storyboard, t, failoverParams]);
 
     useEffect(() => {
         if (debouncedLang !== language || !assets[debouncedLang]) {
@@ -156,14 +157,14 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     };
     
      const handleGenerateThumbnail = async (prompt: string) => {
-        if (!activeApiKey) return;
+        if (!activeKey) return;
         
         const ctaText = assets[selectedLang]?.ctaTexts[0] || "WATCH NOW";
         setIsGeneratingThumb(true);
         setError(null);
         
         try {
-            const imageData = await generateThumbnail(activeApiKey, prompt, aspectRatio);
+            const imageData = await generateThumbnail(failoverParams, prompt, aspectRatio);
             const finalImage = await createImageWithOverlay(imageData, ctaText);
             setThumbImageUrl(finalImage);
         } catch (e) {

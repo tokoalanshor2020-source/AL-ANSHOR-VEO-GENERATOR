@@ -112,7 +112,7 @@ export default function App() {
     localStorage.setItem(STORY_API_KEYS_STORAGE_KEY, JSON.stringify(keys));
   };
 
-  const handleSetActiveStoryApiKey = (key: string | null) => {
+  const handleSetActiveStoryApiKey = useCallback((key: string | null) => {
     setActiveStoryApiKey(key);
     if (key) {
       localStorage.setItem(ACTIVE_STORY_API_KEY_STORAGE_KEY, key);
@@ -120,14 +120,14 @@ export default function App() {
       localStorage.removeItem(ACTIVE_STORY_API_KEY_STORAGE_KEY);
     }
     if(key) setKeyManagerConfig(null)
-  };
+  }, []);
 
   const handleSetVideoApiKeys = (keys: string[]) => {
     setVideoApiKeys(keys);
     localStorage.setItem(VIDEO_API_KEYS_STORAGE_KEY, JSON.stringify(keys));
   };
 
-  const handleSetActiveVideoApiKey = (key: string | null) => {
+  const handleSetActiveVideoApiKey = useCallback((key: string | null) => {
     setActiveVideoApiKey(key);
     if (key) {
       localStorage.setItem(ACTIVE_VIDEO_API_KEY_STORAGE_KEY, key);
@@ -135,7 +135,7 @@ export default function App() {
       localStorage.removeItem(ACTIVE_VIDEO_API_KEY_STORAGE_KEY);
     }
      if(key) setKeyManagerConfig(null)
-  };
+  }, []);
 
   const handleGenerateVideo = useCallback(async (options: GeneratorOptions) => {
     if (!activeVideoApiKey) {
@@ -150,7 +150,12 @@ export default function App() {
     setPromptForVideo(options.prompt);
 
     try {
-      const url = await generateVideo(activeVideoApiKey, options);
+      const url = await generateVideo({
+        allKeys: videoApiKeys,
+        activeKey: activeVideoApiKey,
+        onKeyUpdate: handleSetActiveVideoApiKey,
+        options: options,
+      });
       setVideoUrl(url);
     } catch (e) {
       console.error(e);
@@ -160,7 +165,7 @@ export default function App() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeVideoApiKey, t]);
+  }, [activeVideoApiKey, videoApiKeys, handleSetActiveVideoApiKey, t]);
   
   const handleProceedToVideoGenerator = (prompt: string) => {
     setPromptForVideo(prompt);
@@ -223,7 +228,9 @@ export default function App() {
       <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
         {view === 'story-creator' && (
            <StoryCreator
+              allStoryApiKeys={storyApiKeys}
               activeStoryApiKey={activeStoryApiKey}
+              onStoryKeyUpdate={handleSetActiveStoryApiKey}
               onManageKeysClick={() => setKeyManagerConfig({ type: 'story' })}
               onProceedToVideo={handleProceedToVideoGenerator}
               characters={characters}

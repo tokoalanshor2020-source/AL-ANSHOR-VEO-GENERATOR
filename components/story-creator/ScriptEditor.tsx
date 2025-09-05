@@ -7,6 +7,8 @@ import type { Character, StoryIdea, DirectingSettings } from '../../types';
 
 
 interface ScriptEditorProps {
+    allStoryApiKeys: string[];
+    onStoryKeyUpdate: (key: string) => void;
     logline: string;
     setLogline: (value: string) => void;
     scenario: string;
@@ -102,7 +104,9 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     onClose={() => setIsDirectorBridgeOpen(false)}
                     onApplyIdea={handleApplyIdea}
                     characters={props.characters}
+                    allApiKeys={props.allStoryApiKeys}
                     activeApiKey={props.activeApiKey}
+                    onKeyUpdate={props.onStoryKeyUpdate}
                 />
             )}
         </div>

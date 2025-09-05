@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { useLocalization } from '../../i18n';
-// FIX: The StoryIdea type was imported from the wrong module. It is defined in `types.ts`.
 import type { Character, StoryIdea } from '../../types';
 import { generateStoryIdeas } from '../../services/storyCreatorService';
 import { XCircleIcon } from '../icons/XCircleIcon';
+import { FailoverParams } from '../../services/geminiService';
 
 interface DirectorBridgeModalProps {
     isOpen: boolean;
     onClose: () => void;
     onApplyIdea: (idea: StoryIdea) => void;
     characters: Character[];
+    allApiKeys: string[];
     activeApiKey: string | null;
+    onKeyUpdate: (key: string) => void;
 }
 
-export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen, onClose, onApplyIdea, characters, activeApiKey }) => {
+export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen, onClose, onApplyIdea, characters, allApiKeys, activeApiKey, onKeyUpdate }) => {
     const { t } = useLocalization();
     const [step, setStep] = useState(1);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -45,6 +47,11 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         }
     };
 
+    const getFailoverParams = (): FailoverParams => ({
+        allKeys: allApiKeys,
+        activeKey: activeApiKey,
+        onKeyUpdate: onKeyUpdate,
+    });
 
     const handleGenerateIdeas = async () => {
         if (!activeApiKey) return;
@@ -52,7 +59,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         setIdeas([]);
         setSelectedIdea(null);
         try {
-            const generatedIdeas = await generateStoryIdeas(activeApiKey, {
+            const generatedIdeas = await generateStoryIdeas(getFailoverParams(), {
                 contentFormat,
                 characterNames: selectedCharacterNames,
                 theme: theme === 'custom_theme' ? customTheme : theme,

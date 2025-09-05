@@ -8,6 +8,10 @@ import type { Character, DirectingSettings, StoryboardScene, PublishingKitData }
 type ActiveTab = 'editor' | 'storyboard' | 'publishingKit';
 
 interface MainContentProps {
+    allStoryApiKeys: string[];
+    activeStoryApiKey: string | null;
+    onStoryKeyUpdate: (key: string) => void;
+
     logline: string;
     setLogline: (value: string) => void;
     scenario: string;
@@ -50,8 +54,21 @@ export const MainContent: React.FC<MainContentProps> = ({ activeTab, setActiveTa
             </div>
             
             {activeTab === 'editor' && <ScriptEditor {...props} />}
-            {activeTab === 'storyboard' && <Storyboard {...props} />}
-            {activeTab === 'publishingKit' && publishingKit && <PublishingKitView kitData={publishingKit} activeApiKey={props.activeApiKey} characters={props.characters} storyboard={props.storyboard} logline={props.logline} />}
+            {/* FIX: Pass failover props with correct names (allKeys, activeKey) to Storyboard */}
+            {activeTab === 'storyboard' && <Storyboard
+                {...props}
+                allKeys={props.allStoryApiKeys}
+                activeKey={props.activeStoryApiKey}
+                onKeyUpdate={props.onStoryKeyUpdate}
+            />}
+            {/* FIX: Pass failover props with correct names (allKeys, activeKey) to PublishingKitView */}
+            {activeTab === 'publishingKit' && publishingKit && <PublishingKitView
+                kitData={publishingKit}
+                {...props}
+                allKeys={props.allStoryApiKeys}
+                activeKey={props.activeStoryApiKey}
+                onKeyUpdate={props.onStoryKeyUpdate}
+            />}
         </main>
     );
 };

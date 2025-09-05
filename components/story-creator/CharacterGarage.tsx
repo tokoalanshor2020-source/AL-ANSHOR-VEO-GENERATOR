@@ -9,9 +9,11 @@ interface CharacterGarageProps {
     characters: Character[];
     setCharacters: React.Dispatch<React.SetStateAction<Character[]>>;
     activeApiKey: string | null;
+    allStoryApiKeys: string[];
+    onStoryKeyUpdate: (key: string) => void;
 }
 
-export const CharacterGarage: React.FC<CharacterGarageProps> = ({ characters, setCharacters, activeApiKey }) => {
+export const CharacterGarage: React.FC<CharacterGarageProps> = ({ characters, setCharacters, activeApiKey, allStoryApiKeys, onStoryKeyUpdate }) => {
     const { t } = useLocalization();
     const [isWorkshopOpen, setIsWorkshopOpen] = useState(false);
     const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
@@ -85,6 +87,8 @@ export const CharacterGarage: React.FC<CharacterGarageProps> = ({ characters, se
                     onSave={handleSaveCharacter}
                     initialCharacter={editingCharacter}
                     activeApiKey={activeApiKey}
+                    allStoryApiKeys={allStoryApiKeys}
+                    onStoryKeyUpdate={onStoryKeyUpdate}
                 />
             )}
         </div>
