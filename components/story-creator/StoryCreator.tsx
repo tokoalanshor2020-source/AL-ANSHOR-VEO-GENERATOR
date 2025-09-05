@@ -144,7 +144,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
     }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit, setActiveTab, allStoryApiKeys, onStoryKeyUpdate]);
 
     return (
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col md:flex-row gap-6 md:items-start">
             <Sidebar
                 characters={characters}
                 setCharacters={setCharacters}

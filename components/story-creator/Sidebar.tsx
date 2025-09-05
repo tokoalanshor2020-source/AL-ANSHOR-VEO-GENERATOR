@@ -19,7 +19,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = (props) => {
     const { t } = useLocalization();
     return (
-        <aside className="w-full md:w-1/3 lg:w-1/4 space-y-6 flex-shrink-0">
+        <aside className="w-full md:w-1/3 lg:w-1/4 space-y-6 flex-shrink-0 md:sticky md:top-28 md:self-start md:max-h-[calc(100vh-8rem)] md:overflow-y-auto pr-2 pb-6">
              <button 
                 onClick={props.onNewStory}
                 className="w-full bg-brand-primary hover:bg-brand-dark text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors"
