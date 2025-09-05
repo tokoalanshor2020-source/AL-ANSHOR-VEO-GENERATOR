@@ -3,6 +3,30 @@ import type { GeneratorOptions } from '../types';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const makeApiCallWithRetry = async <T>(apiCall: () => Promise<T>, maxRetries = 3): Promise<T> => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            return await apiCall();
+        } catch (error) {
+            if (error instanceof Error && (error.message.includes('429') || error.message.includes('RESOURCE_EXHAUSTED'))) {
+                if (attempt === maxRetries - 1) {
+                    // Last attempt failed, throw a user-friendly error
+                    throw new Error('errorRateLimit');
+                }
+                const delayTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                console.warn(`Rate limit hit. Retrying in ${delayTime.toFixed(0)}ms... (Attempt ${attempt + 1}/${maxRetries})`);
+                await delay(delayTime);
+            } else {
+                // Not a rate limit error, fail immediately
+                throw error;
+            }
+        }
+    }
+    // This part should be unreachable, but typescript needs a return path.
+    throw new Error('errorRateLimit');
+};
+
+
 export const generateVideo = async (apiKey: string, options: GeneratorOptions): Promise<string> => {
     if (!apiKey) {
         throw new Error("API Key is missing. Please add a valid API key.");
@@ -35,11 +59,11 @@ export const generateVideo = async (apiKey: string, options: GeneratorOptions): 
         };
     }
     
-    let operation = await ai.models.generateVideos(requestPayload);
+    let operation = await makeApiCallWithRetry(() => ai.models.generateVideos(requestPayload));
 
     while (!operation.done) {
         await delay(10000); // Poll every 10 seconds
-        operation = await ai.operations.getVideosOperation({ operation });
+        operation = await makeApiCallWithRetry(() => ai.operations.getVideosOperation({ operation }), 5);
     }
 
     if (operation.error) {

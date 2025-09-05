@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useLocalization } from '../../i18n';
 import { MagicWandIcon } from '../icons/MagicWandIcon';
 import { DirectorBridgeModal } from './DirectorBridgeModal';
-// FIX: The StoryIdea type was imported from the wrong module. It is defined in `types.ts`.
-import type { Character, StoryIdea } from '../../types';
+import { DirectingDesk } from './DirectingDesk';
+import type { Character, StoryIdea, DirectingSettings } from '../../types';
 
 
 interface ScriptEditorProps {
@@ -17,6 +17,8 @@ interface ScriptEditorProps {
     onGenerateStoryboard: () => void;
     characters: Character[];
     activeApiKey: string | null;
+    directingSettings: DirectingSettings;
+    setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
 }
 
 export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
@@ -68,6 +70,8 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-gray-200"
                 ></textarea>
             </div>
+            
+            <DirectingDesk settings={props.directingSettings} setSettings={props.setDirectingSettings} />
             
              <div>
                 <label htmlFor="sceneCount" className="block mb-2 text-sm font-semibold text-gray-300">{t('storyCreator.sceneCount')}</label>

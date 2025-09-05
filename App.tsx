@@ -154,7 +154,9 @@ export default function App() {
       setVideoUrl(url);
     } catch (e) {
       console.error(e);
-      setError(e instanceof Error ? e.message : 'An unknown error occurred.');
+      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      const displayError = errorMessage === 'errorRateLimit' ? t('errorRateLimit') : errorMessage;
+      setError(displayError as string);
     } finally {
       setIsLoading(false);
     }

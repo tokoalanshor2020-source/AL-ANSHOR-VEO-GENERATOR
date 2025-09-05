@@ -1,15 +1,12 @@
 import React from 'react';
 import { CharacterGarage } from './CharacterGarage';
-import { DirectingDesk } from './DirectingDesk';
 import { PublishingKitSection } from './PublishingKitSection';
-import type { Character, DirectingSettings, StoryboardScene } from '../../types';
+import type { Character, StoryboardScene } from '../../types';
 import { useLocalization } from '../../i18n';
 
 interface SidebarProps {
     characters: Character[];
     setCharacters: React.Dispatch<React.SetStateAction<Character[]>>;
-    directingSettings: DirectingSettings;
-    setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
     onNewStory: () => void;
     activeApiKey: string | null;
     storyboard: StoryboardScene[];
@@ -31,10 +28,6 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                 characters={props.characters}
                 setCharacters={props.setCharacters}
                 activeApiKey={props.activeApiKey}
-            />
-            <DirectingDesk
-                settings={props.directingSettings}
-                setSettings={props.setDirectingSettings}
             />
             <PublishingKitSection 
                 storyboard={props.storyboard}

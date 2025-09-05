@@ -38,7 +38,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         activeStoryApiKey, onManageKeysClick, onProceedToVideo, 
         characters, setCharacters, storyboard, setStoryboard,
         logline, setLogline, scenario, setScenario, sceneCount, setSceneCount,
-        directingSettings, onNewStory, publishingKit, setPublishingKit,
+        directingSettings, setDirectingSettings, onNewStory, publishingKit, setPublishingKit,
         activeTab, setActiveTab
     } = props;
 
@@ -101,7 +101,9 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             setActiveTab('storyboard'); 
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : 'An unknown error occurred');
+            const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+            const displayError = errorMessage === 'errorRateLimit' ? t('errorRateLimit') : errorMessage;
+            setError(displayError as string);
             setActiveTab('storyboard');
         } finally {
             setIsGenerating(false);
@@ -122,7 +124,9 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             setActiveTab('publishingKit');
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : 'An unknown error occurred');
+            const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
+            const displayError = errorMessage === 'errorRateLimit' ? t('errorRateLimit') : errorMessage;
+            setError(displayError as string);
             setActiveTab('publishingKit');
         } finally {
             setIsGeneratingKit(false);
@@ -135,8 +139,6 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             <Sidebar
                 characters={characters}
                 setCharacters={setCharacters}
-                directingSettings={props.directingSettings}
-                setDirectingSettings={props.setDirectingSettings}
                 onNewStory={handleNewStoryClick}
                 activeApiKey={activeStoryApiKey}
                 storyboard={storyboard}
@@ -158,6 +160,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
                 activeApiKey={activeStoryApiKey}
                 characters={characters}
                 directingSettings={directingSettings}
+                setDirectingSettings={setDirectingSettings}
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 onUpdateScene={props.onUpdateScene}

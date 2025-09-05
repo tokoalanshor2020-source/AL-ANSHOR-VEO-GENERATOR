@@ -41,6 +41,27 @@ interface ThumbnailData {
     mimeType: string;
 }
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const makeGenerativeApiCall = async <T>(apiCall: () => Promise<T>, maxRetries = 3): Promise<T> => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            return await apiCall();
+        } catch (error) {
+             if (error instanceof Error && (error.message.includes('429') || error.message.includes('RESOURCE_EXHAUSTED'))) {
+                if (attempt === maxRetries - 1) {
+                    throw new Error('errorRateLimit');
+                }
+                const delayTime = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                console.warn(`Rate limit hit. Retrying in ${delayTime.toFixed(0)}ms... (Attempt ${attempt + 1}/${maxRetries})`);
+                await delay(delayTime);
+            } else {
+                throw error;
+            }
+        }
+    }
+    throw new Error('errorRateLimit');
+};
 
 const getAiInstance = (apiKey: string) => new GoogleGenAI({ apiKey });
 
@@ -149,14 +170,14 @@ export const generateStoryboard = async (apiKey: string, options: StoryboardOpti
 
     Untuk SETIAP adegan, buat objek JSON yang detail sesuai skema.`;
 
-    const response = await ai.models.generateContent({
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             responseMimeType: "application/json",
             responseSchema: storyboardSchema
         }
-    });
+    }));
 
     const parsedResult = safeJsonParse(response.text);
     return parsedResult.storyboard || [];
@@ -207,7 +228,7 @@ export const generateBlueprintPrompt = async (apiKey: string, sceneData: Storybo
     //** 6. NEGATIVE PROMPT **//
     NEGATIVE_PROMPT: [animation, 3d render, cgi, cartoon, illustration, painting, drawing, art, video game, unreal engine, octane render, blender render, digital art, perfect, clean, smooth, glossy, inconsistent character, changing model]`;
     
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
     return response.text;
 };
 
@@ -244,7 +265,7 @@ export const generateCinematicPrompt = async (apiKey: string, sceneData: Storybo
     
     Synthesize now.`;
     
-    const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
     return response.text;
 };
 
@@ -287,14 +308,14 @@ export const developCharacter = async (apiKey: string, options: CharacterDevelop
         requestParts.unshift(imagePart);
     }
 
-    const response = await ai.models.generateContent({
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: { parts: requestParts },
         config: {
             responseMimeType: "application/json",
             responseSchema: schema
         }
-    });
+    }));
 
     return safeJsonParse(response.text);
 };
@@ -312,14 +333,14 @@ export const generateActionDna = async (apiKey: string, characterData: Developed
         required: ["action_dna"]
     };
     
-    const response = await ai.models.generateContent({
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             responseMimeType: "application/json",
             responseSchema: schema
         }
-    });
+    }));
     
     const parsed = safeJsonParse(response.text);
     return parsed.action_dna || [];
@@ -359,14 +380,14 @@ export const generateStoryIdeas = async (apiKey: string, options: StoryIdeaOptio
         required: ["ideas"]
     };
 
-    const response = await ai.models.generateContent({
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             responseMimeType: "application/json",
             responseSchema: schema
         }
-    });
+    }));
 
     const parsedResult = safeJsonParse(response.text);
     return parsedResult.ideas || [];
@@ -414,7 +435,9 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
     const { storyboard, characters, logline } = options;
 
     const fullStoryNarration = storyboard.map(scene => scene.sound_design.narration_script).filter(Boolean).join('\n\n');
-    const characterInfo = characters.map(c => c.name).join(', ');
+    const characterInfo = characters.length > 0
+        ? `Karakter utama dalam cerita ini adalah: ${characters.map(c => `Nama: ${c.name}, ID Konsistensi: ${c.consistency_key}, Deskripsi Detail: ${c.designLanguage}, Fitur Kunci: ${c.keyFeatures.join(', ')}, Material: ${c.material}`).join('; ')}.`
+        : "Tidak ada karakter spesifik yang dipilih.";
     const primaryCharacter = characters.length > 0 ? characters[0].name : "mainan ini";
 
     const prompt = `Anda adalah seorang ahli strategi konten YouTube dan pakar SEO viral. Berdasarkan data cerita berikut, buatlah "Kit Siaran Ajaib" yang dioptimalkan secara maksimal untuk kesuksesan algoritma dan skor tertinggi di VidIQ & TubeBuddy.
@@ -423,7 +446,7 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
     - Naskah Narasi Lengkap: ${fullStoryNarration}
     - Judul Asli Cerita: "${logline}"
     - Karakter Utama: "${primaryCharacter}"
-    - Semua Karakter dalam Cerita: "${characterInfo}"
+    - Semua Karakter dalam Cerita (DNA Digital): "${characterInfo}"
     
     ---
 
@@ -454,28 +477,111 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
     - Buat objek dengan 'primary_character_template' dan 'all_characters_template'. Gunakan placeholder [MASUKKAN LINK ANDA DI SINI].
 
     **5. Konsep Thumbnail (thumbnail_concepts):**
-    - Buat array berisi DUA konsep thumbnail.
-    - Setiap konsep harus memiliki 'concept_title_id', 'concept_title_en', 'concept_description_id', 'concept_description_en', 'image_prompt' (prompt detail dalam Bahasa Inggris untuk AI gambar), 'cta_overlay_text_id', dan 'cta_overlay_text_en'. Semua field *_id harus dalam Bahasa Indonesia, dan semua field *_en harus dalam Bahasa Inggris.
-    - 'cta_overlay_text' harus berupa teks singkat yang menarik perhatian (misal, "TONTON SEKARANG!", "JANGAN LEWATKAN!").`;
+    - Buat array berisi SATU konsep thumbnail yang paling kuat.
+    - **Untuk 'image_prompt' (SANGAT PENTING):**
+        - Anda adalah seorang "Visual Prompt Engineer" ahli untuk model AI gambar seperti Imagen.
+        - Prompt HARUS dalam Bahasa Inggris dan sangat detail.
+        - **Sintesiskan SEMUA data yang tersedia:** Judul YouTube yang baru Anda buat, Naskah Narasi Lengkap, dan yang terpenting, DNA Digital Karakter (termasuk 'ID Konsistensi' dan deskripsi visualnya).
+        - Prompt harus menggambarkan adegan paling dramatis atau klimaks dari cerita. Jelaskan aksi karakter, ekspresi wajah, lingkungan, pencahayaan sinematik yang dramatis, palet warna yang hidup, dan gaya visual (misalnya, ultra-realistis, 4K, detail tinggi, blur gerakan untuk aksi).
+        - **Struktur wajib:** Mulai dengan deskripsi adegan, lalu deskripsi karakter yang SANGAT detail dengan merujuk pada 'ID Konsistensi' mereka, diikuti oleh detail latar belakang dan pencahayaan.
+    - Untuk field lainnya (\`concept_title\`, \`concept_description\`, \`cta_overlay_text\`), buat versi Bahasa Indonesia (\`_id\`) dan Inggris (\`_en\`). 'cta_overlay_text' harus singkat dan menarik.`;
     
-     const response = await ai.models.generateContent({
+     const response = await makeGenerativeApiCall(() => ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
         config: {
             responseMimeType: "application/json",
             responseSchema: publishingKitSchema
         }
-    });
+    }));
 
     return safeJsonParse(response.text);
 };
+
+export interface LocalizedAssets {
+    title: string;
+    description: string;
+    tags: string[];
+    ctaTexts: string[];
+}
+
+export const generateLocalizedPublishingAssets = async (apiKey: string, options: PublishingKitOptions, targetLanguageName: string): Promise<LocalizedAssets> => {
+    const ai = getAiInstance(apiKey);
+    const { storyboard, characters, logline } = options;
+
+    const fullStoryNarration = storyboard.map(scene => scene.sound_design.narration_script).filter(Boolean).join('\n\n');
+    const characterInfo = characters.map(c => c.name).join(', ');
+    const numConcepts = 1;
+
+    const prompt = `You are a world-class YouTube content strategist and a native **${targetLanguageName}** speaker. Your task is to generate a complete, hyper-optimized YouTube publishing kit from scratch in **${targetLanguageName}**, tailored for the algorithm and audience in that region.
+
+    **Source Data:**
+    - Story Logline: "${logline}"
+    - Main Characters: "${characterInfo}"
+    - Full Story Narration: ${fullStoryNarration}
+    
+    ---
+
+    **YOUR TASK: Generate the following assets in a single JSON object. ALL text output MUST be in ${targetLanguageName}.**
+
+    **1. YouTube Title (key: "title"):**
+    - **Criteria:**
+        - Must be in **${targetLanguageName}**.
+        - Maximum 100 characters.
+        - Must contain a powerful, controversial, or intriguing hook to maximize clicks.
+        - Must be heavily optimized with SEO keywords relevant to the **${targetLanguageName}**-speaking audience.
+        - Aim for the highest possible score on VidIQ and TubeBuddy for that region.
+
+    **2. YouTube Description (key: "description"):**
+    - **Criteria:**
+        - Must be in **${targetLanguageName}**.
+        - Maximum 5000 characters.
+        - Must be rich with relevant SEO keywords and hashtags (#) that are trending in the target region.
+        - Include a compelling summary of the story.
+        - Include timestamps for key moments.
+
+    **3. YouTube Tags (key: "tags"):**
+    - **Criteria:**
+        - Must be a JSON array of strings in **${targetLanguageName}**.
+        - Total combined character length must not exceed 500 characters.
+        - Must include a mix of high-volume and low-competition long-tail and short-tail keywords for the target region's algorithm.
+
+    **4. Thumbnail CTA Texts (key: "ctaTexts"):**
+     - **Criteria:**
+        - Must be a JSON array of strings in **${targetLanguageName}**.
+        - Generate exactly ${numConcepts} short, high-impact call-to-action texts (e.g., "WATCH NOW!", "SHOCKING!").
+    `;
+    
+    const schema = {
+        type: Type.OBJECT,
+        properties: {
+            title: { type: Type.STRING },
+            description: { type: Type.STRING },
+            tags: { type: Type.ARRAY, items: { type: Type.STRING } },
+            ctaTexts: { type: Type.ARRAY, items: { type: Type.STRING } },
+        },
+        required: ["title", "description", "tags", "ctaTexts"]
+    };
+
+    const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: "application/json",
+            responseSchema: schema
+        }
+    }));
+
+    return safeJsonParse(response.text);
+};
+
 
 export const generateThumbnail = async (apiKey: string, prompt: string, aspectRatio: string): Promise<ThumbnailData> => {
     const ai = getAiInstance(apiKey);
     
     const fullPrompt = `Create a visually stunning and eye-catching YouTube thumbnail. The image must be vibrant, high-contrast, cinematic, and emotionally engaging, perfectly representing this scene: ${prompt}`;
 
-    const response = await ai.models.generateImages({
+    const response = await makeGenerativeApiCall(() => ai.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: fullPrompt,
         config: {
@@ -483,7 +589,7 @@ export const generateThumbnail = async (apiKey: string, prompt: string, aspectRa
           outputMimeType: 'image/png',
           aspectRatio: aspectRatio as "1:1" | "3:4" | "4:3" | "9:16" | "16:9",
         },
-    });
+    }));
 
     if (!response.generatedImages || response.generatedImages.length === 0) {
         throw new Error("Image generation failed. The model returned no candidates.");

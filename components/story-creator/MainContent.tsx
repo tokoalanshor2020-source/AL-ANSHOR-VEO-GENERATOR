@@ -22,6 +22,7 @@ interface MainContentProps {
     activeApiKey: string | null;
     characters: Character[];
     directingSettings: DirectingSettings;
+    setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
     activeTab: ActiveTab;
     setActiveTab: (tab: ActiveTab) => void;
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
@@ -50,7 +51,7 @@ export const MainContent: React.FC<MainContentProps> = ({ activeTab, setActiveTa
             
             {activeTab === 'editor' && <ScriptEditor {...props} />}
             {activeTab === 'storyboard' && <Storyboard {...props} />}
-            {activeTab === 'publishingKit' && publishingKit && <PublishingKitView kitData={publishingKit} activeApiKey={props.activeApiKey} />}
+            {activeTab === 'publishingKit' && publishingKit && <PublishingKitView kitData={publishingKit} activeApiKey={props.activeApiKey} characters={props.characters} storyboard={props.storyboard} logline={props.logline} />}
         </main>
     );
 };
