@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData } from '../types';
 
 interface StoryboardOptions {
@@ -394,12 +394,15 @@ const publishingKitSchema = {
             items: {
                 type: Type.OBJECT,
                 properties: {
-                    concept_title: { type: Type.STRING },
-                    concept_description: { type: Type.STRING },
+                    concept_title_id: { type: Type.STRING },
+                    concept_title_en: { type: Type.STRING },
+                    concept_description_id: { type: Type.STRING },
+                    concept_description_en: { type: Type.STRING },
                     image_prompt: { type: Type.STRING },
-                    cta_overlay_text: { type: Type.STRING }
+                    cta_overlay_text_id: { type: Type.STRING },
+                    cta_overlay_text_en: { type: Type.STRING },
                 },
-                required: ["concept_title", "concept_description", "image_prompt", "cta_overlay_text"]
+                required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "cta_overlay_text_id", "cta_overlay_text_en"]
             }
         }
     },
@@ -452,7 +455,8 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
 
     **5. Konsep Thumbnail (thumbnail_concepts):**
     - Buat array berisi DUA konsep thumbnail.
-    - Setiap konsep harus memiliki 'concept_title', 'concept_description', 'image_prompt' (prompt detail dalam Bahasa Inggris untuk AI gambar), dan 'cta_overlay_text' (contoh teks yang menarik perhatian seperti "TONTON SEKARANG!").`;
+    - Setiap konsep harus memiliki 'concept_title_id', 'concept_title_en', 'concept_description_id', 'concept_description_en', 'image_prompt' (prompt detail dalam Bahasa Inggris untuk AI gambar), 'cta_overlay_text_id', dan 'cta_overlay_text_en'. Semua field *_id harus dalam Bahasa Indonesia, dan semua field *_en harus dalam Bahasa Inggris.
+    - 'cta_overlay_text' harus berupa teks singkat yang menarik perhatian (misal, "TONTON SEKARANG!", "JANGAN LEWATKAN!").`;
     
      const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -466,49 +470,35 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
     return safeJsonParse(response.text);
 };
 
-export const generateThumbnail = async (apiKey: string, prompt: string): Promise<ThumbnailData> => {
+export const generateThumbnail = async (apiKey: string, prompt: string, aspectRatio: string): Promise<ThumbnailData> => {
     const ai = getAiInstance(apiKey);
     
-    // Add a clearer instruction to the AI.
-    const fullPrompt = `Generate a YouTube thumbnail image based on the following description. The image should be vibrant, high-contrast, and suitable for a video thumbnail. Description: ${prompt}`;
+    const fullPrompt = `Create a visually stunning and eye-catching YouTube thumbnail. The image must be vibrant, high-contrast, cinematic, and emotionally engaging, perfectly representing this scene: ${prompt}`;
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents: {
-            parts: [{ text: fullPrompt }],
-        },
+    const response = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: fullPrompt,
         config: {
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
+          numberOfImages: 1,
+          outputMimeType: 'image/png',
+          aspectRatio: aspectRatio as "1:1" | "3:4" | "4:3" | "9:16" | "16:9",
         },
     });
 
-    if (response.promptFeedback?.blockReason) {
-        throw new Error(`Prompt was blocked by safety settings: ${response.promptFeedback.blockReason}`);
+    if (!response.generatedImages || response.generatedImages.length === 0) {
+        throw new Error("Image generation failed. The model returned no candidates.");
     }
 
-    if (!response.candidates || response.candidates.length === 0) {
-        throw new Error("Image generation failed. The model returned no candidates, possibly due to the safety policy.");
-    }
-
-    let textResponse = '';
-    for (const part of response.candidates[0].content.parts) {
-        if (part.text) {
-            textResponse += part.text;
-        }
-        if (part.inlineData?.data && part.inlineData?.mimeType) {
-            return {
-                base64: part.inlineData.data,
-                mimeType: part.inlineData.mimeType,
-            };
-        }
-    }
+    const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
     
-    // If we're here, no image was found. Check if the model gave a text explanation.
-    if (textResponse) {
-        throw new Error(`Image generation failed. The model responded with text: "${textResponse}"`);
+    if (!base64ImageBytes) {
+        throw new Error("Image generation succeeded but no image data was returned.");
     }
 
-    throw new Error("Image generation succeeded but no image data was returned in the response parts.");
+    return {
+        base64: base64ImageBytes,
+        mimeType: 'image/png',
+    };
 };
 
 
@@ -520,25 +510,33 @@ export const createImageWithOverlay = (imageData: ThumbnailData, text: string): 
 
         const img = new Image();
         img.onload = () => {
-            canvas.width = 1280;
-            canvas.height = 720;
-            ctx.drawImage(img, 0, 0, 1280, 720);
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+            
+            const baseWidth = 1280;
+            const scaleFactor = canvas.width / baseWidth;
+            const fontSize = Math.max(50, 80 * scaleFactor);
+            const outlineWidth = Math.max(6, 12 * scaleFactor);
+            const yOffset = Math.max(20, 40 * scaleFactor);
 
-            const fontSize = 80;
             ctx.font = `900 ${fontSize}px sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-            ctx.shadowBlur = 15;
-            ctx.shadowOffsetX = 5;
-            ctx.shadowOffsetY = 5;
+            
+            // Stroked text for outline
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = outlineWidth;
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+            ctx.strokeText(text.toUpperCase(), canvas.width / 2, canvas.height - yOffset);
 
+            // Gradient filled text
             const gradient = ctx.createLinearGradient(0, canvas.height - fontSize, 0, canvas.height);
             gradient.addColorStop(0, '#FFFFFF');
             gradient.addColorStop(1, '#FBBF24'); // Amber-400
             ctx.fillStyle = gradient;
-            
-            ctx.fillText(text.toUpperCase(), canvas.width / 2, canvas.height - 40);
+            ctx.fillText(text.toUpperCase(), canvas.width / 2, canvas.height - yOffset);
             
             resolve(canvas.toDataURL('image/png'));
         };

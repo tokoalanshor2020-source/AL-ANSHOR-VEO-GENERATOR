@@ -72,10 +72,13 @@ export interface PublishingKitData {
     all_characters_template: string;
   };
   thumbnail_concepts: {
-    concept_title: string;
-    concept_description: string;
+    concept_title_id: string;
+    concept_title_en: string;
+    concept_description_id: string;
+    concept_description_en: string;
     image_prompt: string;
-    cta_overlay_text: string;
+    cta_overlay_text_id: string;
+    cta_overlay_text_en: string;
   }[];
 }
 
