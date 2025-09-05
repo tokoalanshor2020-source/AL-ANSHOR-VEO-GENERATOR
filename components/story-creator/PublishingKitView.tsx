@@ -26,7 +26,11 @@ interface LocalizedAsset {
     title: string;
     description: string;
     tags: string[];
-    ctaTexts: string[];
+    ctaTexts: {
+      hook: string;
+      character: string;
+      goal: string;
+    }[];
 }
 
 const AspectRatioSelector: React.FC<{ selected: string; onChange: (value: string) => void }> = ({ selected, onChange }) => {
@@ -159,13 +163,19 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
      const handleGenerateThumbnail = async (prompt: string) => {
         if (!activeKey) return;
         
-        const ctaText = assets[selectedLang]?.ctaTexts[0] || "WATCH NOW";
+        const ctaTextParts = assets[selectedLang]?.ctaTexts[0];
+        if (!ctaTextParts) {
+            console.error("CTA text parts not found for the selected language.");
+            setError("Could not find text for thumbnail overlay.");
+            return;
+        }
+
         setIsGeneratingThumb(true);
         setError(null);
         
         try {
             const imageData = await generateThumbnail(failoverParams, prompt, aspectRatio);
-            const finalImage = await createImageWithOverlay(imageData, ctaText);
+            const finalImage = await createImageWithOverlay(imageData, ctaTextParts);
             setThumbImageUrl(finalImage);
         } catch (e) {
             const errorMessage = e instanceof Error ? e.message : 'Unknown error';
@@ -247,7 +257,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                      <div className="flex justify-center">
                         <div className="w-full max-w-lg bg-base-300/50 p-4 rounded-lg border border-base-300 flex flex-col">
                             <h4 className="font-bold text-amber-400 flex-shrink-0">
-                                {currentAsset?.ctaTexts ? concept.concept_title_id : concept.concept_title_en}
+                                {language === 'id' ? concept.concept_title_id : concept.concept_title_en}
                             </h4>
                             <p className="text-sm text-gray-400 mt-1 mb-3 flex-shrink-0">
                                 {language === 'id' ? concept.concept_description_id : concept.concept_description_en}

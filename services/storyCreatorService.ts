@@ -452,8 +452,24 @@ const publishingKitSchema = {
                     concept_description_id: { type: Type.STRING },
                     concept_description_en: { type: Type.STRING },
                     image_prompt: { type: Type.STRING },
-                    cta_overlay_text_id: { type: Type.STRING },
-                    cta_overlay_text_en: { type: Type.STRING },
+                    cta_overlay_text_id: {
+                        type: Type.OBJECT,
+                        properties: {
+                            hook: { type: Type.STRING },
+                            character: { type: Type.STRING },
+                            goal: { type: Type.STRING },
+                        },
+                        required: ["hook", "character", "goal"],
+                    },
+                    cta_overlay_text_en: {
+                        type: Type.OBJECT,
+                        properties: {
+                            hook: { type: Type.STRING },
+                            character: { type: Type.STRING },
+                            goal: { type: Type.STRING },
+                        },
+                        required: ["hook", "character", "goal"],
+                    },
                 },
                 required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "cta_overlay_text_id", "cta_overlay_text_en"]
             }
@@ -519,7 +535,11 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
                 - **Sintesiskan SEMUA data yang tersedia:** Judul YouTube yang baru Anda buat, Naskah Narasi Lengkap, dan yang terpenting, DNA Digital Karakter (termasuk 'ID Konsistensi' dan deskripsi visualnya).
                 - Prompt harus menggambarkan adegan paling dramatis atau klimaks dari cerita. Jelaskan aksi karakter, ekspresi wajah, lingkungan, pencahayaan sinematik yang dramatis, palet warna yang hidup, dan gaya visual (misalnya, ultra-realistis, 4K, detail tinggi, blur gerakan untuk aksi).
                 - **Struktur wajib:** Mulai dengan deskripsi adegan, lalu deskripsi karakter yang SANGAT detail dengan merujuk pada 'ID Konsistensi' mereka, diikuti oleh detail latar belakang dan pencahayaan.
-            - Untuk field lainnya (\`concept_title\`, \`concept_description\`, \`cta_overlay_text\`), buat versi Bahasa Indonesia (\`_id\`) dan Inggris (\`_en\`). 'cta_overlay_text' harus singkat dan menarik.`;
+            - Untuk 'cta_overlay_text_id' dan 'cta_overlay_text_en', buat objek JSON dengan tiga field: 'hook', 'character', dan 'goal'.
+                - 'hook': Teks pancingan yang sangat menarik, SEMUA HURUF KAPITAL, dan singkat (maksimal 3 kata). Contoh: "BALAS DENDAM EPIK!"
+                - 'character': Sebutkan peran atau karakter yang menjadi sorotan (maksimal 5 kata). Contoh: "Si Truk Monster Pemberani"
+                - 'goal': Jelaskan tujuan cerita secara singkat (maksimal 7 kata). Contoh: "Merebut kembali mahkota yang dicuri"
+            - Untuk field lainnya (\`concept_title\`, \`concept_description\`), buat versi Bahasa Indonesia (\`_id\`) dan Inggris (\`_en\`).`;
             
              const response = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
@@ -539,7 +559,11 @@ export interface LocalizedAssets {
     title: string;
     description: string;
     tags: string[];
-    ctaTexts: string[];
+    ctaTexts: {
+        hook: string;
+        character: string;
+        goal: string;
+    }[];
 }
 
 export const generateLocalizedPublishingAssets = async (failoverParams: FailoverParams, options: PublishingKitOptions, targetLanguageName: string): Promise<LocalizedAssets> => {
@@ -588,8 +612,12 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
         
             **4. Thumbnail CTA Texts (key: "ctaTexts"):**
              - **Criteria:**
-                - Must be a JSON array of strings in **${targetLanguageName}**.
-                - Generate exactly ${numConcepts} short, high-impact call-to-action texts (e.g., "WATCH NOW!", "SHOCKING!").
+                - Must be a JSON array of objects. Generate exactly ${numConcepts} object.
+                - Each object must have three fields: "hook", "character", and "goal".
+                - All field values MUST be in **${targetLanguageName}**.
+                - "hook": A short, high-impact, ALL-CAPS call-to-action (max 3 words).
+                - "character": A short phrase highlighting the main character (max 5 words).
+                - "goal": A short phrase describing the story's objective (max 7 words).
             `;
             
             const schema = {
@@ -598,7 +626,18 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
                     title: { type: Type.STRING },
                     description: { type: Type.STRING },
                     tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    ctaTexts: { type: Type.ARRAY, items: { type: Type.STRING } },
+                    ctaTexts: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                hook: { type: Type.STRING },
+                                character: { type: Type.STRING },
+                                goal: { type: Type.STRING },
+                            },
+                            required: ["hook", "character", "goal"],
+                        }
+                    },
                 },
                 required: ["title", "description", "tags", "ctaTexts"]
             };
@@ -654,8 +693,36 @@ export const generateThumbnail = async (failoverParams: FailoverParams, prompt: 
     });
 };
 
+const drawTextWithOutline = (
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    fontSize: number,
+    isAllCaps: boolean
+) => {
+    const displayText = isAllCaps ? text.toUpperCase() : text;
+    const outlineWidth = Math.max(6, 12 * (fontSize / 100)); // Scale outline with font size
 
-export const createImageWithOverlay = (imageData: ThumbnailData, text: string): Promise<string> => {
+    ctx.font = `900 ${fontSize}px sans-serif`;
+    
+    // Stroked text for outline
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = outlineWidth;
+    ctx.lineJoin = 'round';
+    ctx.miterLimit = 2;
+    ctx.strokeText(displayText, x, y);
+
+    // Gradient filled text
+    const gradient = ctx.createLinearGradient(0, y - fontSize, 0, y);
+    gradient.addColorStop(0, '#FFFFFF');
+    gradient.addColorStop(1, '#FBBF24'); // Amber-400
+    ctx.fillStyle = gradient;
+    ctx.fillText(displayText, x, y);
+};
+
+
+export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { hook: string; character: string; goal: string; }): Promise<string> => {
     return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -667,29 +734,29 @@ export const createImageWithOverlay = (imageData: ThumbnailData, text: string): 
             canvas.height = img.height;
             ctx.drawImage(img, 0, 0, img.width, img.height);
             
-            const baseWidth = 1280;
+            const baseWidth = 1280; // common thumbnail width
             const scaleFactor = canvas.width / baseWidth;
-            const fontSize = Math.max(50, 80 * scaleFactor);
-            const outlineWidth = Math.max(6, 12 * scaleFactor);
-            const yOffset = Math.max(20, 40 * scaleFactor);
 
-            ctx.font = `900 ${fontSize}px sans-serif`;
+            // Define font sizes based on scale factor
+            const hookFontSize = Math.max(60, 100 * scaleFactor);
+            const charFontSize = Math.max(35, 55 * scaleFactor);
+            const goalFontSize = Math.max(25, 40 * scaleFactor);
+
+            // Define vertical positions and spacing
+            const bottomPadding = Math.max(30, 40 * scaleFactor);
+            const lineSpacing = Math.max(10, 15 * scaleFactor);
+            
             ctx.textAlign = 'center';
             ctx.textBaseline = 'bottom';
-            
-            // Stroked text for outline
-            ctx.strokeStyle = 'black';
-            ctx.lineWidth = outlineWidth;
-            ctx.lineJoin = 'round';
-            ctx.miterLimit = 2;
-            ctx.strokeText(text.toUpperCase(), canvas.width / 2, canvas.height - yOffset);
 
-            // Gradient filled text
-            const gradient = ctx.createLinearGradient(0, canvas.height - fontSize, 0, canvas.height);
-            gradient.addColorStop(0, '#FFFFFF');
-            gradient.addColorStop(1, '#FBBF24'); // Amber-400
-            ctx.fillStyle = gradient;
-            ctx.fillText(text.toUpperCase(), canvas.width / 2, canvas.height - yOffset);
+            const goalY = canvas.height - bottomPadding;
+            const charY = goalY - goalFontSize - lineSpacing;
+            const hookY = charY - charFontSize - lineSpacing;
+
+            // Draw texts from bottom to top
+            drawTextWithOutline(ctx, textParts.goal, canvas.width / 2, goalY, goalFontSize, false);
+            drawTextWithOutline(ctx, textParts.character, canvas.width / 2, charY, charFontSize, false);
+            drawTextWithOutline(ctx, textParts.hook, canvas.width / 2, hookY, hookFontSize, true); // Hook is all caps
             
             resolve(canvas.toDataURL('image/png'));
         };

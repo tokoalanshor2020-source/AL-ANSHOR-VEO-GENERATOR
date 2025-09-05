@@ -77,8 +77,16 @@ export interface PublishingKitData {
     concept_description_id: string;
     concept_description_en: string;
     image_prompt: string;
-    cta_overlay_text_id: string;
-    cta_overlay_text_en: string;
+    cta_overlay_text_id: {
+      hook: string;
+      character: string;
+      goal: string;
+    };
+    cta_overlay_text_en: {
+      hook: string;
+      character: string;
+      goal: string;
+    };
   }[];
 }
 
