@@ -133,55 +133,68 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
             <div className="bg-base-200 rounded-2xl shadow-2xl w-full max-w-2xl border border-base-300 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-6 flex-shrink-0 text-center">
                     <h2 className="text-2xl font-bold text-amber-400">
-                       {t('characterWorkshop.title')}
+                       {/* FIX: Cast result of t() to string */}
+                       {t('characterWorkshop.title') as string}
                     </h2>
-                     <p className="text-sm text-gray-400 mt-1">{t('characterWorkshop.subtitle')}</p>
+                     {/* FIX: Cast result of t() to string */}
+                     <p className="text-sm text-gray-400 mt-1">{t('characterWorkshop.subtitle') as string}</p>
                 </div>
 
                 <div className="flex-grow overflow-y-auto px-6 space-y-6">
                     {/* AI Assistant Section */}
                     <div className="bg-base-300/40 p-4 rounded-lg border border-base-300">
-                        <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.aiAssistantSection')}</h3>
-                        <p className="text-xs text-gray-400 mb-3">{t('characterWorkshop.aiAssistantDescription')}</p>
+                        {/* FIX: Cast result of t() to string */}
+                        <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.aiAssistantSection') as string}</h3>
+                        {/* FIX: Cast result of t() to string */}
+                        <p className="text-xs text-gray-400 mb-3">{t('characterWorkshop.aiAssistantDescription') as string}</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <input type="file" id="charImageInput" className="hidden" accept="image/*" onChange={handleImageChange} />
                                 <label htmlFor="charImageInput" className="cursor-pointer w-full flex flex-col items-center justify-center p-4 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[100px] hover:border-brand-primary">
                                     {imageFile ? <img src={imageFile.previewUrl} alt="Preview" className="max-h-24 object-contain rounded"/> : <UploadIcon className="h-8 w-8 text-gray-500" />}
-                                    <span className="text-sm mt-2 text-gray-400">{imageFile ? "Change Image" : t('characterWorkshop.uploadButton')}</span>
+                                    {/* FIX: Cast result of t() to string */}
+                                    <span className="text-sm mt-2 text-gray-400">{imageFile ? "Change Image" : t('characterWorkshop.uploadButton') as string}</span>
                                 </label>
                             </div>
                             <textarea value={idea} onChange={e => setIdea(e.target.value)} placeholder={t('characterWorkshop.ideaPlaceholder') as string} className="w-full h-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500" rows={4}></textarea>
                         </div>
+                         {/* FIX: Cast result of t() to string */}
                          <button onClick={handleDesignWithAi} disabled={isProcessingAi || !activeApiKey} className="mt-3 w-full inline-flex justify-center items-center gap-2 px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">
-                            {isProcessingAi ? t('characterWorkshop.designingWithAiButton') : t('characterWorkshop.designWithAiButton')}
+                            {(isProcessingAi ? t('characterWorkshop.designingWithAiButton') : t('characterWorkshop.designWithAiButton')) as string}
                         </button>
                     </div>
 
                     {/* Manual Entry Section */}
                      <div className="space-y-4 pb-4">
-                        <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.modelDetailsSection')}</h3>
+                        {/* FIX: Cast result of t() to string */}
+                        <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.modelDetailsSection') as string}</h3>
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.brandName')}</label>
+                                {/* FIX: Cast result of t() to string */}
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.brandName') as string}</label>
                                 <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
                             </div>
                              <div>
-                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.modelName')}</label>
+                                {/* FIX: Cast result of t() to string */}
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.modelName') as string}</label>
                                 <input type="text" value={modelName} onChange={e => setModelName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
                             </div>
                        </div>
                        <div>
-                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.consistencyId')}</label>
+                            {/* FIX: Cast result of t() to string */}
+                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.consistencyId') as string}</label>
                             <input type="text" value={consistencyKey} onChange={e => setConsistencyKey(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
-                            <p className="text-xs text-gray-500 mt-1">{t('characterWorkshop.consistencyIdHint')}</p>
+                            {/* FIX: Cast result of t() to string */}
+                            <p className="text-xs text-gray-500 mt-1">{t('characterWorkshop.consistencyIdHint') as string}</p>
                         </div>
                          <div>
-                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.mainMaterial')}</label>
+                            {/* FIX: Cast result of t() to string */}
+                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.mainMaterial') as string}</label>
                             <input type="text" value={material} onChange={e => setMaterial(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
                         </div>
                         <div>
-                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.designLanguage')}</label>
+                             {/* FIX: Cast result of t() to string */}
+                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.designLanguage') as string}</label>
                              <textarea value={designLanguage} onChange={e => setDesignLanguage(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" rows={2}></textarea>
                         </div>
 
@@ -205,9 +218,11 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
                 </div>
 
                 <div className="flex-shrink-0 p-4 mt-4 border-t border-base-300 flex justify-between items-center">
-                    <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('closeButton')}</button>
+                    {/* FIX: Cast result of t() to string */}
+                    <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('closeButton') as string}</button>
                     <button onClick={handleSave} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                        {initialCharacter ? t('characterWorkshop.updateButton') : t('characterWorkshop.saveButton')}
+                        {/* FIX: Cast result of t() to string */}
+                        {(initialCharacter ? t('characterWorkshop.updateButton') : t('characterWorkshop.saveButton')) as string}
                     </button>
                 </div>
             </div>

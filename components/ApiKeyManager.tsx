@@ -141,9 +141,10 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
     }
   }
 
-  const title = t(keyType === 'story' ? 'storyApiKeyManagerTitle' : 'videoApiKeyManagerTitle');
-  const addNewKeyLabel = t(keyType === 'story' ? 'addNewStoryKeyLabel' : 'addNewVideoKeyLabel');
-  const savedKeysLabel = t(keyType === 'story' ? 'savedStoryKeysLabel' : 'savedVideoKeysLabel');
+  // FIX: Cast results of t() to string
+  const title = t(keyType === 'story' ? 'storyApiKeyManagerTitle' : 'videoApiKeyManagerTitle') as string;
+  const addNewKeyLabel = t(keyType === 'story' ? 'addNewStoryKeyLabel' : 'addNewVideoKeyLabel') as string;
+  const savedKeysLabel = t(keyType === 'story' ? 'savedStoryKeysLabel' : 'savedVideoKeysLabel') as string;
 
 
   return (
@@ -177,7 +178,8 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
                     disabled={isValidating}
                     className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-brand-secondary disabled:bg-base-300 disabled:cursor-not-allowed transition-colors"
                 >
-                    {isValidating ? t('validatingButton') : t('addKeyButton')}
+                    {/* FIX: Cast result of t() to string */}
+                    {(isValidating ? t('validatingButton') : t('addKeyButton')) as string}
                 </button>
             </form>
 
@@ -203,8 +205,10 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
                     </ul>
                  ) : (
                     <div className="text-center text-sm text-gray-500 py-4 bg-base-300 rounded-lg">
-                        <p>{t('noKeysSaved')}</p>
-                        <p>{t('addKeyPrompt')}</p>
+                        {/* FIX: Cast result of t() to string */}
+                        <p>{t('noKeysSaved') as string}</p>
+                        {/* FIX: Cast result of t() to string */}
+                        <p>{t('addKeyPrompt') as string}</p>
                     </div>
                  )}
             </div>
@@ -215,7 +219,8 @@ export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKe
                 onClick={onClose}
                 className="px-4 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-brand-secondary transition-colors"
             >
-                {t('closeButton')}
+                {/* FIX: Cast result of t() to string */}
+                {t('closeButton') as string}
             </button>
         </div>
       </div>

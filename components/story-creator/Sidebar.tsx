@@ -24,7 +24,8 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                 onClick={props.onNewStory}
                 className="w-full bg-brand-primary hover:bg-brand-dark text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-colors"
              >
-                {t('storyCreator.newStory')}
+                {/* FIX: Cast result of t() to string */}
+                {t('storyCreator.newStory') as string}
             </button>
             <CharacterGarage
                 characters={props.characters}

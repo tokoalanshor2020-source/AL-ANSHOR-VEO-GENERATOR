@@ -8,6 +8,7 @@ import { StoryCreator } from './components/story-creator/StoryCreator';
 import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab } from './types';
 import { generateVideo } from './services/geminiService';
 import { useLocalization } from './i18n';
+import { TutorialModal } from './components/TutorialModal';
 
 const STORY_API_KEYS_STORAGE_KEY = 'gemini-story-api-keys';
 const ACTIVE_STORY_API_KEY_STORAGE_KEY = 'gemini-active-story-api-key';
@@ -39,6 +40,7 @@ export default function App() {
   const [activeVideoApiKey, setActiveVideoApiKey] = useState<string | null>(null);
 
   const [keyManagerConfig, setKeyManagerConfig] = useState<{ type: KeyManagerType } | null>(null);
+  const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(false);
   
   const { t, language, dir } = useLocalization();
 
@@ -215,12 +217,17 @@ export default function App() {
           onClose={() => setKeyManagerConfig(null)}
         />
       )}
+
+      {isTutorialOpen && (
+        <TutorialModal onClose={() => setIsTutorialOpen(false)} />
+      )}
       
       <header className="sticky top-0 z-30 w-full border-b border-base-300 bg-base-100/90 backdrop-blur-sm">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Header 
               onManageStoryKeysClick={() => setKeyManagerConfig({ type: 'story' })} 
               onManageVideoKeysClick={() => setKeyManagerConfig({ type: 'video' })} 
+              onOpenTutorialClick={() => setIsTutorialOpen(true)}
             />
           </div>
       </header>
@@ -260,7 +267,7 @@ export default function App() {
                 onClick={handleBackToStoryCreator}
                 className="mb-6 inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
               >
-                  &larr; {t('backToStoryboard')}
+                  &larr; {t('backToStoryboard') as string}
               </button>
             <div className="bg-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border border-base-300">
               <VideoGeneratorForm 
@@ -276,7 +283,8 @@ export default function App() {
             
             {error && (
               <div className="mt-8 bg-red-900/50 border border-red-700 text-red-200 p-4 rounded-lg text-center">
-                <h3 className="font-bold text-lg">{t('generationFailed')}</h3>
+                {/* FIX: Cast result of t() to string */}
+                <h3 className="font-bold text-lg">{t('generationFailed') as string}</h3>
                 <p className="mt-1">{error}</p>
               </div>
             )}

@@ -67,6 +67,40 @@ const translations: { [key in Language]: Translations } = {
     alertSetStoryApiKey: "Please set an active Story API Key before generating.",
     alertSetVideoApiKey: "Please set an active Professional Video & Thumbnail API key before generating.",
     backToStoryboard: "Back to Storyboard",
+    tutorialButton: "How to Use",
+    tutorial: {
+        title: "Application Tutorial",
+        intro: "Welcome to the AL ANSHOR VEO GENERATOR! This guide will walk you through creating amazing videos from start to finish.",
+        setup: {
+            title: "1. Initial Setup: API Keys",
+            body: "The application requires two types of API keys to function. You can manage them by clicking the key buttons in the header: <br/>- <strong>Story API Key:</strong> Used for all text-based generation, like creating story ideas, storyboards, and publishing kits. <br/>- <strong>Video & Thumbnail API Key:</strong> Used for generating the final video and thumbnail images. <br/>You must add at least one valid key for each type and set one as 'active' to begin."
+        },
+        story: {
+            title: "2. Creating Your Story",
+            intro: "Everything begins in the 'Story Editor' tab.",
+            step1: "<strong>Character Creation (Optional):</strong> Use the 'Character Garage' to define your characters. This ensures they look consistent across all scenes.",
+            step2: "<strong>Write Your Script:</strong> Fill in the 'Story Title' and 'Story Script / Summary' fields. Or, use the 'Smart Director' to get AI-generated ideas instantly!",
+            step3: "<strong>Direct the Scene:</strong> Use the 'Directing Desk' to set the mood, location, weather, and camera style for your story.",
+            step4: "<strong>Generate Storyboard:</strong> Once your script and settings are ready, click 'Create Storyboard!'."
+        },
+        storyboard: {
+            title: "3. Developing Scenes",
+            intro: "The 'Storyboard' tab shows a scene-by-scene breakdown of your story.",
+            step1: "<strong>Generate Prompts:</strong> For each scene, click 'Design Blueprint' and then 'Create Cinematic Prompt'. The cinematic prompt is a detailed instruction for the video AI.",
+            step2: "<strong>Proceed to Video Generation:</strong> When you're happy with a 'Cinematic Prompt', click 'Generate Video with this Prompt' to move to the next stage."
+        },
+        video: {
+            title: "4. Generating the Video",
+            body: "You are now in the Video Generator. The cinematic prompt is pre-filled. Adjust options like 'Aspect Ratio' or add a 'Reference Image' if needed. Click 'Generate Video' and be patient—this can take several minutes. Once complete, you can watch and download your video."
+        },
+        publishing: {
+            title: "5. Publishing Your Content",
+            intro: "After creating your video, it's time to prepare it for upload.",
+            step1: "<strong>Generate Publishing Kit:</strong> Go back to the Story Creator. In the sidebar, click 'Create Everything!' inside the 'Magic Broadcast Kit' section. This generates YouTube titles, descriptions, tags, and thumbnail concepts.",
+            step2: "<strong>Create Thumbnails:</strong> Switch to the 'Publishing Kit' tab. Here you can generate stunning thumbnails based on AI concepts, add text overlays, and even localize all your text assets for different languages before copying them for your upload."
+        },
+        closeButton: "Got it, let's create!"
+    },
     storyCreator: {
       newStory: "New Story",
       characterGarage: "Character Garage",
@@ -230,6 +264,40 @@ const translations: { [key in Language]: Translations } = {
     alertSetStoryApiKey: "Silakan atur Kunci API Cerita yang aktif sebelum melanjutkan.",
     alertSetVideoApiKey: "Silakan atur Kunci API Video & Thumbnail Profesional yang aktif sebelum membuat video.",
     backToStoryboard: "Kembali ke Papan Cerita",
+    tutorialButton: "Cara Penggunaan",
+    tutorial: {
+        title: "Tutorial Aplikasi",
+        intro: "Selamat datang di AL ANSHOR VEO GENERATOR! Panduan ini akan memandu Anda membuat video luar biasa dari awal hingga akhir.",
+        setup: {
+            title: "1. Pengaturan Awal: Kunci API",
+            body: "Aplikasi ini memerlukan dua jenis kunci API untuk berfungsi. Anda dapat mengelolanya dengan mengklik tombol kunci di header: <br/>- <strong>Kunci API Cerita:</strong> Digunakan untuk semua pembuatan berbasis teks, seperti membuat ide cerita, papan cerita, dan kit publikasi. <br/>- <strong>Kunci API Video & Thumbnail:</strong> Digunakan untuk menghasilkan video final dan gambar thumbnail. <br/>Anda harus menambahkan setidaknya satu kunci yang valid untuk setiap jenis dan menetapkannya sebagai 'aktif' untuk memulai."
+        },
+        story: {
+            title: "2. Membuat Cerita Anda",
+            intro: "Semuanya dimulai di tab 'Editor Cerita'.",
+            step1: "<strong>Pembuatan Karakter (Opsional):</strong> Gunakan 'Garasi Impianmu' untuk mendefinisikan karakter Anda. Ini memastikan mereka terlihat konsisten di semua adegan.",
+            step2: "<strong>Tulis Naskah Anda:</strong> Isi kolom 'Judul Cerita' dan 'Naskah Cerita / Ringkasan'. Atau, gunakan 'Sutradara Cerdas' untuk mendapatkan ide yang dihasilkan AI secara instan!",
+            step3: "<strong>Arahkan Adegan:</strong> Gunakan 'Meja Bermain' untuk mengatur suasana, lokasi, cuaca, dan gaya kamera untuk cerita Anda.",
+            step4: "<strong>Buat Papan Cerita:</strong> Setelah naskah dan pengaturan Anda siap, klik 'Buat Papan Cerita!'."
+        },
+        storyboard: {
+            title: "3. Mengembangkan Adegan",
+            intro: "Tab 'Papan Cerita' menunjukkan rincian adegan demi adegan dari cerita Anda.",
+            step1: "<strong>Hasilkan Prompt:</strong> Untuk setiap adegan, klik 'Rancang Blueprint' lalu 'Buat Prompt Sinematik'. Prompt sinematik adalah instruksi terperinci untuk AI video.",
+            step2: "<strong>Lanjutkan ke Pembuatan Video:</strong> Ketika Anda puas dengan 'Prompt Sinematik', klik 'Hasilkan Video dengan Prompt Ini' untuk melanjutkan ke tahap berikutnya."
+        },
+        video: {
+            title: "4. Menghasilkan Video",
+            body: "Anda sekarang berada di Generator Video. Prompt sinematik sudah terisi sebelumnya. Sesuaikan opsi seperti 'Rasio Aspek' atau tambahkan 'Gambar Referensi' jika perlu. Klik 'Hasilkan Video' dan bersabarlah—ini bisa memakan waktu beberapa menit. Setelah selesai, Anda dapat menonton dan mengunduh video Anda."
+        },
+        publishing: {
+            title: "5. Menerbitkan Konten Anda",
+            intro: "Setelah membuat video Anda, saatnya menyiapkannya untuk diunggah.",
+            step1: "<strong>Hasilkan Kit Publikasi:</strong> Kembali ke Pembuat Cerita. Di sidebar, klik 'Buatkan Semuanya!' di dalam bagian 'Kit Siaran Ajaib'. Ini menghasilkan judul YouTube, deskripsi, tag, dan ide thumbnail.",
+            step2: "<strong>Buat Thumbnail:</strong> Beralih ke tab 'Kit Siaran'. Di sini Anda dapat menghasilkan thumbnail yang menakjubkan berdasarkan konsep AI, menambahkan teks overlay, dan bahkan melokalkan semua aset teks Anda untuk bahasa yang berbeda sebelum menyalinnya untuk diunggah."
+        },
+        closeButton: "Mengerti, ayo buat!"
+    },
     storyCreator: {
       newStory: "Cerita Baru",
       characterGarage: "Garasi Impianmu",
@@ -1984,7 +2052,7 @@ const translations: { [key in Language]: Translations } = {
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string | string[];
+  t: (key: string) => string | string[] | Translations;
   dir: 'ltr' | 'rtl';
 }
 
@@ -2021,7 +2089,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguageState(lang);
   };
   
-  const t = useCallback((key: string): string | string[] => {
+  const t = useCallback((key: string): string | string[] | Translations => {
     const keys = key.split('.');
 
     const getTranslation = (lang: Language): string | string[] | Translations | undefined => {
@@ -2035,15 +2103,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const result = getTranslation(language) ?? getTranslation('en') ?? getTranslation('id');
 
     if (result === undefined) {
-        return key;
-    }
-
-    if (typeof result === 'object' && result !== null && !Array.isArray(result)) {
-        console.warn(`Translation for key '${key}' resolves to an object, which cannot be rendered. Returning the key itself.`);
+        console.warn(`Translation key '${key}' not found.`);
         return key;
     }
     
-    return result as string | string[];
+    return result;
   }, [language]);
 
   const dir = language === 'ar' ? 'rtl' : 'ltr';

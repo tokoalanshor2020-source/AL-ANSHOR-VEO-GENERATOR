@@ -92,7 +92,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
             <div className="bg-base-200 rounded-2xl shadow-2xl w-full max-w-2xl border border-base-300 max-h-[90vh] flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-base-300">
                     <h2 className="text-2xl font-bold text-amber-400 text-center flex-grow">
-                        {step === 1 ? t('smartDirector.title') : t('smartDirector.step2Title')}
+                        {/* FIX: Cast result of t() to string */}
+                        {(step === 1 ? t('smartDirector.title') : t('smartDirector.step2Title')) as string}
                     </h2>
                     <button onClick={onClose} className="text-gray-400 hover:text-white">
                         <XCircleIcon className="h-6 w-6" />
@@ -102,20 +103,27 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                 {/* Step 1: Form */}
                 {step === 1 && (
                     <div className="p-6 space-y-4 overflow-y-auto">
-                        <p className="text-center text-gray-400 mb-6">{t('smartDirector.step1Description')}</p>
+                        {/* FIX: Cast result of t() to string */}
+                        <p className="text-center text-gray-400 mb-6">{t('smartDirector.step1Description') as string}</p>
                         
                         <div>
-                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step1Label')}</label>
+                            {/* FIX: Cast result of t() to string */}
+                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step1Label') as string}</label>
                             <select value={contentFormat} onChange={e => setContentFormat(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm">
-                                <option value="cinematic_adventure">{t('smartDirector.contentFormats.cinematic_adventure')}</option>
-                                <option value="product_review">{t('smartDirector.contentFormats.product_review')}</option>
-                                <option value="unboxing">{t('smartDirector.contentFormats.unboxing')}</option>
-                                <option value="vs_challenge">{t('smartDirector.contentFormats.vs_challenge')}</option>
+                                {/* FIX: Cast result of t() to string */}
+                                <option value="cinematic_adventure">{t('smartDirector.contentFormats.cinematic_adventure') as string}</option>
+                                {/* FIX: Cast result of t() to string */}
+                                <option value="product_review">{t('smartDirector.contentFormats.product_review') as string}</option>
+                                {/* FIX: Cast result of t() to string */}
+                                <option value="unboxing">{t('smartDirector.contentFormats.unboxing') as string}</option>
+                                {/* FIX: Cast result of t() to string */}
+                                <option value="vs_challenge">{t('smartDirector.contentFormats.vs_challenge') as string}</option>
                             </select>
                         </div>
                         
                         <div>
-                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step2Label')}</label>
+                             {/* FIX: Cast result of t() to string */}
+                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step2Label') as string}</label>
                             <div className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm max-h-48 overflow-y-auto space-y-2">
                                 <div className="flex items-center">
                                     <input 
@@ -125,12 +133,14 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                                         onChange={(e) => handleCharacterSelectionChange('random', e.target.checked)}
                                         className="h-4 w-4 rounded border-gray-500 bg-base-100 text-brand-primary focus:ring-brand-secondary"
                                     />
-                                    <label htmlFor="char-random" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.random')}</label>
+                                    {/* FIX: Cast result of t() to string */}
+                                    <label htmlFor="char-random" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.random') as string}</label>
                                 </div>
                                 
                                 {characters.length > 0 && (
                                     <div>
-                                        <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.yourGarage')}</p>
+                                        {/* FIX: Cast result of t() to string */}
+                                        <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.yourGarage') as string}</p>
                                         {characters.map(c => (
                                             <div key={c.id} className="flex items-center pl-2">
                                                 <input
@@ -147,7 +157,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                                 )}
                                 
                                 <div>
-                                    <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.construction')}</p>
+                                    {/* FIX: Cast result of t() to string */}
+                                    <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.construction') as string}</p>
                                     <div className="flex items-center pl-2">
                                         <input
                                             type="checkbox"
@@ -156,24 +167,31 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                                             onChange={(e) => handleCharacterSelectionChange('Beni si Buldoser Pemberani', e.target.checked)}
                                             className="h-4 w-4 rounded border-gray-500 bg-base-100 text-brand-primary focus:ring-brand-secondary"
                                         />
-                                        <label htmlFor="char-beni" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.beniBulldozer')}</label>
+                                        {/* FIX: Cast result of t() to string */}
+                                        <label htmlFor="char-beni" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.beniBulldozer') as string}</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step3Label')}</label>
+                            {/* FIX: Cast result of t() to string */}
+                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step3Label') as string}</label>
                             <select value={theme} onChange={e => setTheme(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm">
-                                <option value="random">{t('smartDirector.themeOptions.random')}</option>
+                                {/* FIX: Cast result of t() to string */}
+                                <option value="random">{t('smartDirector.themeOptions.random') as string}</option>
                                  <optgroup label={t('smartDirector.themeOptions.adventureGroup') as string}>
-                                    <option value="explore_new_area">{t('smartDirector.themeOptions.explore_new_area')}</option>
-                                    <option value="rescue_mission">{t('smartDirector.themeOptions.rescue_mission')}</option>
+                                    {/* FIX: Cast result of t() to string */}
+                                    <option value="explore_new_area">{t('smartDirector.themeOptions.explore_new_area') as string}</option>
+                                    {/* FIX: Cast result of t() to string */}
+                                    <option value="rescue_mission">{t('smartDirector.themeOptions.rescue_mission') as string}</option>
                                 </optgroup>
                                  <optgroup label={t('smartDirector.themeOptions.challengeGroup') as string}>
-                                     <option value="overcome_obstacle">{t('smartDirector.themeOptions.overcome_obstacle')}</option>
+                                     {/* FIX: Cast result of t() to string */}
+                                     <option value="overcome_obstacle">{t('smartDirector.themeOptions.overcome_obstacle') as string}</option>
                                  </optgroup>
-                                 <option value="custom_theme">{t('smartDirector.themeOptions.custom_theme')}</option>
+                                 {/* FIX: Cast result of t() to string */}
+                                 <option value="custom_theme">{t('smartDirector.themeOptions.custom_theme') as string}</option>
                             </select>
                              {theme === 'custom_theme' && (
                                 <input type="text" value={customTheme} onChange={e => setCustomTheme(e.target.value)} placeholder={t('smartDirector.customThemePlaceholder') as string} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm mt-2" />
@@ -199,11 +217,15 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                 )}
                 
                 <div className="flex-shrink-0 p-4 mt-auto border-t border-base-300 flex justify-between items-center">
-                    {step === 1 && <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('smartDirector.cancelButton')}</button>}
-                    {step === 2 && <button onClick={handleTryAgain} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('smartDirector.tryAgainButton')}</button>}
+                    {/* FIX: Cast result of t() to string */}
+                    {step === 1 && <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('smartDirector.cancelButton') as string}</button>}
+                    {/* FIX: Cast result of t() to string */}
+                    {step === 2 && <button onClick={handleTryAgain} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('smartDirector.tryAgainButton') as string}</button>}
                     
-                    {step === 1 && <button onClick={handleGenerateIdeas} disabled={isGenerating} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">{isGenerating ? t('smartDirector.generatingIdeasButton') : t('smartDirector.generateIdeasButton')}</button>}
-                    {step === 2 && <button onClick={handleApply} disabled={!selectedIdea} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50">{t('smartDirector.applyIdeaButton')}</button>}
+                    {/* FIX: Cast result of t() to string */}
+                    {step === 1 && <button onClick={handleGenerateIdeas} disabled={isGenerating} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">{(isGenerating ? t('smartDirector.generatingIdeasButton') : t('smartDirector.generateIdeasButton')) as string}</button>}
+                    {/* FIX: Cast result of t() to string */}
+                    {step === 2 && <button onClick={handleApply} disabled={!selectedIdea} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50">{t('smartDirector.applyIdeaButton') as string}</button>}
                 </div>
             </div>
         </div>

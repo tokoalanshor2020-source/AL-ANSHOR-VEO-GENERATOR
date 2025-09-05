@@ -12,7 +12,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, prompt }) =>
     
     return (
         <div className="mt-8 bg-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border border-base-300">
-            <h2 className="text-2xl font-bold mb-4 text-center text-gray-100">{t('playerTitle')}</h2>
+            {/* FIX: Cast result of t() to string */}
+            <h2 className="text-2xl font-bold mb-4 text-center text-gray-100">{t('playerTitle') as string}</h2>
             <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden">
                 <video src={videoUrl} controls autoPlay loop className="w-full h-full" />
             </div>
@@ -22,7 +23,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, prompt }) =>
                     download={downloadFileName}
                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-brand-primary hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-brand-secondary transition-colors"
                 >
-                    {t('downloadButton')}
+                    {/* FIX: Cast result of t() to string */}
+                    {t('downloadButton') as string}
                 </a>
             </div>
         </div>

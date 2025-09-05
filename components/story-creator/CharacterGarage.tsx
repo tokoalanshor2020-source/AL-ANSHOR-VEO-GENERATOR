@@ -46,19 +46,23 @@ export const CharacterGarage: React.FC<CharacterGarageProps> = ({ characters, se
     return (
         <div className="bg-base-200 rounded-xl border border-base-300">
             <div className="p-4">
-                <h2 className="text-xl font-bold">{t('storyCreator.characterGarage')}</h2>
+                {/* FIX: Cast result of t() to string */}
+                <h2 className="text-xl font-bold">{t('storyCreator.characterGarage') as string}</h2>
             </div>
             <div className="p-4 border-t border-base-300 space-y-4">
-                <p className="text-sm text-gray-400">{t('storyCreator.garageDescription')}</p>
+                {/* FIX: Cast result of t() to string */}
+                <p className="text-sm text-gray-400">{t('storyCreator.garageDescription') as string}</p>
                 <button 
                     onClick={handleAddNew}
                     className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-indigo-500"
                 >
-                    {t('storyCreator.openCharacterWorkshop')}
+                    {/* FIX: Cast result of t() to string */}
+                    {t('storyCreator.openCharacterWorkshop') as string}
                 </button>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2 mt-4">
                     {characters.length === 0 ? (
-                        <p className="text-gray-500 italic text-sm">{t('storyCreator.garageEmpty')}</p>
+                        /* FIX: Cast result of t() to string */
+                        <p className="text-gray-500 italic text-sm">{t('storyCreator.garageEmpty') as string}</p>
                     ) : (
                         characters.map(char => (
                             <div key={char.id} className="bg-base-300 p-3 rounded-lg flex items-center justify-between">

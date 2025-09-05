@@ -37,20 +37,24 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
     return (
         <div className="p-6 space-y-6">
             <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-base-300">
-                <h3 className="text-lg font-bold text-amber-400">{t('storyCreator.needIdea')}</h3>
-                <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescription')}</p>
+                {/* FIX: Cast result of t() to string */}
+                <h3 className="text-lg font-bold text-amber-400">{t('storyCreator.needIdea') as string}</h3>
+                {/* FIX: Cast result of t() to string */}
+                <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescription') as string}</p>
                 <button 
                     onClick={() => setIsDirectorBridgeOpen(true)}
                     className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
                     disabled={!props.activeApiKey}
                 >
                     <MagicWandIcon />
-                    {t('storyCreator.openSmartDirector')}
+                    {/* FIX: Cast result of t() to string */}
+                    {t('storyCreator.openSmartDirector') as string}
                 </button>
             </div>
             
             <div>
-                <label htmlFor="logline" className="block mb-2 font-semibold text-gray-300">{t('storyCreator.storyTitle')}</label>
+                {/* FIX: Cast result of t() to string */}
+                <label htmlFor="logline" className="block mb-2 font-semibold text-gray-300">{t('storyCreator.storyTitle') as string}</label>
                 <input
                     type="text"
                     id="logline"
@@ -62,7 +66,8 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
             </div>
 
             <div>
-                <label htmlFor="scenario" className="block mb-2 font-semibold text-gray-300">{t('storyCreator.storyScript')}</label>
+                {/* FIX: Cast result of t() to string */}
+                <label htmlFor="scenario" className="block mb-2 font-semibold text-gray-300">{t('storyCreator.storyScript') as string}</label>
                 <textarea
                     id="scenario"
                     rows={8}
@@ -76,7 +81,8 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
             <DirectingDesk settings={props.directingSettings} setSettings={props.setDirectingSettings} />
             
              <div>
-                <label htmlFor="sceneCount" className="block mb-2 text-sm font-semibold text-gray-300">{t('storyCreator.sceneCount')}</label>
+                {/* FIX: Cast result of t() to string */}
+                <label htmlFor="sceneCount" className="block mb-2 text-sm font-semibold text-gray-300">{t('storyCreator.sceneCount') as string}</label>
                 <input
                     type="number"
                     id="sceneCount"
@@ -94,7 +100,8 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     disabled={!canGenerate || props.isGenerating}
                     className="w-full font-bold py-4 px-10 text-xl rounded-xl shadow-lg bg-brand-primary hover:bg-brand-dark disabled:bg-base-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                 >
-                    {props.isGenerating ? t('generatingButton') : t('storyCreator.createStoryboard')}
+                    {/* FIX: Cast result of t() to string */}
+                    {(props.isGenerating ? t('generatingButton') : t('storyCreator.createStoryboard')) as string}
                 </button>
             </div>
 

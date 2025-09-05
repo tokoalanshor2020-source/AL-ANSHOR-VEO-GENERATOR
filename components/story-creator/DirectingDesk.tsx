@@ -67,24 +67,26 @@ export const DirectingDesk: React.FC<DirectingDeskProps> = ({ settings, setSetti
     return (
         <div className="bg-base-200 rounded-xl border border-base-300">
             <div className="p-4">
-                <h2 className="text-xl font-bold">{t('storyCreator.directingDesk')}</h2>
+                {/* FIX: Cast result of t() to string */}
+                <h2 className="text-xl font-bold">{t('storyCreator.directingDesk') as string}</h2>
             </div>
             <div className="p-4 border-t border-base-300 space-y-4">
-                <p className="text-sm text-gray-400">{t('storyCreator.deskDescription')}</p>
+                {/* FIX: Cast result of t() to string */}
+                <p className="text-sm text-gray-400">{t('storyCreator.deskDescription') as string}</p>
                 
                 <SelectInput label={t('storyCreator.sceneSet') as string} value={settings.sceneStyleSet} onChange={e => handleChange('sceneStyleSet', e.target.value)}>
                     {sceneSetOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                        <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
                     ))}
                 </SelectInput>
 
                 <SelectInput label={t('storyCreator.locationSet') as string} value={settings.locationSet} onChange={e => handleChange('locationSet', e.target.value)}>
                     <optgroup label={t('storyCreator.directingOptions.locationSet.standardLandGroup') as string}>
                        {locationSetOptions.standard.map(opt => (
-                            <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                            <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
                        ))}
                     </optgroup>
-                    <option value={locationSetOptions.custom.value}>{t(locationSetOptions.custom.labelKey)}</option>
+                    <option value={locationSetOptions.custom.value}>{t(locationSetOptions.custom.labelKey) as string}</option>
                 </SelectInput>
                  {settings.locationSet === 'custom_location' && (
                     <input type="text" value={settings.customLocation} onChange={e => handleChange('customLocation', e.target.value)} placeholder={t('storyCreator.customLocationPlaceholder') as string} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2 text-sm mt-2 text-gray-200" />
@@ -92,21 +94,21 @@ export const DirectingDesk: React.FC<DirectingDeskProps> = ({ settings, setSetti
 
                 <SelectInput label={t('storyCreator.weatherSet') as string} value={settings.weatherSet} onChange={e => handleChange('weatherSet', e.target.value)}>
                     {weatherSetOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                        <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
                     ))}
                 </SelectInput>
 
                 <SelectInput label={t('storyCreator.cameraStyleSet') as string} value={settings.cameraStyleSet} onChange={e => handleChange('cameraStyleSet', e.target.value)}>
                      <optgroup label={t('storyCreator.directingOptions.cameraStyleSet.standardGroup') as string}>
                         {cameraStyleOptions.standard.map(opt => (
-                            <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                            <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
                         ))}
                     </optgroup>
                 </SelectInput>
 
                 <SelectInput label={t('storyCreator.narratorLanguageSet') as string} value={settings.narratorLanguageSet} onChange={e => handleChange('narratorLanguageSet', e.target.value)}>
                     {narratorLanguageOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+                        <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
                     ))}
                 </SelectInput>
                 {settings.narratorLanguageSet === 'custom_language' && (
