@@ -11,129 +11,123 @@ Sebelum memulai, pastikan Anda memiliki:
 
 ## Pemasangan Langkah demi Langkah
 
-### Langkah 1: Hubungkan ke VPS Anda
-Hubungkan ke server Anda menggunakan SSH. Ganti `ALAMAT_IP_VPS_ANDA` dengan alamat IP server Anda.
-```bash
-ssh root@ALAMAT_IP_VPS_ANDA
-```
+# README - Menjalankan Vite Project 24 Jam di
+VPS Ubuntu
+Dokumen ini berisi panduan lengkap step-by-step untuk menjalankan project berbasis Vite di VPS
+Ubuntu agar bisa diakses publik dan tetap berjalan meskipun server di-restart.
+---
+## 1. Update Sistem & Install Utilitas
+apt update && apt upgrade -y
+apt install -y curl git build-essential ca-certificates nginx ufw
+---
 
-### Langkah 2: Perbarui Sistem Anda
-Pastikan semua paket sistem Anda sudah yang terbaru.
-```bash
-sudo apt update && sudo apt upgrade -y
-```
+## 2. Install Node.js (contoh Node 18 LTS)
+curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+apt-get install -y nodejs
+node -v
+npm -v
+---
 
-### Langkah 3: Instal Node.js
-Kita akan menginstal Node.js v18.x, yang merupakan versi Long Term Support (LTS) yang stabil.
-```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-sudo apt-get install -y nodejs
-```
-Verifikasi instalasi:
-```bash
-node -v  # Harus menunjukkan v18.x.x
-npm -v   # Harus menunjukkan versi npm yang kompatibel
-```
+## 3. Siapkan Project
+mkdir -p /var/www
+cd /var/www
+git clone https://github.com/tokoalanshor2020-source/AL-ANSHOR-VEO-GENERATOR.git myproject
+cd myproject
+npm install
+---
 
-### Langkah 4: Instal PM2 dan Serve
-PM2 adalah manajer proses yang akan menjaga aplikasi kita tetap berjalan terus-menerus. `serve` adalah server statis sederhana.
-```bash
-sudo npm install pm2 -g
-sudo npm install serve -g
-```
-
-### Langkah 5: Instal Nginx
-Nginx akan bertindak sebagai reverse proxy, mengarahkan lalu lintas dari internet publik ke aplikasi kita yang sedang berjalan.
-```bash
-sudo apt install nginx -y
-```
-
-### Langkah 6: Unggah Kode Aplikasi
-Buat direktori untuk aplikasi dan navigasikan ke dalamnya.
-```bash
-sudo mkdir -p /var/www/veo-generator
-cd /var/www/veo-generator
-```
-Sekarang, Anda perlu mengunggah file aplikasi Anda (seluruh folder proyek) ke direktori ini. Anda dapat menggunakan alat seperti `scp` dari mesin lokal Anda.
-```bash
-# Jalankan perintah ini dari terminal mesin LOKAL Anda
-scp -r /path/to/your/local/project/* root@ALAMAT_IP_VPS_ANDA:/var/www/veo-generator/
-```
-Atur kepemilikan yang benar untuk direktori tersebut. Ganti `nama_pengguna` dengan nama pengguna Anda di VPS.
-```bash
-sudo chown -R nama_pengguna:nama_pengguna /var/www/veo-generator
-```
-
-### Langkah 7: Jalankan Aplikasi dengan PM2
-Navigasikan ke direktori aplikasi Anda dan mulai proses `serve` dengan PM2. Perintah ini memberitahu `serve` untuk menghosting direktori saat ini (`.`), memperlakukannya sebagai aplikasi halaman tunggal (`-s`), mendengarkan di port 5000 (`-l 5000`), dan menamai prosesnya `veo-app`.
-```bash
-cd /var/www/veo-generator
-pm2 start serve --name "veo-app" -- -s . -l 5000
-```
-Untuk memastikan PM2 dimulai secara otomatis saat server di-reboot, jalankan perintah berikut:
-```bash
-pm2 startup
-# Ini akan menghasilkan sebuah perintah. Salin dan jalankan perintah tersebut.
-pm2 save
-```
-
-### Langkah 8: Konfigurasi Nginx sebagai Reverse Proxy
-Buat file konfigurasi Nginx baru untuk aplikasi Anda.
-```bash
-sudo nano /etc/nginx/sites-available/veo-generator
-```
-Tempelkan konfigurasi berikut ke dalam file. Ganti `DOMAIN_ATAU_IP_ANDA` dengan nama domain atau alamat IP VPS Anda.
-```nginx
-server {
-    listen 80;
-    server_name DOMAIN_ATAU_IP_ANDA;
-
-    root /var/www/veo-generator;
-    index index.html;
-
-    location / {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
+## 4. Jalankan Vite Dev Server (Public)
+npm run dev -- --host 0.0.0.0
+Atau edit vite.config.js:
+server: {
+host: true,
+port: 5173,
+hmr: {
+host: 'YOUR_PUBLIC_IP_OR_DOMAIN',
+protocol: 'ws',
+port: 5173
 }
-```
-Simpan file (Ctrl+X, lalu Y, lalu Enter).
+}
+---
 
-Aktifkan konfigurasi baru ini dengan membuat tautan simbolis.
-```bash
-sudo ln -s /etc/nginx/sites-available/veo-generator /etc/nginx/sites-enabled/
-```
-Uji konfigurasi Nginx Anda untuk kesalahan sintaks.
-```bash
-sudo nginx -t
-```
-Jika tes berhasil, restart Nginx untuk menerapkan perubahan.
-```bash
-sudo systemctl restart nginx
-```
-Aplikasi Anda sekarang seharusnya dapat diakses di `http://DOMAIN_ATAU_IP_ANDA`.
+## 5. Firewall (jika expose port 5173 langsung)
+ufw allow OpenSSH
+ufw allow 5173/tcp
+ufw enable
+---
 
-### Langkah 9 (Disarankan): Amankan dengan SSL Let's Encrypt
-Jika Anda memiliki nama domain, Anda dapat mengamankan situs Anda dengan sertifikat SSL gratis dari Let's Encrypt.
-```bash
-sudo apt install certbot python3-certbot-nginx -y
-sudo certbot --nginx -d DOMAIN_ATAU_IP_ANDA
-```
-Ikuti petunjuk di layar. Certbot akan secara otomatis mendapatkan sertifikat dan memperbarui konfigurasi Nginx Anda untuk menangani lalu lintas HTTPS.
+## 6. Setup Nginx Reverse Proxy (Direkomendasikan)
+File: /etc/nginx/sites-available/myproject
+server {
+listen 80;
+server_name YOUR_DOMAIN_OR_IP;
+location / {
+proxy_pass http://127.0.0.1:5173;
+proxy_http_version 1.1;
+proxy_set_header Upgrade $http_upgrade;
+proxy_set_header Connection "upgrade";
+proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_cache_bypass $http_upgrade;
+}
+}
+Aktifkan:
+ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled/myproject
+nginx -t && systemctl reload nginx
+---
 
-## Mengelola Aplikasi Anda
-Berikut adalah beberapa perintah PM2 yang berguna:
-- `pm2 list`: Menampilkan semua proses aplikasi yang berjalan.
-- `pm2 stop veo-app`: Menghentikan aplikasi Anda.
-- `pm2 restart veo-app`: Memulai ulang aplikasi Anda.
-- `pm2 logs veo-app`: Melihat log real-time untuk aplikasi Anda.
-- `pm2 flush veo-app`: Membersihkan log.
+## 7. HTTPS (Opsional)
+- Pakai domain → gunakan Certbot:
+apt install -y certbot python3-certbot-nginx
+certbot --nginx -d yourdomain.com -d www.yourdomain.com
+- Jika hanya IP → bisa gunakan self-signed certificate.
+---
 
-Aplikasi Anda sekarang telah terpasang dan akan berjalan 24/7, serta akan dimulai ulang secara otomatis setelah server reboot.
+## 8. Menjalankan 24 Jam (Auto Start Setelah Reboot)
+### Opsi A: systemd Service
+Buat file /etc/systemd/system/vite-dev.service
+[Unit]
+Description=Vite Dev Server
+After=network.target
+[Service]
+Type=simple
+WorkingDirectory=/var/www/myproject
+ExecStart=/bin/sh -lc 'npm run dev -- --host 0.0.0.0'
+Restart=always
+RestartSec=5
+User=root
+[Install]
+WantedBy=multi-user.target
+Aktifkan:
+systemctl daemon-reload
+systemctl enable --now vite-dev
+journalctl -u vite-dev -f
+### Opsi B: PM2 (Process Manager)
+npm install -g pm2
+cd /var/www/myproject
+pm2 start "npm run dev -- --host 0.0.0.0" --name myproject
+pm2 save
+pm2 startup systemd
+Cek status:
+pm2 list
+pm2 logs myproject
+---
+
+## 9. Produksi (Saran)
+Lebih aman gunakan build statis:
+npm run build
+Kemudian serve hasil build (/dist) dengan Nginx sebagai static files.
+---
+## 10. Troubleshooting
+- Port tidak terbuka: cek dengan `ss -tulpn | grep 5173`
+- HMR error: pastikan vite.config.js sudah di-set host & Nginx proxy mendukung WebSocket
+- 502 Bad Gateway: pastikan Vite jalan & proxy_pass benar
+- Firewall block: cek `ufw status`
+---
+
+## Ringkasan
+- Untuk akses publik: gunakan --host 0.0.0.0
+- Untuk keamanan & stabilitas: gunakan Nginx reverse proxy + domain + HTTPS
+- Untuk auto start: gunakan systemd atau PM2
+- Untuk produksi: jangan pakai dev server, gunakan npm run build + Nginx
+---
