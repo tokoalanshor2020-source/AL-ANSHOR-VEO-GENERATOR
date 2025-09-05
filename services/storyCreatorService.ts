@@ -26,7 +26,7 @@ export interface DevelopedCharacterData {
 
 export interface StoryIdeaOptions {
     contentFormat: string;
-    characterName: string;
+    characterNames: string[];
     theme: string;
 }
 
@@ -327,12 +327,16 @@ export const generateActionDna = async (apiKey: string, characterData: Developed
 
 export const generateStoryIdeas = async (apiKey: string, options: StoryIdeaOptions): Promise<StoryIdea[]> => {
     const ai = getAiInstance(apiKey);
-    const { contentFormat, characterName, theme } = options;
+    const { contentFormat, characterNames, theme } = options;
+
+    const characterPromptPart = (characterNames.length === 0 || (characterNames.length === 1 && characterNames[0] === 'random'))
+        ? "Pilihkan Secara Acak"
+        : characterNames.join(', ');
     
     const prompt = `Anda adalah penulis naskah YouTube. Berikan 3 ide kerangka naskah unik dalam Bahasa Indonesia.
 
     - Format Konten: "${contentFormat}"
-    - Karakter Utama: "${characterName}"
+    - Karakter Utama: "${characterPromptPart}"
     - Tema Cerita: "${theme}"
 
     Untuk setiap ide, berikan: 'title_suggestion' dan 'script_outline'.`;
@@ -410,19 +414,45 @@ export const generatePublishingKit = async (apiKey: string, options: PublishingK
     const characterInfo = characters.map(c => c.name).join(', ');
     const primaryCharacter = characters.length > 0 ? characters[0].name : "mainan ini";
 
-    const prompt = `Anda adalah ahli strategi konten YouTube. Berdasarkan data berikut, buatlah "Kit Siaran" lengkap.
+    const prompt = `Anda adalah seorang ahli strategi konten YouTube dan pakar SEO viral. Berdasarkan data cerita berikut, buatlah "Kit Siaran Ajaib" yang dioptimalkan secara maksimal untuk kesuksesan algoritma dan skor tertinggi di VidIQ & TubeBuddy.
 
-    **Naskah Narasi:** ${fullStoryNarration}
-    **Judul Asli:** "${logline}"
-    **Karakter Utama:** "${primaryCharacter}"
-    **Semua Karakter:** "${characterInfo}"
+    **Data Sumber:**
+    - Naskah Narasi Lengkap: ${fullStoryNarration}
+    - Judul Asli Cerita: "${logline}"
+    - Karakter Utama: "${primaryCharacter}"
+    - Semua Karakter dalam Cerita: "${characterInfo}"
+    
+    ---
 
-    Buat aset berikut dalam format JSON:
-    1.  youtube_title_id & youtube_title_en
-    2.  youtube_description_id & youtube_description_en (dengan timestamps jika memungkinkan)
-    3.  youtube_tags_id (array Bahasa Indonesia) & youtube_tags_en (array Bahasa Inggris)
-    4.  affiliate_links: objek dengan 'primary_character_template' dan 'all_characters_template'. Gunakan placeholder [MASUKKAN LINK ANDA].
-    5.  thumbnail_concepts: array berisi DUA objek. Setiap objek harus punya 'concept_title', 'concept_description', 'image_prompt' (prompt detail untuk AI gambar, dalam Bahasa Inggris), dan 'cta_overlay_text' (contoh: "TONTON SEKARANG!").`;
+    **TUGAS: Hasilkan Aset YouTube Berikut dalam Format JSON Sesuai Skema yang Diberikan**
+
+    **1. Judul YouTube (youtube_title_id & youtube_title_en):**
+    - **Kriteria Wajib:**
+        - Buat judul yang sangat menarik (clickbait positif), mungkin kontroversial, dan mengandung hook yang kuat untuk memancing klik.
+        - Lakukan riset kata kunci untuk memastikan judul sangat SEO-friendly dan akan menempati peringkat tinggi di pencarian YouTube.
+        - **WAJIB MAKSIMAL 100 KARAKTER.**
+        - Targetkan skor setinggi mungkin di VidIQ dan TubeBuddy.
+
+    **2. Deskripsi YouTube (youtube_description_id & youtube_description_en):**
+    - **Kriteria Wajib:**
+        - Tulis deskripsi yang kaya akan kata kunci SEO yang relevan, menceritakan kembali ringkasan cerita dengan menarik.
+        - Sertakan timestamp untuk adegan-adegan penting jika memungkinkan.
+        - Tambahkan 3-5 tagar (hashtag) yang sangat relevan dan trending di akhir deskripsi.
+        - **WAJIB MAKSIMAL 5000 KARAKTER.**
+
+    **3. Tag YouTube (youtube_tags_id & youtube_tags_en):**
+    - **Kriteria Wajib:**
+        - Hasilkan daftar tag yang sangat relevan, menargetkan kata kunci bervolume tinggi dan rendah persaingan.
+        - Sertakan kata kunci long-tail dan short-tail.
+        - Dirancang untuk memaksimalkan visibilitas di rekomendasi dan pencarian YouTube.
+        - **TOTAL GABUNGAN SEMUA KARAKTER TAG TIDAK BOLEH MELEBIHI 500 KARAKTER.**
+
+    **4. Link Afiliasi (affiliate_links):**
+    - Buat objek dengan 'primary_character_template' dan 'all_characters_template'. Gunakan placeholder [MASUKKAN LINK ANDA DI SINI].
+
+    **5. Konsep Thumbnail (thumbnail_concepts):**
+    - Buat array berisi DUA konsep thumbnail.
+    - Setiap konsep harus memiliki 'concept_title', 'concept_description', 'image_prompt' (prompt detail dalam Bahasa Inggris untuk AI gambar), dan 'cta_overlay_text' (contoh teks yang menarik perhatian seperti "TONTON SEKARANG!").`;
     
      const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',

@@ -20,13 +20,31 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     
     // Form state
     const [contentFormat, setContentFormat] = useState('cinematic_adventure');
-    const [characterName, setCharacterName] = useState('random');
+    const [selectedCharacterNames, setSelectedCharacterNames] = useState<string[]>(['random']);
     const [theme, setTheme] = useState('random');
     const [customTheme, setCustomTheme] = useState('');
     
     // Results state
     const [ideas, setIdeas] = useState<StoryIdea[]>([]);
     const [selectedIdea, setSelectedIdea] = useState<StoryIdea | null>(null);
+
+     const handleCharacterSelectionChange = (characterIdentifier: string, isChecked: boolean) => {
+        if (characterIdentifier === 'random') {
+            setSelectedCharacterNames(isChecked ? ['random'] : []);
+        } else {
+            setSelectedCharacterNames(prev => {
+                const withoutRandom = prev.filter(name => name !== 'random');
+                if (isChecked) {
+                    return [...withoutRandom, characterIdentifier];
+                } else {
+                    const newSelection = withoutRandom.filter(name => name !== characterIdentifier);
+                    // If it becomes empty, default back to random
+                    return newSelection.length === 0 ? ['random'] : newSelection;
+                }
+            });
+        }
+    };
+
 
     const handleGenerateIdeas = async () => {
         if (!activeApiKey) return;
@@ -36,7 +54,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         try {
             const generatedIdeas = await generateStoryIdeas(activeApiKey, {
                 contentFormat,
-                characterName,
+                characterNames: selectedCharacterNames,
                 theme: theme === 'custom_theme' ? customTheme : theme,
             });
             setIdeas(generatedIdeas);
@@ -91,17 +109,50 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                         
                         <div>
                              <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step2Label')}</label>
-                            <select value={characterName} onChange={e => setCharacterName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm">
-                                <option value="random">{t('smartDirector.characterOptions.random')}</option>
+                            <div className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm max-h-48 overflow-y-auto space-y-2">
+                                <div className="flex items-center">
+                                    <input 
+                                        type="checkbox"
+                                        id="char-random"
+                                        checked={selectedCharacterNames.includes('random')}
+                                        onChange={(e) => handleCharacterSelectionChange('random', e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-500 bg-base-100 text-brand-primary focus:ring-brand-secondary"
+                                    />
+                                    <label htmlFor="char-random" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.random')}</label>
+                                </div>
+                                
                                 {characters.length > 0 && (
-                                    <optgroup label={t('smartDirector.characterOptions.yourGarage') as string}>
-                                        {characters.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                                    </optgroup>
+                                    <div>
+                                        <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.yourGarage')}</p>
+                                        {characters.map(c => (
+                                            <div key={c.id} className="flex items-center pl-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`char-${c.id}`}
+                                                    checked={selectedCharacterNames.includes(c.name)}
+                                                    onChange={(e) => handleCharacterSelectionChange(c.name, e.target.checked)}
+                                                    className="h-4 w-4 rounded border-gray-500 bg-base-100 text-brand-primary focus:ring-brand-secondary"
+                                                />
+                                                <label htmlFor={`char-${c.id}`} className="ml-3 text-gray-300">{c.name}</label>
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
-                                <optgroup label={t('smartDirector.characterOptions.construction') as string}>
-                                    <option value="Beni si Buldoser Pemberani">{t('smartDirector.characterOptions.beniBulldozer')}</option>
-                                </optgroup>
-                            </select>
+                                
+                                <div>
+                                    <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.construction')}</p>
+                                    <div className="flex items-center pl-2">
+                                        <input
+                                            type="checkbox"
+                                            id="char-beni"
+                                            checked={selectedCharacterNames.includes('Beni si Buldoser Pemberani')}
+                                            onChange={(e) => handleCharacterSelectionChange('Beni si Buldoser Pemberani', e.target.checked)}
+                                            className="h-4 w-4 rounded border-gray-500 bg-base-100 text-brand-primary focus:ring-brand-secondary"
+                                        />
+                                        <label htmlFor="char-beni" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.beniBulldozer')}</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
