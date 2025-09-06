@@ -158,9 +158,16 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
                                     </div>
                                     <textarea value={idea} onChange={e => setIdea(e.target.value)} placeholder={t('characterWorkshop.ideaPlaceholder') as string} className="w-full h-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500" rows={4}></textarea>
                                 </div>
-                                 <button onClick={handleDesignWithAi} disabled={isProcessingAi || !activeApiKey} className="mt-4 w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition-colors">
-                                    {(isProcessingAi ? t('characterWorkshop.designingWithAiButton') : t('characterWorkshop.designWithAiButton')) as string}
-                                </button>
+                                 <div className="mt-4">
+                                    <button onClick={handleDesignWithAi} disabled={isProcessingAi || !activeApiKey} className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:opacity-70 transition-colors">
+                                        {(isProcessingAi ? t('characterWorkshop.designingWithAiButton') : t('characterWorkshop.designWithAiButton')) as string}
+                                    </button>
+                                    {!activeApiKey && (
+                                        <p className="text-xs text-yellow-400/80 text-center mt-2">
+                                            {t('alertSetStoryApiKey') as string}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
