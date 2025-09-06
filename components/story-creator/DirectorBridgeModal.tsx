@@ -87,7 +87,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     if (!isOpen) return null;
 
     return (
-        <div className="fixed top-24 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
+        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
             <main className="flex-grow overflow-y-auto">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
                 {/* Step 1: Form */}
@@ -139,20 +139,6 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                                         ))}
                                     </div>
                                 )}
-                                
-                                <div>
-                                    <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.construction') as string}</p>
-                                    <div className="flex items-center pl-2">
-                                        <input
-                                            type="checkbox"
-                                            id="char-beni"
-                                            checked={selectedCharacterNames.includes('Beni si Buldoser Pemberani')}
-                                            onChange={(e) => handleCharacterSelectionChange('Beni si Buldoser Pemberani', e.target.checked)}
-                                            className="h-4 w-4 rounded border-gray-500 bg-base-100 text-brand-primary focus:ring-brand-secondary"
-                                        />
-                                        <label htmlFor="char-beni" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.beniBulldozer') as string}</label>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 

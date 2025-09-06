@@ -206,8 +206,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Choose Randomly",
         yourGarage: "🚗 Your Garage",
-        construction: "🚛 Construction Vehicles",
-        beniBulldozer: "Beni the Brave Bulldozer",
       },
       themeOptions: {
         random: "Choose Randomly",
@@ -243,7 +241,7 @@ const translations: { [key in Language]: Translations } = {
     generateButton: "Hasilkan Video",
     generatingButton: "Menghasilkan Video...",
     loaderTitle: "Menghasilkan Video Anda",
-    loadingMessages: [ "Menginisialisasi model VEO...", "Menganalisis prompt Anda...", "Menyusun adegan utama...", "Menghasilkan bingkai awal...", "Merender urutan video... ini mungkin memakan waktu beberapa menit.", "Meningkatkan skala ke resolusi tinggi...", "Menambahkan suara dan sentuhan akhir...", "Hampir selesai, menyiapkan file video akhir." ],
+    loadingMessages: [ "Menginisialisasi model VEO...", "Menganalisisis prompt Anda...", "Menyusun adegan utama...", "Menghasilkan bingkai awal...", "Merender urutan video... ini mungkin memakan waktu beberapa menit.", "Meningkatkan skala ke resolusi tinggi...", "Menambahkan suara dan sentuhan akhir...", "Hampir selesai, menyiapkan file video akhir." ],
     playerTitle: "Pembuatan Selesai!",
     downloadButton: "Unduh Video",
     storyApiKeyManagerTitle: "Kunci API Cerita",
@@ -405,8 +403,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Pilihkan Secara Acak",
         yourGarage: "🚗 Garasi Anda",
-        construction: "🚛 Kendaraan Konstruksi",
-        beniBulldozer: "Beni si Buldoser Pemberani",
       },
       themeOptions: {
         random: "Pilihkan Secara Acak",
@@ -604,8 +600,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Elegir al azar",
         yourGarage: "🚗 Tu garaje",
-        construction: "🚛 Vehículos de construcción",
-        beniBulldozer: "Beni el Bulldozer Valiente",
       },
       themeOptions: {
         random: "Elegir al azar",
@@ -802,8 +796,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "随机选择",
         yourGarage: "🚗 您的车库",
-        construction: "🚛 工程车辆",
-        beniBulldozer: "勇敢的推土机贝尼",
       },
       themeOptions: {
         random: "随机选择",
@@ -1000,8 +992,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "यादृच्छिक रूप से चुनें",
         yourGarage: "🚗 आपका गैराज",
-        construction: "🚛 निर्माण वाहन",
-        beniBulldozer: "बहादुर बुलडोजर बेनी",
       },
       themeOptions: {
         random: "यादृच्छिक रूप से चुनें",
@@ -1198,8 +1188,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "اختر بشكل عشوائي",
         yourGarage: "🚗 المرآب الخاص بك",
-        construction: "🚛 مركبات البناء",
-        beniBulldozer: "بيني الجرافة الشجاعة",
       },
       themeOptions: {
         random: "اختر بشكل عشوائي",
@@ -1396,8 +1384,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Escolher Aleatoriamente",
         yourGarage: "🚗 Sua Garagem",
-        construction: "🚛 Veículos de Construção",
-        beniBulldozer: "Beni, o Bulldozer Corajoso",
       },
       themeOptions: {
         random: "Escolher Aleatoriamente",
@@ -1594,8 +1580,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "এলোমেলোভাবে বেছে নিন",
         yourGarage: "🚗 আপনার গ্যারেজ",
-        construction: "🚛 নির্মাণ যানবাহন",
-        beniBulldozer: "সাহসী বুলডোজার বেনি",
       },
       themeOptions: {
         random: "এলোমেলোভাবে বেছে নিন",
@@ -1792,8 +1776,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Выбрать случайно",
         yourGarage: "🚗 Ваш гараж",
-        construction: "🚛 Строительная техника",
-        beniBulldozer: "Храбрый бульдозер Бени",
       },
       themeOptions: {
         random: "Выбрать случайно",
@@ -1990,8 +1972,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "ランダムに選択",
         yourGarage: "🚗 あなたのガレージ",
-        construction: "🚛 建設車両",
-        beniBulldozer: "勇敢なブルドーザーのベニ",
       },
       themeOptions: {
         random: "ランダムに選択",
@@ -2188,8 +2168,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Zufällig wählen",
         yourGarage: "🚗 Deine Garage",
-        construction: "🚛 Baufahrzeuge",
-        beniBulldozer: "Beni der tapfere Bulldozer",
       },
       themeOptions: {
         random: "Zufällig wählen",
@@ -2386,8 +2364,6 @@ const translations: { [key in Language]: Translations } = {
       characterOptions: {
         random: "Choisir au hasard",
         yourGarage: "🚗 Votre garage",
-        construction: "🚛 Véhicules de construction",
-        beniBulldozer: "Beni le courageux bulldozer",
       },
       themeOptions: {
         random: "Choisir au hasard",

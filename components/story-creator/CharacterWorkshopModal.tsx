@@ -149,7 +149,7 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed top-24 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
+        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
             {/* Main scrollable content */}
             <main className="flex-grow overflow-y-auto bg-base-100">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
