@@ -615,7 +615,7 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
             - **Criteria:**
                 - Must be a JSON array of strings in **${targetLanguageName}**.
                 - Total combined character length must not exceed 500 characters.
-                - Must include a mix of high-volume and low-competition long-tail and short-tail keywords for the target region's algorithm.
+                - Must include a mix of of high-volume and low-competition long-tail and short-tail keywords for the target region's algorithm.
         
             **4. Thumbnail CTA Texts (key: "ctaTexts"):**
              - **Criteria:**
@@ -730,6 +730,15 @@ const drawTextWithOutline = (
     ctx.fillText(displayText, x, y);
 };
 
+const base64ToBlob = (base64: string, mimeType: string): Blob => {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+};
 
 export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { hook: string; character: string; goal: string; }): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -738,6 +747,9 @@ export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { ho
         if (!ctx) return reject(new Error("Could not create canvas context"));
 
         const img = new Image();
+        const blob = base64ToBlob(imageData.base64, imageData.mimeType);
+        const objectUrl = URL.createObjectURL(blob);
+
         img.onload = () => {
             canvas.width = img.width;
             canvas.height = img.height;
@@ -767,9 +779,13 @@ export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { ho
             drawTextWithOutline(ctx, textParts.character, canvas.width / 2, charY, charFontSize, false);
             drawTextWithOutline(ctx, textParts.hook, canvas.width / 2, hookY, hookFontSize, true); // Hook is all caps
             
+            URL.revokeObjectURL(objectUrl);
             resolve(canvas.toDataURL('image/png'));
         };
-        img.onerror = () => reject(new Error("Failed to load image for canvas overlay."));
-        img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error("Failed to load image for canvas overlay."));
+        };
+        img.src = objectUrl;
     });
 };
