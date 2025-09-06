@@ -63,12 +63,12 @@ cd /var/www
 
 ### Clone repositori dari GitHub
 ```bash
-sudo git clone https://github.com/tokoalanshor2020-source/AL-ANSHOR-VEO-GENERATOR.git myproject
+sudo git clone https://github.com/tokoalanshor2020-source/AL-ANSHOR-VEO-GENERATOR.git al-anshor-veo-generator
 ```
 
 ### Pindah ke direktori proyek
 ```bash
-cd myproject
+cd al-anshor-veo-generator
 ```
 
 ### Instal semua dependensi proyek
@@ -132,13 +132,13 @@ sudo npm install -g pm2
 
 ### Pindah ke direktori proyek
 ```bash
-cd /var/www/myproject
+cd /var/www/al-anshor-veo-generator
 ```
 
 ### Jalankan server pengembangan Vite menggunakan PM2
 ### Perintah '-- --host' diperlukan agar Vite mendengarkan koneksi dari Nginx
 ```bash
-pm2 start "npm run dev -- --host" --name myproject
+pm2 start "npm run dev -- --host" --name al-anshor-veo-generator
 ```
 
 ### Simpan daftar proses PM2 agar dapat dipulihkan saat reboot
@@ -155,8 +155,8 @@ Anda akan melihat perintah output yang perlu Anda jalankan (biasanya `sudo env P
 
 **Perintah PM2 yang Berguna:**
 -   Melihat daftar semua aplikasi: `pm2 list`
--   Melihat log aplikasi: `pm2 logs myproject`
--   Memulai ulang aplikasi: `pm2 restart myproject`
+-   Melihat log aplikasi: `pm2 logs al-anshor-veo-generator`
+-   Memulai ulang aplikasi: `pm2 restart al-anshor-veo-generator`
 
 
 # Langkah 6: Konfigurasi Nginx sebagai Reverse Proxy
@@ -166,7 +166,7 @@ Menjalankan server pengembangan Vite secara langsung ke internet tidak aman dan 
 ### 1.  Buat file konfigurasi Nginx baru untuk proyek Anda.
 
 ```bash
-sudo nano /etc/nginx/sites-available/myproject
+sudo nano /etc/nginx/sites-available/al-anshor-veo-generator
 ```
 
 ### 2.  Salin dan tempel konfigurasi berikut ke dalam file tersebut. **Jangan lupa ganti `your_domain_or_ip`** dengan nama domain atau alamat IP VPS Anda.
@@ -191,7 +191,7 @@ sudo nano /etc/nginx/sites-available/myproject
 ### 3.  Aktifkan konfigurasi dengan membuat *symbolic link*.
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/al-anshor-veo-generator /etc/nginx/sites-enabled/
 ```
 
 ### 4.  Uji konfigurasi Nginx dan muat ulang jika tidak ada kesalahan.
@@ -223,19 +223,19 @@ Untuk lingkungan produksi, lebih aman dan performan untuk membuat *build* statis
 
 ### 1.  Buat build statis.
 ```bash
-cd /var/www/myproject
+cd /var/www/al-anshor-veo-generator
 ```
 ```bash
 sudo npm run build
 ```
 
-### 2.  Ubah konfigurasi Nginx (`sudo nano /etc/nginx/sites-available/myproject`) untuk menyajikan file dari direktori `dist`.
+### 2.  Ubah konfigurasi Nginx (`sudo nano /etc/nginx/sites-available/al-anshor-veo-generator`) untuk menyajikan file dari direktori `dist`.
     ```nginx
     server {
         listen 80;
         server_name your_domain_or_ip;
 
-        root /var/www/myproject/dist;
+        root /var/www/al-anshor-veo-generator/dist;
         index index.html;
 
         location / {
