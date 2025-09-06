@@ -112,7 +112,7 @@ export const generateVideo = async ({ allKeys, activeKey, onKeyUpdate, options }
             `;
         
             const requestPayload: any = {
-                model: 'veo-3.0-generate-preview',
+                model: 'veo-2.0-generate-001',
                 prompt: augmentedPrompt,
                 config: {
                     numberOfVideos: 1,

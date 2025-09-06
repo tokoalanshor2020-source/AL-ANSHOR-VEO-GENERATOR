@@ -14,6 +14,7 @@ const STORY_API_KEYS_STORAGE_KEY = 'gemini-story-api-keys';
 const ACTIVE_STORY_API_KEY_STORAGE_KEY = 'gemini-active-story-api-key';
 const VIDEO_API_KEYS_STORAGE_KEY = 'gemini-video-api-keys';
 const ACTIVE_VIDEO_API_KEY_STORAGE_KEY = 'gemini-active-video-api-key';
+const CHARACTERS_STORAGE_KEY = 'gemini-story-characters';
 
 type AppView = 'story-creator' | 'video-generator';
 type KeyManagerType = 'story' | 'video';
@@ -48,7 +49,16 @@ export default function App() {
   const [promptForVideo, setPromptForVideo] = useState<string>('');
   
   // --- Lifted State from StoryCreator ---
-  const [characters, setCharacters] = useState<Character[]>([]);
+  const [characters, setCharacters] = useState<Character[]>(() => {
+    try {
+        const storedCharacters = localStorage.getItem(CHARACTERS_STORAGE_KEY);
+        return storedCharacters ? JSON.parse(storedCharacters) : [];
+    } catch (e) {
+        console.error("Failed to parse characters from localStorage", e);
+        localStorage.removeItem(CHARACTERS_STORAGE_KEY);
+        return [];
+    }
+  });
   const [storyboard, setStoryboard] = useState<StoryboardScene[]>([]);
   const [logline, setLogline] = useState('');
   const [scenario, setScenario] = useState('');
@@ -62,6 +72,15 @@ export default function App() {
     document.documentElement.lang = language;
     document.documentElement.dir = dir;
   }, [language, dir]);
+
+  useEffect(() => {
+    // Save characters to localStorage whenever they change
+    try {
+        localStorage.setItem(CHARACTERS_STORAGE_KEY, JSON.stringify(characters));
+    } catch(e) {
+        console.error("Failed to save characters to localStorage", e);
+    }
+  }, [characters]);
 
   useEffect(() => {
     // Load story keys
