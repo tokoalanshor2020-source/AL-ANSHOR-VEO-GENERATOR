@@ -19,14 +19,22 @@ const CHARACTERS_STORAGE_KEY = 'gemini-story-characters';
 type AppView = 'story-creator' | 'video-generator';
 type KeyManagerType = 'story' | 'video';
 
+// FIX: Initialize all properties for the `DirectingSettings` type to resolve TypeScript error.
 const initialDirectingSettings: DirectingSettings = {
     sceneStyleSet: 'standard_cinematic',
+    customSceneStyle: '',
     locationSet: 'natural_outdoor',
     customLocation: '',
     weatherSet: 'sunny',
+    customWeather: '',
     cameraStyleSet: 'standard_cinematic',
+    customCameraStyle: '',
     narratorLanguageSet: 'id',
     customNarratorLanguage: '',
+    timeOfDay: 'default',
+    artStyle: 'hyper_realistic',
+    soundtrackMood: 'epic_orchestral',
+    pacing: 'normal',
 };
 
 export default function App() {

@@ -1,3 +1,5 @@
+// types.ts
+
 export interface GeneratorOptions {
   prompt: string;
   image?: {
@@ -112,10 +114,17 @@ export interface PublishingKitData {
 
 export interface DirectingSettings {
   sceneStyleSet: string;
+  customSceneStyle: string;
   locationSet: string;
   customLocation: string;
   weatherSet: string;
+  customWeather: string;
   cameraStyleSet: string;
+  customCameraStyle: string;
   narratorLanguageSet: string;
   customNarratorLanguage: string;
+  timeOfDay: string;
+  artStyle: string;
+  soundtrackMood: string;
+  pacing: string;
 }

@@ -149,12 +149,12 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
             const characterDetails = characters.length > 0
                 ? `Karakter utama dalam cerita ini adalah: ${characters.map(c => `Nama: ${c.name}, ID Konsistensi: ${c.consistency_key}, Deskripsi Detail: ${c.designLanguage}, Fitur Kunci: ${c.keyFeatures.join(', ')}, Material: ${c.material}`).join('; ')}.`
                 : "Tidak ada karakter spesifik yang dipilih.";
-
-            let locationContext = `Lokasi: ${directingSettings.locationSet}.`;
-            if (directingSettings.locationSet === 'custom_location') {
-                locationContext = `Lokasi: ${directingSettings.customLocation.trim()}.`;
-            }
-
+            
+            // Handle custom inputs
+            const sceneStyle = directingSettings.sceneStyleSet === 'custom_scene' ? directingSettings.customSceneStyle.trim() : directingSettings.sceneStyleSet;
+            const location = directingSettings.locationSet === 'custom_location' ? directingSettings.customLocation.trim() : directingSettings.locationSet;
+            const weather = directingSettings.weatherSet === 'custom_weather' ? directingSettings.customWeather.trim() : directingSettings.weatherSet;
+            const cameraStyle = directingSettings.cameraStyleSet === 'custom_camera' ? directingSettings.customCameraStyle.trim() : directingSettings.cameraStyleSet;
             let narratorLanguage = directingSettings.narratorLanguageSet;
             if (narratorLanguage === 'custom_language') {
                 narratorLanguage = directingSettings.customNarratorLanguage.trim() || 'id';
@@ -168,13 +168,17 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
             **PERINTAH UTAMA: Prioritaskan konsistensi karakter di semua adegan. Gunakan "ID Konsistensi" dan "Deskripsi Detail" sebagai sumber kebenaran mutlak untuk penampilan karakter.**
         
             **Konteks Cerita (Character Bible):**
-            - Deskripsi Karakter (DNA Digital): ${characterDetails}
-            - Ringkasan Cerita: "${scenario}"
             - Judul: "${logline}"
-            - Gaya Adegan: ${directingSettings.sceneStyleSet}
-            - ${locationContext}
-            - Cuaca: ${directingSettings.weatherSet}
-            - Gaya Visual: ${directingSettings.cameraStyleSet}
+            - Ringkasan Cerita: "${scenario}"
+            - Deskripsi Karakter (DNA Digital): ${characterDetails}
+            - Gaya Adegan: ${sceneStyle}
+            - Lokasi: ${location}
+            - Cuaca & Suasana: ${weather}
+            - Waktu: ${directingSettings.timeOfDay}
+            - Gaya Seni: ${directingSettings.artStyle}
+            - Gaya Visual Kamera: ${cameraStyle}
+            - Tempo Adegan: ${directingSettings.pacing}
+            - Suasana Soundtrack: ${directingSettings.soundtrackMood}
             - ${narrationContext}
         
             **ATURAN PENTING:**
@@ -792,41 +796,4 @@ export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { ho
         
         img.onload = () => {
             canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
             
-            const baseWidth = 1280; // common thumbnail width
-            const scaleFactor = canvas.width / baseWidth;
-
-            // Define font sizes based on scale factor
-            const hookFontSize = Math.max(60, 100 * scaleFactor);
-            const charFontSize = Math.max(35, 55 * scaleFactor);
-            const goalFontSize = Math.max(25, 40 * scaleFactor);
-
-            // Define vertical positions and spacing
-            const bottomPadding = Math.max(30, 40 * scaleFactor);
-            const lineSpacing = Math.max(10, 15 * scaleFactor);
-            
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
-
-            const goalY = canvas.height - bottomPadding;
-            const charY = goalY - goalFontSize - lineSpacing;
-            const hookY = charY - charFontSize - lineSpacing;
-
-            // Draw texts from bottom to top
-            drawTextWithOutline(ctx, textParts.goal, canvas.width / 2, goalY, goalFontSize, false);
-            drawTextWithOutline(ctx, textParts.character, canvas.width / 2, charY, charFontSize, false);
-            drawTextWithOutline(ctx, textParts.hook, canvas.width / 2, hookY, hookFontSize, true); // Hook is all caps
-            
-            resolve(canvas.toDataURL('image/png'));
-        };
-        img.onerror = (err) => {
-            console.error("Image load error for canvas:", err);
-            reject(new Error("Failed to load image for canvas overlay."));
-        };
-        
-        // Use a direct data URI, which is the most reliable way to prevent canvas tainting.
-        img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
-    });
-};

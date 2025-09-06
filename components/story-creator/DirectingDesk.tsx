@@ -21,40 +21,13 @@ const SelectInput: React.FC<{
     </div>
 );
 
-// Data for the dropdowns
-const sceneSetOptions = [
-    { value: 'standard_cinematic', labelKey: 'storyCreator.directingOptions.sceneSet.standard_cinematic' },
-    { value: 'epic_destruction', labelKey: 'storyCreator.directingOptions.sceneSet.epic_destruction' },
-    { value: 'drifting_precision', labelKey: 'storyCreator.directingOptions.sceneSet.drifting_precision' },
-];
-
-const locationSetOptions = {
-    standard: [
-        { value: 'natural_outdoor', labelKey: 'storyCreator.directingOptions.locationSet.natural_outdoor' },
-        { value: 'kids_bedroom', labelKey: 'storyCreator.directingOptions.locationSet.kids_bedroom' },
-    ],
-    custom: { value: 'custom_location', labelKey: 'storyCreator.directingOptions.locationSet.custom_location' }
-};
-
-const weatherSetOptions = [
-    { value: 'sunny', labelKey: 'storyCreator.directingOptions.weatherSet.sunny' },
-    { value: 'cloudy', labelKey: 'storyCreator.directingOptions.weatherSet.cloudy' },
-    { value: 'rainy', labelKey: 'storyCreator.directingOptions.weatherSet.rainy' },
-];
-
-const cameraStyleOptions = {
-    standard: [
-        { value: 'standard_cinematic', labelKey: 'storyCreator.directingOptions.cameraStyleSet.standard_cinematic' },
-        { value: 'fpv_drone_dive', labelKey: 'storyCreator.directingOptions.cameraStyleSet.fpv_drone_dive' },
-    ]
-};
-
-const narratorLanguageOptions = [
-    { value: 'no_narrator', labelKey: 'storyCreator.directingOptions.narratorLanguageSet.no_narrator' },
-    { value: 'id', labelKey: 'storyCreator.directingOptions.narratorLanguageSet.id' },
-    { value: 'en', labelKey: 'storyCreator.directingOptions.narratorLanguageSet.en' },
-    { value: 'custom_language', labelKey: 'storyCreator.directingOptions.narratorLanguageSet.custom_language' },
-];
+const CustomInput: React.FC<{
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder: string;
+}> = ({ value, onChange, placeholder }) => (
+     <input type="text" value={value} onChange={onChange} placeholder={placeholder} className="w-full bg-base-100/50 border border-gray-500 rounded-lg p-2 text-sm mt-2 text-gray-200 placeholder-gray-400/80" />
+);
 
 
 export const DirectingDesk: React.FC<DirectingDeskProps> = ({ settings, setSettings }) => {
@@ -63,57 +36,92 @@ export const DirectingDesk: React.FC<DirectingDeskProps> = ({ settings, setSetti
     const handleChange = (field: keyof DirectingSettings, value: string) => {
         setSettings(prev => ({ ...prev, [field]: value }));
     };
+    
+    // Dynamically get options from i18n
+    const sceneSetOptions = t('storyCreator.directingOptions.sceneSet') as { [key: string]: string };
+    const locationSetOptions = t('storyCreator.directingOptions.locationSet') as { [key: string]: string };
+    const weatherSetOptions = t('storyCreator.directingOptions.weatherSet') as { [key: string]: string };
+    const cameraStyleSetOptions = t('storyCreator.directingOptions.cameraStyleSet') as { [key: string]: string };
+    const narratorLanguageSetOptions = t('storyCreator.directingOptions.narratorLanguageSet') as { [key: string]: string };
+    const timeOfDayOptions = t('storyCreator.directingOptions.timeOfDay') as { [key: string]: string };
+    const artStyleOptions = t('storyCreator.directingOptions.artStyle') as { [key: string]: string };
+    const soundtrackMoodOptions = t('storyCreator.directingOptions.soundtrackMood') as { [key: string]: string };
+    const pacingOptions = t('storyCreator.directingOptions.pacing') as { [key: string]: string };
+
+    const renderOptions = (options: { [key: string]: string }, excludeKeys: string[] = []) => {
+        return Object.entries(options)
+            .filter(([key]) => !excludeKeys.includes(key))
+            .map(([key, value]) => (
+                <option key={key} value={key}>{value}</option>
+            ));
+    };
 
     return (
         <div className="bg-base-200 rounded-xl border border-base-300">
             <div className="p-4">
-                {/* FIX: Cast result of t() to string */}
                 <h2 className="text-xl font-bold">{t('storyCreator.directingDesk') as string}</h2>
             </div>
             <div className="p-4 border-t border-base-300 space-y-4">
-                {/* FIX: Cast result of t() to string */}
                 <p className="text-sm text-gray-400">{t('storyCreator.deskDescription') as string}</p>
                 
-                <SelectInput label={t('storyCreator.sceneSet') as string} value={settings.sceneStyleSet} onChange={e => handleChange('sceneStyleSet', e.target.value)}>
-                    {sceneSetOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
-                    ))}
-                </SelectInput>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <SelectInput label={t('storyCreator.sceneSet') as string} value={settings.sceneStyleSet} onChange={e => handleChange('sceneStyleSet', e.target.value)}>
+                        {renderOptions(sceneSetOptions)}
+                    </SelectInput>
+                    {settings.sceneStyleSet === 'custom_scene' && (
+                        <CustomInput value={settings.customSceneStyle} onChange={e => handleChange('customSceneStyle', e.target.value)} placeholder={t('storyCreator.customSceneStylePlaceholder') as string} />
+                    )}
 
-                <SelectInput label={t('storyCreator.locationSet') as string} value={settings.locationSet} onChange={e => handleChange('locationSet', e.target.value)}>
-                    <optgroup label={t('storyCreator.directingOptions.locationSet.standardLandGroup') as string}>
-                       {locationSetOptions.standard.map(opt => (
-                            <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
-                       ))}
-                    </optgroup>
-                    <option value={locationSetOptions.custom.value}>{t(locationSetOptions.custom.labelKey) as string}</option>
-                </SelectInput>
-                 {settings.locationSet === 'custom_location' && (
-                    <input type="text" value={settings.customLocation} onChange={e => handleChange('customLocation', e.target.value)} placeholder={t('storyCreator.customLocationPlaceholder') as string} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2 text-sm mt-2 text-gray-200" />
-                )}
+                    <SelectInput label={t('storyCreator.locationSet') as string} value={settings.locationSet} onChange={e => handleChange('locationSet', e.target.value)}>
+                        <optgroup label={locationSetOptions.standardLandGroup}>
+                           {renderOptions(locationSetOptions, ['standardLandGroup', 'custom_location'])}
+                        </optgroup>
+                        <option value="custom_location">{locationSetOptions.custom_location}</option>
+                    </SelectInput>
+                    {settings.locationSet === 'custom_location' && (
+                        <CustomInput value={settings.customLocation} onChange={e => handleChange('customLocation', e.target.value)} placeholder={t('storyCreator.customLocationPlaceholder') as string} />
+                    )}
 
-                <SelectInput label={t('storyCreator.weatherSet') as string} value={settings.weatherSet} onChange={e => handleChange('weatherSet', e.target.value)}>
-                    {weatherSetOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
-                    ))}
-                </SelectInput>
+                    <SelectInput label={t('storyCreator.weatherSet') as string} value={settings.weatherSet} onChange={e => handleChange('weatherSet', e.target.value)}>
+                        {renderOptions(weatherSetOptions)}
+                    </SelectInput>
+                    {settings.weatherSet === 'custom_weather' && (
+                        <CustomInput value={settings.customWeather} onChange={e => handleChange('customWeather', e.target.value)} placeholder={t('storyCreator.customWeatherPlaceholder') as string} />
+                    )}
 
-                <SelectInput label={t('storyCreator.cameraStyleSet') as string} value={settings.cameraStyleSet} onChange={e => handleChange('cameraStyleSet', e.target.value)}>
-                     <optgroup label={t('storyCreator.directingOptions.cameraStyleSet.standardGroup') as string}>
-                        {cameraStyleOptions.standard.map(opt => (
-                            <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
-                        ))}
-                    </optgroup>
-                </SelectInput>
+                    <SelectInput label={t('storyCreator.cameraStyleSet') as string} value={settings.cameraStyleSet} onChange={e => handleChange('cameraStyleSet', e.target.value)}>
+                        <optgroup label={cameraStyleSetOptions.standardGroup}>
+                             {renderOptions(cameraStyleSetOptions, ['standardGroup', 'custom_camera'])}
+                        </optgroup>
+                        <option value="custom_camera">{cameraStyleSetOptions.custom_camera}</option>
+                    </SelectInput>
+                    {settings.cameraStyleSet === 'custom_camera' && (
+                        <CustomInput value={settings.customCameraStyle} onChange={e => handleChange('customCameraStyle', e.target.value)} placeholder={t('storyCreator.customCameraStylePlaceholder') as string} />
+                    )}
 
-                <SelectInput label={t('storyCreator.narratorLanguageSet') as string} value={settings.narratorLanguageSet} onChange={e => handleChange('narratorLanguageSet', e.target.value)}>
-                    {narratorLanguageOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{t(opt.labelKey) as string}</option>
-                    ))}
-                </SelectInput>
-                {settings.narratorLanguageSet === 'custom_language' && (
-                    <input type="text" value={settings.customNarratorLanguage} onChange={e => handleChange('customNarratorLanguage', e.target.value)} placeholder={t('storyCreator.customLanguagePlaceholder') as string} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2 text-sm mt-2 text-gray-200" />
-                )}
+                    <SelectInput label={t('storyCreator.narratorLanguageSet') as string} value={settings.narratorLanguageSet} onChange={e => handleChange('narratorLanguageSet', e.target.value)}>
+                        {renderOptions(narratorLanguageSetOptions)}
+                    </SelectInput>
+                    {settings.narratorLanguageSet === 'custom_language' && (
+                        <CustomInput value={settings.customNarratorLanguage} onChange={e => handleChange('customNarratorLanguage', e.target.value)} placeholder={t('storyCreator.customLanguagePlaceholder') as string} />
+                    )}
+                    
+                    <SelectInput label={t('storyCreator.timeOfDay') as string} value={settings.timeOfDay} onChange={e => handleChange('timeOfDay', e.target.value)}>
+                        {renderOptions(timeOfDayOptions)}
+                    </SelectInput>
+                    
+                    <SelectInput label={t('storyCreator.artStyle') as string} value={settings.artStyle} onChange={e => handleChange('artStyle', e.target.value)}>
+                        {renderOptions(artStyleOptions)}
+                    </SelectInput>
+                    
+                     <SelectInput label={t('storyCreator.soundtrackMood') as string} value={settings.soundtrackMood} onChange={e => handleChange('soundtrackMood', e.target.value)}>
+                        {renderOptions(soundtrackMoodOptions)}
+                    </SelectInput>
+                    
+                    <SelectInput label={t('storyCreator.pacing') as string} value={settings.pacing} onChange={e => handleChange('pacing', e.target.value)}>
+                        {renderOptions(pacingOptions)}
+                    </SelectInput>
+                </div>
             </div>
         </div>
     );

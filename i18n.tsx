@@ -113,10 +113,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Additional settings for your story.",
       sceneSet: "Scene Set:",
       locationSet: "Main Location Set:",
-      weatherSet: "Weather Set:",
+      weatherSet: "Weather & Atmosphere Set:",
       cameraStyleSet: "Camera Style (POV):",
       narratorLanguageSet: "Narrator Language Set:",
+      timeOfDay: "Time of Day:",
+      artStyle: "Art Style / Visual Mood:",
+      soundtrackMood: "Soundtrack Mood:",
+      pacing: "Scene Pacing:",
+      customSceneStylePlaceholder: "e.g., A funny cooking show scene",
       customLocationPlaceholder: "e.g., Giant Kitchen Diorama",
+      customWeatherPlaceholder: "e.g., Magical aurora in the sky",
+      customCameraStylePlaceholder: "e.g., Spy movie style tracking shot",
       customLanguagePlaceholder: "e.g., Sundanese",
       storyEditor: "Story Editor",
       storyboard: "Storyboard",
@@ -146,11 +153,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "Start a New Story?",
       confirmNewStoryMessage: "All current progress will be deleted. Are you sure?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Standard Cinematic Adventure", epic_destruction: "Epic Destruction (Slow-Motion)", drifting_precision: "Drifting Precision Challenge", },
-        locationSet: { standardLandGroup: "🏞️ Standard & Land Sets", natural_outdoor: "Outdoors (Garden/Yard)", kids_bedroom: "Kid's Bedroom", custom_location: "Type your own location...", },
-        weatherSet: { sunny: "Bright Sunny", cloudy: "Cloudy", rainy: "Rainy", },
-        cameraStyleSet: { standardGroup: "🎥 Standard Styles", standard_cinematic: "Standard Cinematic", fpv_drone_dive: "FPV Drone Dive", },
-        narratorLanguageSet: { no_narrator: "Without Narrator", id: "Indonesian", en: "English", custom_language: "Type your own language...", }
+        sceneSet: { 
+          standard_cinematic: "Standard Cinematic Adventure", 
+          epic_destruction: "Epic Destruction (Slow-Motion)", 
+          drifting_precision: "Drifting Precision Challenge",
+          comedic_chase: "Comedic Chase Scene",
+          tense_standoff: "Tense Standoff",
+          mysterious_discovery: "Mysterious Discovery",
+          custom_scene: "Type your own scene set..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Standard & Land Sets", 
+          natural_outdoor: "Outdoors (Garden/Yard)", 
+          kids_bedroom: "Kid's Bedroom",
+          city_streets: "City Streets (Urban)",
+          enchanted_forest: "Enchanted Forest",
+          futuristic_lab: "Futuristic Lab",
+          custom_location: "Type your own location..." 
+        },
+        weatherSet: { 
+          sunny: "Bright Sunny", 
+          cloudy: "Cloudy", 
+          rainy: "Rainy with Thunder",
+          misty_fog: "Misty Fog",
+          magical_twilight: "Magical Twilight",
+          post_apocalyptic_dust: "Post-Apocalyptic Dust",
+          custom_weather: "Type your own atmosphere..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Standard Styles", 
+          standard_cinematic: "Standard Cinematic", 
+          fpv_drone_dive: "FPV Drone Dive",
+          handheld_shaky: "Handheld (Shaky Cam)",
+          slow_dolly_zoom: "Slow Dolly Zoom (Vertigo)",
+          stationary_asmr: "Stationary (ASMR/Relaxation)",
+          custom_camera: "Type your own camera style..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Without Narrator", 
+          id: "Indonesian", 
+          en: "English", 
+          es: "Spanish",
+          zh: "Chinese (Mandarin)",
+          hi: "Hindi",
+          ar: "Arabic",
+          pt: "Portuguese",
+          ru: "Russian",
+          ja: "Japanese",
+          de: "German",
+          fr: "French",
+          custom_language: "Type your own language..."
+        },
+        timeOfDay: {
+            default: "Default (Based on story)",
+            golden_hour: "Golden Hour (Sunset)",
+            midday: "Bright Midday",
+            blue_hour: "Blue Hour (Twilight)",
+            night: "Pitch Black Night"
+        },
+        artStyle: {
+            hyper_realistic: "Hyper-realistic",
+            vintage_film: "Vintage Film (80s look)",
+            anime_inspired: "Anime Inspired",
+            gritty_noir: "Gritty Noir",
+            dreamlike_fantasy: "Dreamlike & Fantasy"
+        },
+        soundtrackMood: {
+            none: "No Music (Ambience Only)",
+            epic_orchestral: "Epic Orchestral",
+            tense_suspenseful: "Tense & Suspenseful",
+            upbeat_cheerful: "Upbeat & Cheerful",
+            lofi_relaxing: "Lo-fi & Relaxing"
+        },
+        pacing: {
+            normal: "Normal Pace",
+            slow_deliberate: "Very Slow (Deliberate)",
+            fast_action: "Fast-Paced (Action)",
+            frenetic_chaotic: "Frenetic (Chaotic)"
+        }
       },
        publishingKitSection: {
         title: "Magic Broadcast Kit",
@@ -322,10 +402,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Pengaturan tambahan untuk cerita Anda.",
       sceneSet: "Set Adegan:",
       locationSet: "Set Lokasi Utama:",
-      weatherSet: "Set Cuaca:",
+      weatherSet: "Set Cuaca & Suasana:",
       cameraStyleSet: "Gaya Kamera (POV):",
       narratorLanguageSet: "Set Bahasa Narator:",
+      timeOfDay: "Waktu:",
+      artStyle: "Gaya Seni / Suasana Visual:",
+      soundtrackMood: "Suasana Soundtrack:",
+      pacing: "Tempo Adegan:",
+      customSceneStylePlaceholder: "Contoh: Adegan acara masak yang lucu",
       customLocationPlaceholder: "Contoh: Diorama Dapur Raksasa",
+      customWeatherPlaceholder: "Contoh: Aurora magis di langit",
+      customCameraStylePlaceholder: "Contoh: Gaya film mata-mata",
       customLanguagePlaceholder: "Contoh: Bahasa Sunda",
       storyEditor: "Editor Cerita",
       storyboard: "Papan Cerita",
@@ -355,11 +442,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "Mulai Cerita Baru?",
       confirmNewStoryMessage: "Semua progres saat ini akan dihapus. Anda yakin?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Petualangan Sinematik Standar", epic_destruction: "Kehancuran Epik (Slow-Motion)", drifting_precision: "Tantangan Presisi Drifting", },
-        locationSet: { standardLandGroup: "🏞️ Set Standar & Darat", natural_outdoor: "Luar Ruangan (Taman/Halaman)", kids_bedroom: "Kamar Tidur Anak", custom_location: "Ketik Lokasi Sendiri...", },
-        weatherSet: { sunny: "Cerah Terik", cloudy: "Berawan", rainy: "Hujan", },
-        cameraStyleSet: { standardGroup: "🎥 Gaya Standar", standard_cinematic: "Sinematik Standar", fpv_drone_dive: "FPV Drone Dive", },
-        narratorLanguageSet: { no_narrator: "Tanpa Narator", id: "Bahasa Indonesia", en: "English (Bahasa Inggris)", custom_language: "Ketik Bahasa Sendiri...", }
+        sceneSet: { 
+          standard_cinematic: "Petualangan Sinematik Standar", 
+          epic_destruction: "Kehancuran Epik (Slow-Motion)", 
+          drifting_precision: "Tantangan Presisi Drifting",
+          comedic_chase: "Adegan Kejar-kejaran Komedi",
+          tense_standoff: "Konfrontasi Tegang",
+          mysterious_discovery: "Penemuan Misterius",
+          custom_scene: "Ketik Set Adegan Sendiri..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Set Standar & Darat", 
+          natural_outdoor: "Luar Ruangan (Taman/Halaman)", 
+          kids_bedroom: "Kamar Tidur Anak",
+          city_streets: "Jalanan Kota (Perkotaan)",
+          enchanted_forest: "Hutan Ajaib",
+          futuristic_lab: "Laboratorium Futuristik",
+          custom_location: "Ketik Lokasi Sendiri..." 
+        },
+        weatherSet: { 
+          sunny: "Cerah Terik", 
+          cloudy: "Berawan", 
+          rainy: "Hujan dengan Petir",
+          misty_fog: "Kabut Misterius",
+          magical_twilight: "Senja Ajaib",
+          post_apocalyptic_dust: "Debu Pasca-Apokaliptik",
+          custom_weather: "Ketik Suasana Sendiri..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Gaya Standar", 
+          standard_cinematic: "Sinematik Standar", 
+          fpv_drone_dive: "FPV Drone Dive",
+          handheld_shaky: "Handheld (Kamera Goyang)",
+          slow_dolly_zoom: "Slow Dolly Zoom (Efek Vertigo)",
+          stationary_asmr: "Statis (ASMR/Relaksasi)",
+          custom_camera: "Ketik Gaya Sendiri..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Tanpa Narator", 
+          id: "Bahasa Indonesia", 
+          en: "English (Bahasa Inggris)", 
+          es: "Español (Bahasa Spanyol)",
+          zh: "中文 (Bahasa Mandarin)",
+          hi: "हिन्दी (Bahasa Hindi)",
+          ar: "العربية (Bahasa Arab)",
+          pt: "Português (Bahasa Portugis)",
+          ru: "Русский (Bahasa Rusia)",
+          ja: "日本語 (Bahasa Jepang)",
+          de: "Deutsch (Bahasa Jerman)",
+          fr: "Français (Bahasa Prancis)",
+          custom_language: "Ketik Bahasa Sendiri..."
+        },
+        timeOfDay: {
+            default: "Default (Sesuai Cerita)",
+            golden_hour: "Golden Hour (Matahari Terbenam)",
+            midday: "Siang Hari Terik",
+            blue_hour: "Blue Hour (Senja)",
+            night: "Malam Gelap Gulita"
+        },
+        artStyle: {
+            hyper_realistic: "Sangat Realistis (Hyper-realistic)",
+            vintage_film: "Film Antik (Tampilan 80-an)",
+            anime_inspired: "Terinspirasi Anime",
+            gritty_noir: "Film Noir Kelam",
+            dreamlike_fantasy: "Fantasi Seperti Mimpi"
+        },
+        soundtrackMood: {
+            none: "Tanpa Musik (Hanya Suara Latar)",
+            epic_orchestral: "Orkestra Epik",
+            tense_suspenseful: "Tegang & Penuh Ketegangan",
+            upbeat_cheerful: "Ceria & Semangat",
+            lofi_relaxing: "Lo-fi & Santai"
+        },
+        pacing: {
+            normal: "Tempo Normal",
+            slow_deliberate: "Sangat Lambat (Sengaja)",
+            fast_action: "Tempo Cepat (Aksi)",
+            frenetic_chaotic: "Kacau (Frenetic)"
+        }
       },
        publishingKitSection: {
         title: "Kit Siaran Ajaib",
@@ -531,10 +691,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Ajustes adicionales para tu historia.",
       sceneSet: "Set de Escena:",
       locationSet: "Set de Ubicación Principal:",
-      weatherSet: "Set de Clima:",
+      weatherSet: "Set de Clima y Atmósfera:",
       cameraStyleSet: "Estilo de Cámara (POV):",
       narratorLanguageSet: "Idioma del Narrador:",
+      timeOfDay: "Hora del día:",
+      artStyle: "Estilo de Arte / Ambiente Visual:",
+      soundtrackMood: "Ambiente de la Banda Sonora:",
+      pacing: "Ritmo de la Escena:",
+      customSceneStylePlaceholder: "Ej: Una escena de programa de cocina divertida",
       customLocationPlaceholder: "Ej: Diorama de Cocina Gigante",
+      customWeatherPlaceholder: "Ej: Aurora mágica en el cielo",
+      customCameraStylePlaceholder: "Ej: Toma de seguimiento estilo película de espías",
       customLanguagePlaceholder: "Ej: Catalán",
       storyEditor: "Editor de Historias",
       storyboard: "Guion Gráfico",
@@ -564,11 +731,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "¿Empezar una Nueva Historia?",
       confirmNewStoryMessage: "Todo el progreso actual será eliminado. ¿Estás seguro?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Aventura Cinemática Estándar", epic_destruction: "Destrucción Épica (Cámara Lenta)", drifting_precision: "Desafío de Precisión de Derrape" },
-        locationSet: { standardLandGroup: "🏞️ Sets Estándar y Terrestres", natural_outdoor: "Exteriores (Jardín/Patio)", kids_bedroom: "Habitación de Niño", custom_location: "Escribe tu propia ubicación..." },
-        weatherSet: { sunny: "Soleado Brillante", cloudy: "Nublado", rainy: "Lluvioso" },
-        cameraStyleSet: { standardGroup: "🎥 Estilos Estándar", standard_cinematic: "Cinemático Estándar", fpv_drone_dive: "Picado de Dron FPV" },
-        narratorLanguageSet: { no_narrator: "Sin Narrador", id: "Indonesio", en: "Inglés", custom_language: "Escribe tu propio idioma..." }
+        sceneSet: { 
+          standard_cinematic: "Aventura Cinemática Estándar", 
+          epic_destruction: "Destrucción Épica (Cámara Lenta)", 
+          drifting_precision: "Desafío de Precisión de Derrape",
+          comedic_chase: "Escena de Persecución Cómica",
+          tense_standoff: "Enfrentamiento Tenso",
+          mysterious_discovery: "Descubrimiento Misterioso",
+          custom_scene: "Escribe tu propio set de escena..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Sets Estándar y Terrestres", 
+          natural_outdoor: "Exteriores (Jardín/Patio)", 
+          kids_bedroom: "Habitación de Niño",
+          city_streets: "Calles de la Ciudad (Urbano)",
+          enchanted_forest: "Bosque Encantado",
+          futuristic_lab: "Laboratorio Futurista",
+          custom_location: "Escribe tu propia ubicación..." 
+        },
+        weatherSet: { 
+          sunny: "Soleado Brillante", 
+          cloudy: "Nublado", 
+          rainy: "Lluvia con Truenos",
+          misty_fog: "Niebla Misteriosa",
+          magical_twilight: "Crepúsculo Mágico",
+          post_apocalyptic_dust: "Polvo Post-apocalíptico",
+          custom_weather: "Escribe tu propia atmósfera..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Estilos Estándar", 
+          standard_cinematic: "Cinemático Estándar", 
+          fpv_drone_dive: "Picado de Dron FPV",
+          handheld_shaky: "Cámara en Mano (Inestable)",
+          slow_dolly_zoom: "Dolly Zoom Lento (Efecto Vértigo)",
+          stationary_asmr: "Estacionaria (ASMR/Relajación)",
+          custom_camera: "Escribe tu propio estilo de cámara..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Sin Narrador", 
+          id: "Indonesio", 
+          en: "Inglés", 
+          es: "Español",
+          zh: "Chino (Mandarín)",
+          hi: "Hindi",
+          ar: "Árabe",
+          pt: "Portugués",
+          ru: "Ruso",
+          ja: "Japonés",
+          de: "Alemán",
+          fr: "Francés",
+          custom_language: "Escribe tu propio idioma..."
+        },
+        timeOfDay: {
+            default: "Predeterminado (Según la historia)",
+            golden_hour: "Hora Dorada (Atardecer)",
+            midday: "Mediodía Brillante",
+            blue_hour: "Hora Azul (Crepúsculo)",
+            night: "Noche Oscura"
+        },
+        artStyle: {
+            hyper_realistic: "Hiperrealista",
+            vintage_film: "Película Antigua (aspecto de los 80)",
+            anime_inspired: "Inspirado en Anime",
+            gritty_noir: "Noir Crudo",
+            dreamlike_fantasy: "Fantasía Onírica"
+        },
+        soundtrackMood: {
+            none: "Sin Música (Solo Ambiente)",
+            epic_orchestral: "Orquestal Épica",
+            tense_suspenseful: "Tensa y de Suspenso",
+            upbeat_cheerful: "Alegre y Animada",
+            lofi_relaxing: "Lo-fi y Relajante"
+        },
+        pacing: {
+            normal: "Ritmo Normal",
+            slow_deliberate: "Muy Lento (Deliberado)",
+            fast_action: "Ritmo Rápido (Acción)",
+            frenetic_chaotic: "Frenético (Caótico)"
+        }
       },
        publishingKitSection: {
         title: "Kit de Transmisión Mágica",
@@ -739,10 +979,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "为您的故事提供额外设置。",
       sceneSet: "场景设置:",
       locationSet: "主要地点设置:",
-      weatherSet: "天气设置:",
+      weatherSet: "天气与氛围设置:",
       cameraStyleSet: "相机风格 (POV):",
       narratorLanguageSet: "旁白语言设置:",
+      timeOfDay: "时间:",
+      artStyle: "艺术风格/视觉氛围:",
+      soundtrackMood: "配乐氛围:",
+      pacing: "场景节奏:",
+      customSceneStylePlaceholder: "例如：一个有趣的烹饪节目场景",
       customLocationPlaceholder: "例如：巨型厨房立体模型",
+      customWeatherPlaceholder: "例如：天空中神奇的极光",
+      customCameraStylePlaceholder: "例如：间谍电影风格的跟踪镜头",
       customLanguagePlaceholder: "例如：粤语",
       storyEditor: "故事编辑器",
       storyboard: "故事板",
@@ -772,11 +1019,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "开始一个新故事？",
       confirmNewStoryMessage: "所有当前进度将被删除。您确定吗？",
       directingOptions: {
-        sceneSet: { standard_cinematic: "标准电影冒险", epic_destruction: "史诗级破坏（慢动作）", drifting_precision: "漂移精度挑战" },
-        locationSet: { standardLandGroup: "🏞️ 标准与陆地场景", natural_outdoor: "户外（花园/院子）", kids_bedroom: "儿童卧室", custom_location: "输入您自己的地点..." },
-        weatherSet: { sunny: "晴朗", cloudy: "多云", rainy: "雨天" },
-        cameraStyleSet: { standardGroup: "🎥 标准风格", standard_cinematic: "标准电影", fpv_drone_dive: "FPV无人机俯冲" },
-        narratorLanguageSet: { no_narrator: "无旁白", id: "印尼语", en: "英语", custom_language: "输入您自己的语言..." }
+        sceneSet: { 
+          standard_cinematic: "标准电影冒险", 
+          epic_destruction: "史诗级破坏（慢动作）", 
+          drifting_precision: "漂移精度挑战",
+          comedic_chase: "喜剧追逐场景",
+          tense_standoff: "紧张对峙",
+          mysterious_discovery: "神秘发现",
+          custom_scene: "输入您自己的场景设置..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ 标准与陆地场景", 
+          natural_outdoor: "户外（花园/院子）", 
+          kids_bedroom: "儿童卧室",
+          city_streets: "城市街道（都市）",
+          enchanted_forest: "魔法森林",
+          futuristic_lab: "未来实验室",
+          custom_location: "输入您自己的地点..." 
+        },
+        weatherSet: { 
+          sunny: "晴朗", 
+          cloudy: "多云", 
+          rainy: "雷雨",
+          misty_fog: "薄雾",
+          magical_twilight: "魔法黄昏",
+          post_apocalyptic_dust: "末日尘埃",
+          custom_weather: "输入您自己的氛围..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 标准风格", 
+          standard_cinematic: "标准电影", 
+          fpv_drone_dive: "FPV无人机俯冲",
+          handheld_shaky: "手持（摇晃镜头）",
+          slow_dolly_zoom: "慢速推拉变焦（眩晕效果）",
+          stationary_asmr: "固定（ASMR/放松）",
+          custom_camera: "输入您自己的相机风格..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "无旁白", 
+          id: "印尼语", 
+          en: "英语", 
+          es: "西班牙语",
+          zh: "中文（普通话）",
+          hi: "印地语",
+          ar: "阿拉伯语",
+          pt: "葡萄牙语",
+          ru: "俄语",
+          ja: "日语",
+          de: "德语",
+          fr: "法语",
+          custom_language: "输入您自己的语言..."
+        },
+        timeOfDay: {
+            default: "默认（根据故事）",
+            golden_hour: "黄金时段（日落）",
+            midday: "正午阳光",
+            blue_hour: "蓝色时段（黄昏）",
+            night: "漆黑的夜晚"
+        },
+        artStyle: {
+            hyper_realistic: "超现实主义",
+            vintage_film: "复古电影（80年代风格）",
+            anime_inspired: "动漫风格",
+            gritty_noir: "黑色电影",
+            dreamlike_fantasy: "梦幻"
+        },
+        soundtrackMood: {
+            none: "无音乐（仅环境音）",
+            epic_orchestral: "史诗管弦乐",
+            tense_suspenseful: "紧张悬疑",
+            upbeat_cheerful: "欢快愉悦",
+            lofi_relaxing: "Lo-fi放松"
+        },
+        pacing: {
+            normal: "正常节奏",
+            slow_deliberate: "极慢（蓄意）",
+            fast_action: "快节奏（动作）",
+            frenetic_chaotic: "狂热（混乱）"
+        }
       },
        publishingKitSection: {
         title: "魔法广播套件",
@@ -947,10 +1267,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "आपकी कहानी के लिए अतिरिक्त सेटिंग्स।",
       sceneSet: "दृश्य सेट:",
       locationSet: "मुख्य स्थान सेट:",
-      weatherSet: "मौसम सेट:",
+      weatherSet: "मौसम और वातावरण सेट:",
       cameraStyleSet: "कैमरा शैली (POV):",
       narratorLanguageSet: "कथावाचक भाषा सेट:",
+      timeOfDay: "दिन का समय:",
+      artStyle: "कला शैली / दृश्य मूड:",
+      soundtrackMood: "साउंडट्रैक मूड:",
+      pacing: "दृश्य गति:",
+      customSceneStylePlaceholder: "जैसे, एक मज़ेदार खाना पकाने के शो का दृश्य",
       customLocationPlaceholder: "जैसे, विशाल रसोई डायोरमा",
+      customWeatherPlaceholder: "जैसे, आकाश में जादुई अरोरा",
+      customCameraStylePlaceholder: "जैसे, जासूसी फिल्म शैली ट्रैकिंग शॉट",
       customLanguagePlaceholder: "जैसे, पंजाबी",
       storyEditor: "कहानी संपादक",
       storyboard: "स्टोरीबोर्ड",
@@ -980,11 +1307,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "एक नई कहानी शुरू करें?",
       confirmNewStoryMessage: "सभी वर्तमान प्रगति हटा दी जाएगी। क्या आप निश्चित हैं?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "मानक सिनेमैटिक साहसिक", epic_destruction: "महाकाव्य विनाश (धीमी गति)", drifting_precision: "ड्रिफ्टिंग परिशुद्धता चुनौती" },
-        locationSet: { standardLandGroup: "🏞️ मानक और भूमि सेट", natural_outdoor: "बाहर (बगीचा/आंगन)", kids_bedroom: "बच्चों का शयनकक्ष", custom_location: "अपना स्थान टाइप करें..." },
-        weatherSet: { sunny: "तेज धूप", cloudy: "बादल छाए हुए", rainy: "बरसात" },
-        cameraStyleSet: { standardGroup: "🎥 मानक शैलियाँ", standard_cinematic: "मानक सिनेमैटिक", fpv_drone_dive: "FPV ड्रोन डाइव" },
-        narratorLanguageSet: { no_narrator: "बिना कथावाचक के", id: "इंडोनेशियाई", en: "अंग्रेज़ी", custom_language: "अपनी भाषा टाइप करें..." }
+        sceneSet: { 
+          standard_cinematic: "मानक सिनेमैटिक साहसिक", 
+          epic_destruction: "महाकाव्य विनाश (धीमी गति)", 
+          drifting_precision: "ड्रिफ्टिंग परिशुद्धता चुनौती",
+          comedic_chase: "कॉमेडी पीछा दृश्य",
+          tense_standoff: "तनावपूर्ण गतिरोध",
+          mysterious_discovery: "रहस्यमय खोज",
+          custom_scene: "अपना दृश्य सेट टाइप करें..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ मानक और भूमि सेट", 
+          natural_outdoor: "बाहर (बगीचा/आंगन)", 
+          kids_bedroom: "बच्चों का शयनकक्ष",
+          city_streets: "शहर की सड़कें (शहरी)",
+          enchanted_forest: "जादुई जंगल",
+          futuristic_lab: "भविष्य की प्रयोगशाला",
+          custom_location: "अपना स्थान टाइप करें..." 
+        },
+        weatherSet: { 
+          sunny: "तेज धूप", 
+          cloudy: "बादल छाए हुए", 
+          rainy: "गरज के साथ बारिश",
+          misty_fog: "धुंध भरा कोहरा",
+          magical_twilight: "जादुई गोधूलि",
+          post_apocalyptic_dust: "सर्वनाश के बाद की धूल",
+          custom_weather: "अपना वातावरण टाइप करें..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 मानक शैलियाँ", 
+          standard_cinematic: "मानक सिनेमैटिक", 
+          fpv_drone_dive: "FPV ड्रोन डाइव",
+          handheld_shaky: "हाथ में (हिलता हुआ कैमरा)",
+          slow_dolly_zoom: "धीमा डॉली ज़ूम (वर्टिगो प्रभाव)",
+          stationary_asmr: "स्थिर (ASMR/आराम)",
+          custom_camera: "अपनी कैमरा शैली टाइप करें..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "बिना कथावाचक के", 
+          id: "इंडोनेशियाई", 
+          en: "अंग्रेज़ी", 
+          es: "स्पेनिश",
+          zh: "चीनी (मंदारिन)",
+          hi: "हिंदी",
+          ar: "अरबी",
+          pt: "पुर्तगाली",
+          ru: "रूसी",
+          ja: "जापानी",
+          de: "जर्मन",
+          fr: "फ्रेंच",
+          custom_language: "अपनी भाषा टाइप करें..."
+        },
+        timeOfDay: {
+            default: "डिफ़ॉल्ट (कहानी के आधार पर)",
+            golden_hour: "सुनहरा घंटा (सूर्यास्त)",
+            midday: "तेज दोपहर",
+            blue_hour: "नीला घंटा (गोधूलि)",
+            night: "घोर अंधेरी रात"
+        },
+        artStyle: {
+            hyper_realistic: "अति-यथार्थवादी",
+            vintage_film: "विंटेज फिल्म (80 के दशक का लुक)",
+            anime_inspired: "एनिमे से प्रेरित",
+            gritty_noir: "ग्रिटी नॉयर",
+            dreamlike_fantasy: "स्वप्निल और काल्पनिक"
+        },
+        soundtrackMood: {
+            none: "कोई संगीत नहीं (केवल परिवेश)",
+            epic_orchestral: "महाकाव्य ऑर्केस्ट्रा",
+            tense_suspenseful: "तनावपूर्ण और रहस्यपूर्ण",
+            upbeat_cheerful: "उत्साहित और हंसमुख",
+            lofi_relaxing: "लो-फाई और आरामदायक"
+        },
+        pacing: {
+            normal: "सामान्य गति",
+            slow_deliberate: "बहुत धीमी (जानबूझकर)",
+            fast_action: "तेज-गति (एक्शन)",
+            frenetic_chaotic: "उन्मत्त (अराजक)"
+        }
       },
        publishingKitSection: {
         title: "मैजिक ब्रॉडकास्ट किट",
@@ -1155,10 +1555,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "إعدادات إضافية لقصتك.",
       sceneSet: "إعداد المشهد:",
       locationSet: "إعداد الموقع الرئيسي:",
-      weatherSet: "إعداد الطقس:",
+      weatherSet: "إعداد الطقس والأجواء:",
       cameraStyleSet: "نمط الكاميرا (POV):",
       narratorLanguageSet: "لغة الراوي:",
+      timeOfDay: "الوقت من اليوم:",
+      artStyle: "النمط الفني / المزاج البصري:",
+      soundtrackMood: "مزاج الموسيقى التصويرية:",
+      pacing: "وتيرة المشهد:",
+      customSceneStylePlaceholder: "مثال: مشهد برنامج طبخ مضحك",
       customLocationPlaceholder: "مثال: ديوراما مطبخ عملاق",
+      customWeatherPlaceholder: "مثال: شفق قطبي سحري في السماء",
+      customCameraStylePlaceholder: "مثال: لقطة تتبع بأسلوب أفلام التجسس",
       customLanguagePlaceholder: "مثال: الأردية",
       storyEditor: "محرر القصة",
       storyboard: "لوحة القصة",
@@ -1188,11 +1595,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "هل تريد بدء قصة جديدة؟",
       confirmNewStoryMessage: "سيتم حذف كل التقدم الحالي. هل أنت متأكد؟",
       directingOptions: {
-        sceneSet: { standard_cinematic: "مغامرة سينمائية قياسية", epic_destruction: "دمار ملحمي (حركة بطيئة)", drifting_precision: "تحدي الانجراف الدقيق" },
-        locationSet: { standardLandGroup: "🏞️ مجموعات قياسية وأرضية", natural_outdoor: "في الهواء الطلق (حديقة / فناء)", kids_bedroom: "غرفة نوم أطفال", custom_location: "اكتب موقعك الخاص..." },
-        weatherSet: { sunny: "مشمس مشرق", cloudy: "غائم", rainy: "ممطر" },
-        cameraStyleSet: { standardGroup: "🎥 أنماط قياسية", standard_cinematic: "سينمائي قياسي", fpv_drone_dive: "غوص طائرة بدون طيار FPV" },
-        narratorLanguageSet: { no_narrator: "بدون راوي", id: "الإندونيسية", en: "الإنجليزية", custom_language: "اكتب لغتك الخاصة..." }
+        sceneSet: { 
+          standard_cinematic: "مغامرة سينمائية قياسية", 
+          epic_destruction: "دمار ملحمي (حركة بطيئة)", 
+          drifting_precision: "تحدي الانجراف الدقيق",
+          comedic_chase: "مشهد مطاردة كوميدي",
+          tense_standoff: "مواجهة متوترة",
+          mysterious_discovery: "اكتشاف غامض",
+          custom_scene: "اكتب مجموعة المشهد الخاصة بك..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ مجموعات قياسية وأرضية", 
+          natural_outdoor: "في الهواء الطلق (حديقة / فناء)", 
+          kids_bedroom: "غرفة نوم أطفال",
+          city_streets: "شوارع المدينة (حضرية)",
+          enchanted_forest: "غابة مسحورة",
+          futuristic_lab: "مختبر مستقبلي",
+          custom_location: "اكتب موقعك الخاص..." 
+        },
+        weatherSet: { 
+          sunny: "مشمس مشرق", 
+          cloudy: "غائم", 
+          rainy: "مطر مع رعد",
+          misty_fog: "ضباب غامض",
+          magical_twilight: "شفق سحري",
+          post_apocalyptic_dust: "غبار ما بعد نهاية العالم",
+          custom_weather: "اكتب الجو الخاص بك..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 أنماط قياسية", 
+          standard_cinematic: "سينمائي قياسي", 
+          fpv_drone_dive: "غوص طائرة بدون طيار FPV",
+          handheld_shaky: "محمولة باليد (كاميرا مهتزة)",
+          slow_dolly_zoom: "زووم دوللي بطيء (تأثير الدوار)",
+          stationary_asmr: "ثابتة (ASMR / استرخاء)",
+          custom_camera: "اكتب نمط الكاميرا الخاص بك..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "بدون راوي", 
+          id: "الإندونيسية", 
+          en: "الإنجليزية", 
+          es: "الإسبانية",
+          zh: "الصينية (الماندرين)",
+          hi: "الهندية",
+          ar: "العربية",
+          pt: "البرتغالية",
+          ru: "الروسية",
+          ja: "اليابانية",
+          de: "الألمانية",
+          fr: "الفرنسية",
+          custom_language: "اكتب لغتك الخاصة..."
+        },
+        timeOfDay: {
+            default: "افتراضي (بناءً على القصة)",
+            golden_hour: "الساعة الذهبية (غروب الشمس)",
+            midday: "منتصف النهار الساطع",
+            blue_hour: "الساعة الزرقاء (الشفق)",
+            night: "ليلة حالكة الظلام"
+        },
+        artStyle: {
+            hyper_realistic: "واقعي للغاية",
+            vintage_film: "فيلم قديم (مظهر الثمانينيات)",
+            anime_inspired: "مستوحى من الأنمي",
+            gritty_noir: "فيلم نوار قاتم",
+            dreamlike_fantasy: "خيالي وحالم"
+        },
+        soundtrackMood: {
+            none: "بدون موسيقى (أجواء فقط)",
+            epic_orchestral: "أوركسترا ملحمية",
+            tense_suspenseful: "متوتر ومشوق",
+            upbeat_cheerful: "مبهج ومرح",
+            lofi_relaxing: "لو-فاي ومريح"
+        },
+        pacing: {
+            normal: "وتيرة عادية",
+            slow_deliberate: "بطيئة جداً (متعمدة)",
+            fast_action: "سريعة الوتيرة (أكشن)",
+            frenetic_chaotic: "محمومة (فوضوية)"
+        }
       },
        publishingKitSection: {
         title: "مجموعة البث السحرية",
@@ -1363,10 +1843,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Configurações adicionais para sua história.",
       sceneSet: "Conjunto de Cena:",
       locationSet: "Conjunto de Local Principal:",
-      weatherSet: "Conjunto de Clima:",
+      weatherSet: "Conjunto de Clima e Atmosfera:",
       cameraStyleSet: "Estilo de Câmera (POV):",
       narratorLanguageSet: "Idioma do Narrador:",
+      timeOfDay: "Hora do dia:",
+      artStyle: "Estilo de Arte / Clima Visual:",
+      soundtrackMood: "Clima da Trilha Sonora:",
+      pacing: "Ritmo da Cena:",
+      customSceneStylePlaceholder: "Ex: Uma cena engraçada de programa de culinária",
       customLocationPlaceholder: "Ex: Diorama de Cozinha Gigante",
+      customWeatherPlaceholder: "Ex: Aurora mágica no céu",
+      customCameraStylePlaceholder: "Ex: Tomada de rastreamento estilo filme de espião",
       customLanguagePlaceholder: "Ex: Galego",
       storyEditor: "Editor de Histórias",
       storyboard: "Storyboard",
@@ -1396,11 +1883,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "Começar uma Nova História?",
       confirmNewStoryMessage: "Todo o progresso atual será excluído. Você tem certeza?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Aventura Cinemática Padrão", epic_destruction: "Destruição Épica (Câmera Lenta)", drifting_precision: "Desafio de Precisão de Drift" },
-        locationSet: { standardLandGroup: "🏞️ Conjuntos Padrão e Terrestres", natural_outdoor: "Ao Ar Livre (Jardim/Quintal)", kids_bedroom: "Quarto de Criança", custom_location: "Digite seu próprio local..." },
-        weatherSet: { sunny: "Ensolarado", cloudy: "Nublado", rainy: "Chuvoso" },
-        cameraStyleSet: { standardGroup: "🎥 Estilos Padrão", standard_cinematic: "Cinemático Padrão", fpv_drone_dive: "Mergulho de Drone FPV" },
-        narratorLanguageSet: { no_narrator: "Sem Narrador", id: "Indonésio", en: "Inglês", custom_language: "Digite seu próprio idioma..." }
+        sceneSet: { 
+          standard_cinematic: "Aventura Cinemática Padrão", 
+          epic_destruction: "Destruição Épica (Câmera Lenta)", 
+          drifting_precision: "Desafio de Precisão de Drift",
+          comedic_chase: "Cena de Perseguição Cômica",
+          tense_standoff: "Confronto Tenso",
+          mysterious_discovery: "Descoberta Misteriosa",
+          custom_scene: "Digite seu próprio conjunto de cena..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Conjuntos Padrão e Terrestres", 
+          natural_outdoor: "Ao Ar Livre (Jardim/Quintal)", 
+          kids_bedroom: "Quarto de Criança",
+          city_streets: "Ruas da Cidade (Urbano)",
+          enchanted_forest: "Floresta Encantada",
+          futuristic_lab: "Laboratório Futurista",
+          custom_location: "Digite seu próprio local..." 
+        },
+        weatherSet: { 
+          sunny: "Ensolarado", 
+          cloudy: "Nublado", 
+          rainy: "Chuva com Trovão",
+          misty_fog: "Névoa Misteriosa",
+          magical_twilight: "Crepúsculo Mágico",
+          post_apocalyptic_dust: "Poeira Pós-apocalíptica",
+          custom_weather: "Digite sua própria atmosfera..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Estilos Padrão", 
+          standard_cinematic: "Cinemático Padrão", 
+          fpv_drone_dive: "Mergulho de Drone FPV",
+          handheld_shaky: "Câmera na Mão (Trêmula)",
+          slow_dolly_zoom: "Dolly Zoom Lento (Efeito Vertigo)",
+          stationary_asmr: "Estacionária (ASMR/Relaxamento)",
+          custom_camera: "Digite seu próprio estilo de câmera..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Sem Narrador", 
+          id: "Indonésio", 
+          en: "Inglês", 
+          es: "Espanhol",
+          zh: "Chinês (Mandarim)",
+          hi: "Hindi",
+          ar: "Árabe",
+          pt: "Português",
+          ru: "Russo",
+          ja: "Japonês",
+          de: "Alemão",
+          fr: "Francês",
+          custom_language: "Digite seu próprio idioma..."
+        },
+        timeOfDay: {
+            default: "Padrão (Baseado na história)",
+            golden_hour: "Hora Dourada (Pôr do sol)",
+            midday: "Meio-dia Claro",
+            blue_hour: "Hora Azul (Crepúsculo)",
+            night: "Noite Escura"
+        },
+        artStyle: {
+            hyper_realistic: "Hiper-realista",
+            vintage_film: "Filme Vintage (aparência dos anos 80)",
+            anime_inspired: "Inspirado em Anime",
+            gritty_noir: "Noir Cru",
+            dreamlike_fantasy: "Fantasia Onírica"
+        },
+        soundtrackMood: {
+            none: "Sem Música (Apenas Ambiente)",
+            epic_orchestral: "Orquestral Épica",
+            tense_suspenseful: "Tenso e Suspenso",
+            upbeat_cheerful: "Alegre e Animado",
+            lofi_relaxing: "Lo-fi e Relaxante"
+        },
+        pacing: {
+            normal: "Ritmo Normal",
+            slow_deliberate: "Muito Lento (Deliberado)",
+            fast_action: "Ritmo Rápido (Ação)",
+            frenetic_chaotic: "Frenético (Caótico)"
+        }
       },
        publishingKitSection: {
         title: "Kit de Transmissão Mágica",
@@ -1571,10 +2131,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "আপনার গল্পের জন্য অতিরিক্ত সেটিংস।",
       sceneSet: "দৃশ্যের সেট:",
       locationSet: "প্রধান অবস্থানের সেট:",
-      weatherSet: "আবহাওয়ার সেট:",
+      weatherSet: "আবহাওয়া ও পরিবেশ সেট:",
       cameraStyleSet: "ক্যামেরার স্টাইল (POV):",
       narratorLanguageSet: "বর্ণনাকারীর ভাষার সেট:",
+      timeOfDay: "দিনের সময়:",
+      artStyle: "শিল্প শৈলী / চাক্ষুষ মেজাজ:",
+      soundtrackMood: "সাউন্ডট্র랙ের মেজাজ:",
+      pacing: "দৃশ্যের গতি:",
+      customSceneStylePlaceholder: "যেমন, একটি মজার রান্নার অনুষ্ঠানের দৃশ্য",
       customLocationPlaceholder: "যেমন, বিশাল রান্নাঘরের ডায়োরামা",
+      customWeatherPlaceholder: "যেমন, আকাশে জাদুকরী অরোরা",
+      customCameraStylePlaceholder: "যেমন, গুপ্তচর চলচ্চিত্রের মতো ট্র্যাকিং শট",
       customLanguagePlaceholder: "যেমন, অসমীয়া",
       storyEditor: "গল্প সম্পাদক",
       storyboard: "স্টোরিবোর্ড",
@@ -1604,11 +2171,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "একটি নতুন গল্প শুরু করবেন?",
       confirmNewStoryMessage: "সমস্ত বর্তমান অগ্রগতি মুছে ফেলা হবে। আপনি কি নিশ্চিত?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "স্ট্যান্ডার্ড সিনেমাটিক অ্যাডভেঞ্চার", epic_destruction: "এপিক ধ্বংস (স্লো-মোশন)", drifting_precision: "ড্রিফটিং প্রিসিশন চ্যালেঞ্জ" },
-        locationSet: { standardLandGroup: "🏞️ স্ট্যান্ডার্ড ও ল্যান্ড সেট", natural_outdoor: "বাইরে (বাগান/উঠান)", kids_bedroom: "বাচ্চার শোবার ঘর", custom_location: "আপনার নিজের অবস্থান টাইপ করুন..." },
-        weatherSet: { sunny: "উজ্জ্বল রোদ", cloudy: "মেঘলা", rainy: "বৃষ্টি" },
-        cameraStyleSet: { standardGroup: "🎥 স্ট্যান্ডার্ড স্টাইল", standard_cinematic: "স্ট্যান্ডার্ড সিনেমাটিক", fpv_drone_dive: "FPV ড্রোন ডাইভ" },
-        narratorLanguageSet: { no_narrator: "বর্ণনাকারী ছাড়া", id: "ইন্দোনেশিয়ান", en: "ইংরেজি", custom_language: "আপনার নিজের ভাষা টাইপ করুন..." }
+        sceneSet: { 
+          standard_cinematic: "স্ট্যান্ডার্ড সিনেমাটিক অ্যাডভেঞ্চার", 
+          epic_destruction: "এপিক ধ্বংস (স্লো-মোশন)", 
+          drifting_precision: "ড্রিফটিং প্রিসিশন চ্যালেঞ্জ",
+          comedic_chase: "কমেডি ধাওয়া দৃশ্য",
+          tense_standoff: "উত্তেজনাপূর্ণ মুখোমুখি",
+          mysterious_discovery: "রহস্যময় আবিষ্কার",
+          custom_scene: "আপনার নিজের দৃশ্য সেট টাইপ করুন..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ স্ট্যান্ডার্ড ও ল্যান্ড সেট", 
+          natural_outdoor: "বাইরে (বাগান/উঠান)", 
+          kids_bedroom: "বাচ্চার শোবার ঘর",
+          city_streets: "শহরের রাস্তা (শহুরে)",
+          enchanted_forest: "জাদুকরী বন",
+          futuristic_lab: "ভবিষ্যতের গবেষণাগার",
+          custom_location: "আপনার নিজের অবস্থান টাইপ করুন..." 
+        },
+        weatherSet: { 
+          sunny: "উজ্জ্বল রোদ", 
+          cloudy: "মেঘলা", 
+          rainy: "বজ্রসহ বৃষ্টি",
+          misty_fog: "রহস্যময় কুয়াশা",
+          magical_twilight: "জাদুকরী গোধূলি",
+          post_apocalyptic_dust: "পোস্ট-অ্যাপোক্যালিপটিক ধুলো",
+          custom_weather: "আপনার নিজের পরিবেশ টাইপ করুন..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 স্ট্যান্ডার্ড স্টাইল", 
+          standard_cinematic: "স্ট্যান্ডার্ড সিনেমাটিক", 
+          fpv_drone_dive: "FPV ড্রোন ডাইভ",
+          handheld_shaky: "হাতে ধরা (কাঁপা ক্যামেরা)",
+          slow_dolly_zoom: "ধীর ডলি জুম (ভার্টিগো প্রভাব)",
+          stationary_asmr: "স্থির (ASMR/রিলাক্সেশন)",
+          custom_camera: "আপনার নিজের ক্যামেরা স্টাইল টাইপ করুন..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "বর্ণনাকারী ছাড়া", 
+          id: "ইন্দোনেশিয়ান", 
+          en: "ইংরেজি", 
+          es: "স্প্যানিশ",
+          zh: "চীনা (ম্যান্ডারিন)",
+          hi: "হিন্দি",
+          ar: "আরবি",
+          pt: "পর্তুগিজ",
+          ru: "রাশিয়ান",
+          ja: "জাপানি",
+          de: "জার্মান",
+          fr: "ফরাসি",
+          custom_language: "আপনার নিজের ভাষা টাইপ করুন..."
+        },
+        timeOfDay: {
+            default: "ডিফল্ট (গল্পের উপর ভিত্তি করে)",
+            golden_hour: "গোল্ডেন আওয়ার (সূর্যাস্ত)",
+            midday: "উজ্জ্বল মধ্যাহ্ন",
+            blue_hour: "ব্লু আওয়ার (গোধূলি)",
+            night: "ঘুটঘুটে অন্ধকার রাত"
+        },
+        artStyle: {
+            hyper_realistic: "অবাস্তবভাবে বাস্তব",
+            vintage_film: "ভিন্টেজ ফিল্ম (৮০-এর দশকের চেহারা)",
+            anime_inspired: "অ্যানিমে অনুপ্রাণিত",
+            gritty_noir: "গ্রিটি নোয়ার",
+            dreamlike_fantasy: "স্বপ্নময় ও ফ্যান্টাসি"
+        },
+        soundtrackMood: {
+            none: "কোনো সঙ্গীত নেই (শুধু পরিবেষ্টিত শব্দ)",
+            epic_orchestral: "এপিক অর্কেস্ট্রাল",
+            tense_suspenseful: "উত্তেজনাপূর্ণ ও সাসপেন্সফুল",
+            upbeat_cheerful: "উৎফুল্ল ও প্রফুল্ল",
+            lofi_relaxing: "লো-ফাই ও রিলাক্সিং"
+        },
+        pacing: {
+            normal: "স্বাভাবিক গতি",
+            slow_deliberate: "খুব ধীর (ইচ্ছাকৃত)",
+            fast_action: "দ্রুত গতির (অ্যাকশন)",
+            frenetic_chaotic: "উন্মত্ত (বিশৃঙ্খল)"
+        }
       },
        publishingKitSection: {
         title: "ম্যাজিক ব্রডকাস্ট কিট",
@@ -1779,10 +2419,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Дополнительные настройки для вашей истории.",
       sceneSet: "Набор сцены:",
       locationSet: "Основное местоположение:",
-      weatherSet: "Погода:",
+      weatherSet: "Погода и атмосфера:",
       cameraStyleSet: "Стиль камеры (POV):",
       narratorLanguageSet: "Язык рассказчика:",
+      timeOfDay: "Время суток:",
+      artStyle: "Художественный стиль / Визуальное настроение:",
+      soundtrackMood: "Настроение саундтрека:",
+      pacing: "Темп сцены:",
+      customSceneStylePlaceholder: "Например, забавная сцена кулинарного шоу",
       customLocationPlaceholder: "Например, диорама гигантской кухни",
+      customWeatherPlaceholder: "Например, волшебное северное сияние в небе",
+      customCameraStylePlaceholder: "Например, кадр в стиле шпионского фильма",
       customLanguagePlaceholder: "Например, украинский",
       storyEditor: "Редактор историй",
       storyboard: "Раскадровка",
@@ -1812,11 +2459,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "Начать новую историю?",
       confirmNewStoryMessage: "Весь текущий прогресс будет удален. Вы уверены?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Стандартное кинематографическое приключение", epic_destruction: "Эпическое разрушение (замедленная съемка)", drifting_precision: "Испытание на точность дрифта" },
-        locationSet: { standardLandGroup: "🏞️ Стандартные и наземные наборы", natural_outdoor: "На открытом воздухе (сад/двор)", kids_bedroom: "Детская спальня", custom_location: "Введите свое местоположение..." },
-        weatherSet: { sunny: "Ясно", cloudy: "Облачно", rainy: "Дождь" },
-        cameraStyleSet: { standardGroup: "🎥 Стандартные стили", standard_cinematic: "Стандартный кинематографический", fpv_drone_dive: "Погружение с FPV-дрона" },
-        narratorLanguageSet: { no_narrator: "Без рассказчика", id: "Индонезийский", en: "Английский", custom_language: "Введите свой язык..." }
+        sceneSet: { 
+          standard_cinematic: "Стандартное кинематографическое приключение", 
+          epic_destruction: "Эпическое разрушение (замедленная съемка)", 
+          drifting_precision: "Испытание на точность дрифта",
+          comedic_chase: "Комедийная сцена погони",
+          tense_standoff: "Напряженное противостояние",
+          mysterious_discovery: "Таинственное открытие",
+          custom_scene: "Введите свой набор сцен..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Стандартные и наземные наборы", 
+          natural_outdoor: "На открытом воздухе (сад/двор)", 
+          kids_bedroom: "Детская спальня",
+          city_streets: "Городские улицы (город)",
+          enchanted_forest: "Зачарованный лес",
+          futuristic_lab: "Футуристическая лаборатория",
+          custom_location: "Введите свое местоположение..." 
+        },
+        weatherSet: { 
+          sunny: "Ясно", 
+          cloudy: "Облачно", 
+          rainy: "Дождь с грозой",
+          misty_fog: "Туман",
+          magical_twilight: "Волшебные сумерки",
+          post_apocalyptic_dust: "Постапокалиптическая пыль",
+          custom_weather: "Введите свою атмосферу..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Стандартные стили", 
+          standard_cinematic: "Стандартный кинематографический", 
+          fpv_drone_dive: "Погружение с FPV-дрона",
+          handheld_shaky: "Ручная съемка (дрожащая камера)",
+          slow_dolly_zoom: "Медленный зум (эффект вертиго)",
+          stationary_asmr: "Стационарная (АСМР/релаксация)",
+          custom_camera: "Введите свой стиль камеры..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Без рассказчика", 
+          id: "Индонезийский", 
+          en: "Английский", 
+          es: "Испанский",
+          zh: "Китайский (мандарин)",
+          hi: "Хинди",
+          ar: "Арабский",
+          pt: "Португальский",
+          ru: "Русский",
+          ja: "Японский",
+          de: "Немецкий",
+          fr: "Французский",
+          custom_language: "Введите свой язык..."
+        },
+        timeOfDay: {
+            default: "По умолчанию (по сюжету)",
+            golden_hour: "Золотой час (закат)",
+            midday: "Полдень",
+            blue_hour: "Синий час (сумерки)",
+            night: "Темная ночь"
+        },
+        artStyle: {
+            hyper_realistic: "Гиперреалистичный",
+            vintage_film: "Винтажный фильм (стиль 80-х)",
+            anime_inspired: "В стиле аниме",
+            gritty_noir: "Нуар",
+            dreamlike_fantasy: "Сказочный"
+        },
+        soundtrackMood: {
+            none: "Без музыки (только эмбиент)",
+            epic_orchestral: "Эпическая оркестровая",
+            tense_suspenseful: "Напряженная и тревожная",
+            upbeat_cheerful: "Оптимистичная и веселая",
+            lofi_relaxing: "Lo-fi и расслабляющая"
+        },
+        pacing: {
+            normal: "Нормальный темп",
+            slow_deliberate: "Очень медленный (размеренный)",
+            fast_action: "Быстрый (экшн)",
+            frenetic_chaotic: "Хаотичный"
+        }
       },
        publishingKitSection: {
         title: "Волшебный вещательный комплект",
@@ -1987,10 +2707,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "ストーリーの追加設定。",
       sceneSet: "シーン設定:",
       locationSet: "主な場所の設定:",
-      weatherSet: "天気の設定:",
+      weatherSet: "天気と雰囲気の設定:",
       cameraStyleSet: "カメラスタイル (POV):",
       narratorLanguageSet: "ナレーター言語設定:",
+      timeOfDay: "時間帯:",
+      artStyle: "アートスタイル/視覚的雰囲気:",
+      soundtrackMood: "サウンドトラックの雰囲気:",
+      pacing: "シーンのペース:",
+      customSceneStylePlaceholder: "例：面白い料理番組のシーン",
       customLocationPlaceholder: "例：巨大なキッチンのジオラマ",
+      customWeatherPlaceholder: "例：空に魔法のオーロラ",
+      customCameraStylePlaceholder: "例：スパイ映画風のトラッキングショット",
       customLanguagePlaceholder: "例：関西弁",
       storyEditor: "ストーリーエディター",
       storyboard: "ストーリーボード",
@@ -2020,11 +2747,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "新しいストーリーを開始しますか？",
       confirmNewStoryMessage: "現在の進捗はすべて削除されます。よろしいですか？",
       directingOptions: {
-        sceneSet: { standard_cinematic: "標準的なシネマティックアドベンチャー", epic_destruction: "壮大な破壊（スローモーション）", drifting_precision: "ドリフト精度チャレンジ" },
-        locationSet: { standardLandGroup: "🏞️ 標準＆陸上セット", natural_outdoor: "屋外（庭/庭）", kids_bedroom: "子供部屋", custom_location: "独自の場所を入力..." },
-        weatherSet: { sunny: "晴れ", cloudy: "曇り", rainy: "雨" },
-        cameraStyleSet: { standardGroup: "🎥 標準スタイル", standard_cinematic: "標準シネマティック", fpv_drone_dive: "FPVドローンダイブ" },
-        narratorLanguageSet: { no_narrator: "ナレーターなし", id: "インドネシア語", en: "英語", custom_language: "独自の言語を入力..." }
+        sceneSet: { 
+          standard_cinematic: "標準的なシネマティックアドベンチャー", 
+          epic_destruction: "壮大な破壊（スローモーション）", 
+          drifting_precision: "ドリフト精度チャレンジ",
+          comedic_chase: "コミカルな追跡シーン",
+          tense_standoff: "緊迫した対立",
+          mysterious_discovery: "神秘的な発見",
+          custom_scene: "独自のシーン設定を入力..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ 標準＆陸上セット", 
+          natural_outdoor: "屋外（庭/庭）", 
+          kids_bedroom: "子供部屋",
+          city_streets: "街の通り（都会）",
+          enchanted_forest: "魔法の森",
+          futuristic_lab: "未来的な研究室",
+          custom_location: "独自の場所を入力..." 
+        },
+        weatherSet: { 
+          sunny: "晴れ", 
+          cloudy: "曇り", 
+          rainy: "雷雨",
+          misty_fog: "霧",
+          magical_twilight: "魔法の黄昏",
+          post_apocalyptic_dust: "終末後の砂塵",
+          custom_weather: "独自の雰囲気を入力..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 標準スタイル", 
+          standard_cinematic: "標準シネマティック", 
+          fpv_drone_dive: "FPVドローンダイブ",
+          handheld_shaky: "手持ち（手ぶれカメラ）",
+          slow_dolly_zoom: "スロードリーズーム（めまい効果）",
+          stationary_asmr: "固定（ASMR/リラクゼーション）",
+          custom_camera: "独自のカメラスタイルを入力..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "ナレーターなし", 
+          id: "インドネシア語", 
+          en: "英語", 
+          es: "スペイン語",
+          zh: "中国語（標準）",
+          hi: "ヒンディー語",
+          ar: "アラビア語",
+          pt: "ポルトガル語",
+          ru: "ロシア語",
+          ja: "日本語",
+          de: "ドイツ語",
+          fr: "フランス語",
+          custom_language: "独自の言語を入力..."
+        },
+        timeOfDay: {
+            default: "デフォルト（ストーリーに基づく）",
+            golden_hour: "ゴールデンアワー（日没）",
+            midday: "真昼",
+            blue_hour: "ブルーアワー（薄暮）",
+            night: "漆黒の夜"
+        },
+        artStyle: {
+            hyper_realistic: "超写実的",
+            vintage_film: "ビンテージフィルム（80年代風）",
+            anime_inspired: "アニメ風",
+            gritty_noir: "グリッティノワール",
+            dreamlike_fantasy: "夢のようなファンタジー"
+        },
+        soundtrackMood: {
+            none: "音楽なし（環境音のみ）",
+            epic_orchestral: "壮大なオーケストラ",
+            tense_suspenseful: "緊迫感のあるサスペンス",
+            upbeat_cheerful: "アップビートで陽気",
+            lofi_relaxing: "ローファイでリラックス"
+        },
+        pacing: {
+            normal: "通常のペース",
+            slow_deliberate: "非常に遅い（意図的）",
+            fast_action: "速いペース（アクション）",
+            frenetic_chaotic: "熱狂的（混沌）"
+        }
       },
        publishingKitSection: {
         title: "魔法の放送キット",
@@ -2195,10 +2995,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Zusätzliche Einstellungen für Ihre Geschichte.",
       sceneSet: "Szenen-Set:",
       locationSet: "Hauptort-Set:",
-      weatherSet: "Wetter-Set:",
+      weatherSet: "Wetter- & Atmosphären-Set:",
       cameraStyleSet: "Kamerastil (POV):",
       narratorLanguageSet: "Erzählersprache:",
+      timeOfDay: "Tageszeit:",
+      artStyle: "Kunststil / Visuelle Stimmung:",
+      soundtrackMood: "Soundtrack-Stimmung:",
+      pacing: "Szenentempo:",
+      customSceneStylePlaceholder: "z.B. Eine lustige Kochshow-Szene",
       customLocationPlaceholder: "z.B. Riesiges Küchen-Diorama",
+      customWeatherPlaceholder: "z.B. Magische Aurora am Himmel",
+      customCameraStylePlaceholder: "z.B. Verfolgungsjagd im Stil eines Spionagefilms",
       customLanguagePlaceholder: "z.B. Bayerisch",
       storyEditor: "Story-Editor",
       storyboard: "Storyboard",
@@ -2228,11 +3035,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "Eine neue Geschichte beginnen?",
       confirmNewStoryMessage: "Alle aktuellen Fortschritte werden gelöscht. Sind Sie sicher?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Standard-Kinoabenteuer", epic_destruction: "Epische Zerstörung (Zeitlupe)", drifting_precision: "Drift-Präzisions-Herausforderung" },
-        locationSet: { standardLandGroup: "🏞️ Standard- & Land-Sets", natural_outdoor: "Im Freien (Garten/Hof)", kids_bedroom: "Kinderzimmer", custom_location: "Eigenen Ort eingeben..." },
-        weatherSet: { sunny: "Sonnig", cloudy: "Bewölkt", rainy: "Regnerisch" },
-        cameraStyleSet: { standardGroup: "🎥 Standard-Stile", standard_cinematic: "Standard-Kino", fpv_drone_dive: "FPV-Drohnen-Tauchflug" },
-        narratorLanguageSet: { no_narrator: "Ohne Erzähler", id: "Indonesisch", en: "Englisch", custom_language: "Eigene Sprache eingeben..." }
+        sceneSet: { 
+          standard_cinematic: "Standard-Kinoabenteuer", 
+          epic_destruction: "Epische Zerstörung (Zeitlupe)", 
+          drifting_precision: "Drift-Präzisions-Herausforderung",
+          comedic_chase: "Komödiantische Verfolgungsszene",
+          tense_standoff: "Spannungsgeladener Stillstand",
+          mysterious_discovery: "Geheimnisvolle Entdeckung",
+          custom_scene: "Eigenes Szenen-Set eingeben..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Standard- & Land-Sets", 
+          natural_outdoor: "Im Freien (Garten/Hof)", 
+          kids_bedroom: "Kinderzimmer",
+          city_streets: "Stadtstraßen (Urban)",
+          enchanted_forest: "Verzauberter Wald",
+          futuristic_lab: "Futuristisches Labor",
+          custom_location: "Eigenen Ort eingeben..." 
+        },
+        weatherSet: { 
+          sunny: "Sonnig", 
+          cloudy: "Bewölkt", 
+          rainy: "Regen mit Donner",
+          misty_fog: "Nebel",
+          magical_twilight: "Magische Dämmerung",
+          post_apocalyptic_dust: "Postapokalyptischer Staub",
+          custom_weather: "Eigene Atmosphäre eingeben..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Standard-Stile", 
+          standard_cinematic: "Standard-Kino", 
+          fpv_drone_dive: "FPV-Drohnen-Tauchflug",
+          handheld_shaky: "Handkamera (Wackelkamera)",
+          slow_dolly_zoom: "Langsamer Dolly-Zoom (Vertigo-Effekt)",
+          stationary_asmr: "Stationär (ASMR/Entspannung)",
+          custom_camera: "Eigenen Kamerastil eingeben..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Ohne Erzähler", 
+          id: "Indonesisch", 
+          en: "Englisch", 
+          es: "Spanisch",
+          zh: "Chinesisch (Mandarin)",
+          hi: "Hindi",
+          ar: "Arabisch",
+          pt: "Portugiesisch",
+          ru: "Russisch",
+          ja: "Japanisch",
+          de: "Deutsch",
+          fr: "Französisch",
+          custom_language: "Eigene Sprache eingeben..."
+        },
+        timeOfDay: {
+            default: "Standard (je nach Geschichte)",
+            golden_hour: "Goldene Stunde (Sonnenuntergang)",
+            midday: "Heller Mittag",
+            blue_hour: "Blaue Stunde (Dämmerung)",
+            night: "Stockfinstere Nacht"
+        },
+        artStyle: {
+            hyper_realistic: "Hyperrealistisch",
+            vintage_film: "Vintage-Film (80er-Jahre-Look)",
+            anime_inspired: "Anime-inspiriert",
+            gritty_noir: "Düsterer Noir",
+            dreamlike_fantasy: "Traumhafte Fantasie"
+        },
+        soundtrackMood: {
+            none: "Keine Musik (nur Umgebungsgeräusche)",
+            epic_orchestral: "Episch orchestral",
+            tense_suspenseful: "Spannungsgeladen & packend",
+            upbeat_cheerful: "Fröhlich & heiter",
+            lofi_relaxing: "Lo-Fi & entspannend"
+        },
+        pacing: {
+            normal: "Normales Tempo",
+            slow_deliberate: "Sehr langsam (bedächtig)",
+            fast_action: "Schnelles Tempo (Action)",
+            frenetic_chaotic: "Frenetisch (chaotisch)"
+        }
       },
        publishingKitSection: {
         title: "Magisches Sende-Kit",
@@ -2403,10 +3283,17 @@ const translations: { [key in Language]: Translations } = {
       deskDescription: "Paramètres supplémentaires pour votre histoire.",
       sceneSet: "Ensemble de scènes :",
       locationSet: "Lieu principal :",
-      weatherSet: "Météo :",
+      weatherSet: "Météo et atmosphère :",
       cameraStyleSet: "Style de caméra (POV) :",
       narratorLanguageSet: "Langue du narrateur :",
+      timeOfDay: "Heure de la journée :",
+      artStyle: "Style artistique / Ambiance visuelle :",
+      soundtrackMood: "Ambiance de la bande sonore :",
+      pacing: "Rythme de la scène :",
+      customSceneStylePlaceholder: "Ex: Une scène d'émission de cuisine amusante",
       customLocationPlaceholder: "Ex: Diorama de cuisine géante",
+      customWeatherPlaceholder: "Ex: Aurore boréale magique dans le ciel",
+      customCameraStylePlaceholder: "Ex: Travelling de style film d'espionnage",
       customLanguagePlaceholder: "Ex: Alsacien",
       storyEditor: "Éditeur d'histoire",
       storyboard: "Storyboard",
@@ -2436,11 +3323,84 @@ const translations: { [key in Language]: Translations } = {
       confirmNewStoryTitle: "Commencer une nouvelle histoire ?",
       confirmNewStoryMessage: "Toute la progression actuelle sera supprimée. Êtes-vous sûr ?",
       directingOptions: {
-        sceneSet: { standard_cinematic: "Aventure cinématique standard", epic_destruction: "Destruction épique (ralenti)", drifting_precision: "Défi de précision de dérapage" },
-        locationSet: { standardLandGroup: "🏞️ Ensembles standard et terrestres", natural_outdoor: "Extérieur (Jardin/Cour)", kids_bedroom: "Chambre d'enfant", custom_location: "Entrez votre propre lieu..." },
-        weatherSet: { sunny: "Ensoleillé", cloudy: "Nuageux", rainy: "Pluvieux" },
-        cameraStyleSet: { standardGroup: "🎥 Styles standard", standard_cinematic: "Cinématique standard", fpv_drone_dive: "Plongée de drone FPV" },
-        narratorLanguageSet: { no_narrator: "Sans narrateur", id: "Indonésien", en: "Anglais", custom_language: "Entrez votre propre langue..." }
+        sceneSet: { 
+          standard_cinematic: "Aventure cinématique standard", 
+          epic_destruction: "Destruction épique (ralenti)", 
+          drifting_precision: "Défi de précision de dérapage",
+          comedic_chase: "Scène de poursuite comique",
+          tense_standoff: "Confrontation tendue",
+          mysterious_discovery: "Découverte mystérieuse",
+          custom_scene: "Saisissez votre propre ensemble de scènes..."
+        },
+        locationSet: { 
+          standardLandGroup: "🏞️ Ensembles standard et terrestres", 
+          natural_outdoor: "Extérieur (Jardin/Cour)", 
+          kids_bedroom: "Chambre d'enfant",
+          city_streets: "Rues de la ville (Urbain)",
+          enchanted_forest: "Forêt enchantée",
+          futuristic_lab: "Laboratoire futuriste",
+          custom_location: "Entrez votre propre lieu..." 
+        },
+        weatherSet: { 
+          sunny: "Ensoleillé", 
+          cloudy: "Nuageux", 
+          rainy: "Pluie et tonnerre",
+          misty_fog: "Brouillard mystérieux",
+          magical_twilight: "Crépuscule magique",
+          post_apocalyptic_dust: "Poussière post-apocalyptique",
+          custom_weather: "Saisissez votre propre atmosphère..."
+        },
+        cameraStyleSet: { 
+          standardGroup: "🎥 Styles standard", 
+          standard_cinematic: "Cinématique standard", 
+          fpv_drone_dive: "Plongée de drone FPV",
+          handheld_shaky: "Caméra à l'épaule (instable)",
+          slow_dolly_zoom: "Zoom compensé lent (effet Vertigo)",
+          stationary_asmr: "Stationnaire (ASMR/Relaxation)",
+          custom_camera: "Saisissez votre propre style de caméra..."
+        },
+        narratorLanguageSet: { 
+          no_narrator: "Sans narrateur", 
+          id: "Indonésien", 
+          en: "Anglais", 
+          es: "Espagnol",
+          zh: "Chinois (mandarin)",
+          hi: "Hindi",
+          ar: "Arabe",
+          pt: "Portugais",
+          ru: "Russe",
+          ja: "Japonais",
+          de: "Allemand",
+          fr: "Français",
+          custom_language: "Entrez votre propre langue..."
+        },
+        timeOfDay: {
+            default: "Par défaut (selon l'histoire)",
+            golden_hour: "Heure dorée (coucher de soleil)",
+            midday: "Plein midi",
+            blue_hour: "Heure bleue (crépuscule)",
+            night: "Nuit noire"
+        },
+        artStyle: {
+            hyper_realistic: "Hyperréaliste",
+            vintage_film: "Film vintage (aspect années 80)",
+            anime_inspired: "Inspiré de l'anime",
+            gritty_noir: "Noir et granuleux",
+            dreamlike_fantasy: "Fantaisie onirique"
+        },
+        soundtrackMood: {
+            none: "Pas de musique (ambiance uniquement)",
+            epic_orchestral: "Orchestral épique",
+            tense_suspenseful: "Tendu et suspensif",
+            upbeat_cheerful: "Joyeux et entraînant",
+            lofi_relaxing: "Lo-fi et relaxant"
+        },
+        pacing: {
+            normal: "Rythme normal",
+            slow_deliberate: "Très lent (délibéré)",
+            fast_action: "Rythme rapide (action)",
+            frenetic_chaotic: "Frénétique (chaotique)"
+        }
       },
        publishingKitSection: {
         title: "Kit de Diffusion Magique",
