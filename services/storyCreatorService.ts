@@ -493,59 +493,59 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
 
             const fullStoryNarration = storyboard.map(scene => scene.sound_design.narration_script).filter(Boolean).join('\n\n');
             const characterInfo = characters.length > 0
-                ? `Karakter utama dalam cerita ini adalah: ${characters.map(c => `Nama: ${c.name}, ID Konsistensi: ${c.consistency_key}, Deskripsi Detail: ${c.designLanguage}, Fitur Kunci: ${c.keyFeatures.join(', ')}, Material: ${c.material}`).join('; ')}.`
-                : "Tidak ada karakter spesifik yang dipilih.";
-            const primaryCharacter = characters.length > 0 ? characters[0].name : "mainan ini";
+                ? `The main characters in this story are: ${characters.map(c => `Name: ${c.name}, Consistency ID: ${c.consistency_key}, Detailed Description: ${c.designLanguage}, Key Features: ${c.keyFeatures.join(', ')}, Material: ${c.material}`).join('; ')}.`
+                : "No specific characters were selected.";
+            const primaryCharacter = characters.length > 0 ? characters[0].name : "this toy";
         
-            const prompt = `Anda adalah seorang ahli strategi konten YouTube dan pakar SEO viral. Berdasarkan data cerita berikut, buatlah "Kit Siaran Ajaib" yang dioptimalkan secara maksimal untuk kesuksesan algoritma dan skor tertinggi di VidIQ & TubeBuddy.
-        
-            **Data Sumber:**
-            - Naskah Narasi Lengkap: ${fullStoryNarration}
-            - Judul Asli Cerita: "${logline}"
-            - Karakter Utama: "${primaryCharacter}"
-            - Semua Karakter dalam Cerita (DNA Digital): "${characterInfo}"
+            const prompt = `You are an expert YouTube content strategist and viral SEO expert. Based on the following source data, create a "Magic Broadcast Kit" that is hyper-optimized for algorithmic success and high scores on VidIQ & TubeBuddy.
+
+            **Source Data:**
+            - Full Narrative Script: ${fullStoryNarration}
+            - Original Story Title: "${logline}"
+            - Primary Character: "${primaryCharacter}"
+            - All Characters in Story (Digital DNA): "${characterInfo}"
             
             ---
         
-            **TUGAS: Hasilkan Aset YouTube Berikut dalam Format JSON Sesuai Skema yang Diberikan**
+            **TASK: Generate the Following YouTube Assets in JSON Format According to the Provided Schema**
         
-            **1. Judul YouTube (youtube_title_id & youtube_title_en):**
-            - **Kriteria Wajib:**
-                - Buat judul yang sangat menarik (clickbait positif), mungkin kontroversial, dan mengandung hook yang kuat untuk memancing klik.
-                - Lakukan riset kata kunci untuk memastikan judul sangat SEO-friendly dan akan menempati peringkat tinggi di pencarian YouTube.
-                - **WAJIB MAKSIMAL 100 KARAKTER.**
-                - Targetkan skor setinggi mungkin di VidIQ dan TubeBuddy.
+            **1. YouTube Titles (youtube_title_id & youtube_title_en):**
+            - **Requirements:**
+                - Create highly engaging titles (positive clickbait) with a strong hook for both Indonesian and English audiences.
+                - Perform keyword research to ensure titles are highly SEO-friendly and will rank high in YouTube search.
+                - **MUST BE A MAXIMUM OF 100 CHARACTERS.**
+                - Target the highest possible scores on VidIQ and TubeBuddy.
         
-            **2. Deskripsi YouTube (youtube_description_id & youtube_description_en):**
-            - **Kriteria Wajib:**
-                - Tulis deskripsi yang kaya akan kata kunci SEO yang relevan, menceritakan kembali ringkasan cerita dengan menarik.
-                - Sertakan timestamp untuk adegan-adegan penting jika memungkinkan.
-                - Tambahkan 3-5 tagar (hashtag) yang sangat relevan dan trending di akhir deskripsi.
-                - **WAJIB MAKSIMAL 5000 KARAKTER.**
+            **2. YouTube Descriptions (youtube_description_id & youtube_description_en):**
+            - **Requirements:**
+                - Write descriptions rich with relevant SEO keywords, retelling the story summary compellingly.
+                - Include timestamps for key scenes if possible.
+                - Add 3-5 highly relevant and trending hashtags at the end of the description.
+                - **MUST BE A MAXIMUM OF 5000 CHARACTERS.**
         
-            **3. Tag YouTube (youtube_tags_id & youtube_tags_en):**
-            - **Kriteria Wajib:**
-                - Hasilkan daftar tag yang sangat relevan, menargetkan kata kunci bervolume tinggi dan rendah persaingan.
-                - Sertakan kata kunci long-tail dan short-tail.
-                - Dirancang untuk memaksimalkan visibilitas di rekomendasi dan pencarian YouTube.
-                - **TOTAL GABUNGAN SEMUA KARAKTER TAG TIDAK BOLEH MELEBIHI 500 KARAKTER.**
+            **3. YouTube Tags (youtube_tags_id & youtube_tags_en):**
+            - **Requirements:**
+                - Generate a list of highly relevant tags, targeting high-volume, low-competition keywords.
+                - Include long-tail and short-tail keywords.
+                - Designed to maximize visibility in YouTube recommendations and search.
+                - **TOTAL COMBINED CHARACTER COUNT FOR ALL TAGS MUST NOT EXCEED 500 CHARACTERS.**
         
-            **4. Link Afiliasi (affiliate_links):**
-            - Buat objek dengan 'primary_character_template' dan 'all_characters_template'. Gunakan placeholder [MASUKKAN LINK ANDA DI SINI].
+            **4. Affiliate Links (affiliate_links):**
+            - Create an object with 'primary_character_template' and 'all_characters_template'. Use the placeholder [INSERT YOUR LINK HERE].
         
-            **5. Konsep Thumbnail (thumbnail_concepts):**
-            - Buat array berisi SATU konsep thumbnail yang paling kuat.
-            - **Untuk 'image_prompt' (SANGAT PENTING):**
-                - Anda adalah seorang "Visual Prompt Engineer" ahli untuk model AI gambar seperti Imagen.
-                - Prompt HARUS dalam Bahasa Inggris dan sangat detail.
-                - **Sintesiskan SEMUA data yang tersedia:** Judul YouTube yang baru Anda buat, Naskah Narasi Lengkap, dan yang terpenting, DNA Digital Karakter (termasuk 'ID Konsistensi' dan deskripsi visualnya).
-                - Prompt harus menggambarkan adegan paling dramatis atau klimaks dari cerita. Jelaskan aksi karakter, ekspresi wajah, lingkungan, pencahayaan sinematik yang dramatis, palet warna yang hidup, dan gaya visual (misalnya, ultra-realistis, 4K, detail tinggi, blur gerakan untuk aksi).
-                - **Struktur wajib:** Mulai dengan deskripsi adegan, lalu deskripsi karakter yang SANGAT detail dengan merujuk pada 'ID Konsistensi' mereka, diikuti oleh detail latar belakang dan pencahayaan.
-            - Untuk 'cta_overlay_text_id' dan 'cta_overlay_text_en', buat objek JSON dengan tiga field: 'hook', 'character', dan 'goal'.
-                - 'hook': Teks pancingan yang sangat menarik, SEMUA HURUF KAPITAL, dan singkat (maksimal 3 kata). Contoh: "BALAS DENDAM EPIK!"
-                - 'character': Sebutkan peran atau karakter yang menjadi sorotan (maksimal 5 kata). Contoh: "Si Truk Monster Pemberani"
-                - 'goal': Jelaskan tujuan cerita secara singkat (maksimal 7 kata). Contoh: "Merebut kembali mahkota yang dicuri"
-            - Untuk field lainnya (\`concept_title\`, \`concept_description\`), buat versi Bahasa Indonesia (\`_id\`) dan Inggris (\`_en\`).`;
+            **5. Thumbnail Concepts (thumbnail_concepts):**
+            - Create an array containing ONE powerful thumbnail concept.
+            - **For 'image_prompt' (CRITICAL):**
+                - You are an expert "Visual Prompt Engineer" for image AI models like Imagen.
+                - The prompt MUST be in **English** and highly detailed.
+                - **Synthesize ALL available data:** The YouTube titles you just created, the full narrative script, and most importantly, the characters' Digital DNA (including 'consistency_key' and visual descriptions).
+                - The prompt must describe the most dramatic or climactic scene from the story. Describe the character's action, expression, environment, dramatic cinematic lighting, vivid color palette, and visual style (e.g., ultra-realistic, 4K, high detail, motion blur for action).
+                - **Mandatory structure:** Start with the scene description, then a VERY detailed character description referencing their 'consistency_key', followed by background and lighting details.
+            - For 'cta_overlay_text_id' and 'cta_overlay_text_en', create a JSON object with three fields: 'hook', 'character', and 'goal'.
+                - 'hook': A very catchy, ALL CAPS, short hook (max 3 words). Example: "EPIC REVENGE!"
+                - 'character': Mention the highlighted role or character (max 5 words). Example: "The Brave Monster Truck"
+                - 'goal': Briefly describe the story's goal (max 7 words). Example: "Reclaiming the stolen crown"
+            - For other fields (\`concept_title\`, \`concept_description\`), create Indonesian (\`_id\`) and English (\`_en\`) versions.`;
             
              // FIX: Add GenerateContentResponse type to the response variable.
              const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
