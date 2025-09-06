@@ -11,6 +11,11 @@ interface StoryCreatorProps {
     allStoryApiKeys: string[];
     activeStoryApiKey: string | null;
     onStoryKeyUpdate: (key: string) => void;
+    
+    allVideoApiKeys: string[];
+    activeVideoApiKey: string | null;
+    onVideoKeyUpdate: (key: string) => void;
+
     onManageKeysClick: () => void;
     onProceedToVideo: (prompt: string) => void;
     

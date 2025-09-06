@@ -12,6 +12,10 @@ interface MainContentProps {
     activeStoryApiKey: string | null;
     onStoryKeyUpdate: (key: string) => void;
 
+    allVideoApiKeys: string[];
+    activeVideoApiKey: string | null;
+    onVideoKeyUpdate: (key: string) => void;
+
     logline: string;
     setLogline: (value: string) => void;
     scenario: string;
@@ -54,20 +58,18 @@ export const MainContent: React.FC<MainContentProps> = ({ activeTab, setActiveTa
             </div>
             
             {activeTab === 'editor' && <ScriptEditor {...props} />}
-            {/* FIX: Pass failover props with correct names (allKeys, activeKey) to Storyboard */}
             {activeTab === 'storyboard' && <Storyboard
                 {...props}
                 allKeys={props.allStoryApiKeys}
                 activeKey={props.activeStoryApiKey}
                 onKeyUpdate={props.onStoryKeyUpdate}
             />}
-            {/* FIX: Pass failover props with correct names (allKeys, activeKey) to PublishingKitView */}
             {activeTab === 'publishingKit' && publishingKit && <PublishingKitView
                 kitData={publishingKit}
                 {...props}
-                allKeys={props.allStoryApiKeys}
-                activeKey={props.activeStoryApiKey}
-                onKeyUpdate={props.onStoryKeyUpdate}
+                allKeys={props.allVideoApiKeys}
+                activeKey={props.activeVideoApiKey}
+                onKeyUpdate={props.onVideoKeyUpdate}
             />}
         </main>
     );

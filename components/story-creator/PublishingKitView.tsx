@@ -161,7 +161,10 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     };
     
      const handleGenerateThumbnail = async (prompt: string) => {
-        if (!activeKey) return;
+        if (!activeKey) {
+            alert(t('alertSetVideoThumbnailApiKey'));
+            return;
+        }
         
         const ctaTextParts = assets[selectedLang]?.ctaTexts[0];
         if (!ctaTextParts) {

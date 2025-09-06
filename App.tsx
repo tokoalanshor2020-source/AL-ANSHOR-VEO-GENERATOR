@@ -257,6 +257,9 @@ export default function App() {
               allStoryApiKeys={storyApiKeys}
               activeStoryApiKey={activeStoryApiKey}
               onStoryKeyUpdate={handleSetActiveStoryApiKey}
+              allVideoApiKeys={videoApiKeys}
+              activeVideoApiKey={activeVideoApiKey}
+              onVideoKeyUpdate={handleSetActiveVideoApiKey}
               onManageKeysClick={() => setKeyManagerConfig({ type: 'story' })}
               onProceedToVideo={handleProceedToVideoGenerator}
               characters={characters}
