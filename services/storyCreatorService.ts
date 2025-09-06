@@ -730,16 +730,6 @@ const drawTextWithOutline = (
     ctx.fillText(displayText, x, y);
 };
 
-const base64ToBlob = (base64: string, mimeType: string): Blob => {
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType });
-};
-
 export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { hook: string; character: string; goal: string; }): Promise<string> => {
     return new Promise((resolve, reject) => {
         const canvas = document.createElement('canvas');
@@ -747,9 +737,7 @@ export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { ho
         if (!ctx) return reject(new Error("Could not create canvas context"));
 
         const img = new Image();
-        const blob = base64ToBlob(imageData.base64, imageData.mimeType);
-        const objectUrl = URL.createObjectURL(blob);
-
+        
         img.onload = () => {
             canvas.width = img.width;
             canvas.height = img.height;
@@ -779,13 +767,14 @@ export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { ho
             drawTextWithOutline(ctx, textParts.character, canvas.width / 2, charY, charFontSize, false);
             drawTextWithOutline(ctx, textParts.hook, canvas.width / 2, hookY, hookFontSize, true); // Hook is all caps
             
-            URL.revokeObjectURL(objectUrl);
             resolve(canvas.toDataURL('image/png'));
         };
-        img.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
+        img.onerror = (err) => {
+            console.error("Image load error for canvas:", err);
             reject(new Error("Failed to load image for canvas overlay."));
         };
-        img.src = objectUrl;
+        
+        // Use a direct data URI, which is the most reliable way to prevent canvas tainting.
+        img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
     });
 };
