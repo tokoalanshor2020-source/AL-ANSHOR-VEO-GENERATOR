@@ -133,7 +133,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     const contentFormatOptions = t('smartDirector.contentFormats') as { [key: string]: string };
 
     return (
-        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
+        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-20 flex flex-col font-sans" role="dialog" aria-modal="true">
             <main className="flex-grow overflow-y-auto">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
                 {/* Step 1: Form */}
