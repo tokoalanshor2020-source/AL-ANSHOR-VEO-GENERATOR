@@ -584,48 +584,26 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
             const characterInfo = characters.map(c => c.name).join(', ');
             const numConcepts = 1;
         
-            const prompt = `You are a world-class YouTube content strategist and a native **${targetLanguageName}** speaker. Your task is to generate a complete, hyper-optimized YouTube publishing kit from scratch in **${targetLanguageName}**, tailored for the algorithm and audience in that region.
-        
-            **Source Data:**
-            - Story Logline: "${logline}"
-            - Main Characters: "${characterInfo}"
-            - Full Story Narration: ${fullStoryNarration}
-            
-            ---
-        
-            **YOUR TASK: Generate the following assets in a single JSON object. ALL text output MUST be in ${targetLanguageName}.**
-        
-            **1. YouTube Title (key: "title"):**
-            - **Criteria:**
-                - Must be in **${targetLanguageName}**.
-                - Maximum 100 characters.
-                - Must contain a powerful, controversial, or intriguing hook to maximize clicks.
-                - Must be heavily optimized with SEO keywords relevant to the **${targetLanguageName}**-speaking audience.
-                - Aim for the highest possible score on VidIQ and TubeBuddy for that region.
-        
-            **2. YouTube Description (key: "description"):**
-            - **Criteria:**
-                - Must be in **${targetLanguageName}**.
-                - Maximum 5000 characters.
-                - Must be rich with relevant SEO keywords and hashtags (#) that are trending in the target region.
-                - Include a compelling summary of the story.
-                - Include timestamps for key moments.
-        
-            **3. YouTube Tags (key: "tags"):**
-            - **Criteria:**
-                - Must be a JSON array of strings in **${targetLanguageName}**.
-                - Total combined character length must not exceed 500 characters.
-                - Must include a mix of of high-volume and low-competition long-tail and short-tail keywords for the target region's algorithm.
-        
-            **4. Thumbnail CTA Texts (key: "ctaTexts"):**
-             - **Criteria:**
-                - Must be a JSON array of objects. Generate exactly ${numConcepts} object.
-                - Each object must have three fields: "hook", "character", and "goal".
-                - All field values MUST be in **${targetLanguageName}**.
-                - "hook": A short, high-impact, ALL-CAPS call-to-action (max 3 words).
-                - "character": A short phrase highlighting the main character (max 5 words).
-                - "goal": A short phrase describing the story's objective (max 7 words).
-            `;
+            const prompt = `You are an expert YouTube content strategist and a native speaker of **${targetLanguageName}**.
+Based on the following source data, your task is to generate a complete, hyper-optimized YouTube publishing kit.
+Your entire output MUST be a single JSON object that strictly adheres to the provided schema.
+All string values within the JSON object MUST be written in **${targetLanguageName}**.
+
+**Source Data:**
+- Story Logline: "${logline}"
+- Main Characters: "${characterInfo}"
+- Full Story Narration: ${fullStoryNarration}
+
+**Generation Rules:**
+1.  **YouTube Title (title):** Must be highly engaging (positive clickbait), SEO-friendly for the target region, and under 100 characters.
+2.  **YouTube Description (description):** Must be rich with relevant SEO keywords and hashtags. Include a compelling story summary and timestamps. Max 5000 characters.
+3.  **YouTube Tags (tags):** A list of relevant, high-volume, low-competition keywords. Include long-tail and short-tail tags. Total combined length under 500 characters.
+4.  **Thumbnail CTA Texts (ctaTexts):** Generate exactly ${numConcepts} concept.
+    - **hook:** A short, ALL-CAPS, high-impact hook (max 3 words).
+    - **character:** A short phrase about the main character (max 5 words).
+    - **goal:** A short phrase describing the story's objective (max 7 words).
+
+Produce the JSON object now.`;
             
             const schema = {
                 type: Type.OBJECT,
