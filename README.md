@@ -138,7 +138,7 @@ cd /var/www/al-anshor-veo-generator
 ### Jalankan server pengembangan Vite menggunakan PM2
 ### Perintah '-- --host' diperlukan agar Vite mendengarkan koneksi dari Nginx
 ```bash
-pm2 start "npm run dev -- --host" --name al-anshor-veo-generator
+pm2 start "npm run dev -- --host 0.0.0.0" --name al-anshor-veo-generator
 ```
 
 ### Simpan daftar proses PM2 agar dapat dipulihkan saat reboot
