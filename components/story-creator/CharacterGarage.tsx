@@ -4,6 +4,8 @@ import { useLocalization } from '../../i18n';
 import { PencilSquareIcon } from '../icons/PencilSquareIcon';
 import { TrashIcon } from '../icons/TrashIcon';
 import { CharacterWorkshopModal } from './CharacterWorkshopModal'; 
+import { ChevronLeftIcon } from '../icons/ChevronLeftIcon';
+import { ChevronRightIcon } from '../icons/ChevronRightIcon';
 
 interface CharacterGarageProps {
     characters: Character[];
@@ -12,18 +14,6 @@ interface CharacterGarageProps {
     allStoryApiKeys: string[];
     onStoryKeyUpdate: (key: string) => void;
 }
-
-const ChevronLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-    </svg>
-);
-
-const ChevronRightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-    </svg>
-);
 
 export const CharacterGarage: React.FC<CharacterGarageProps> = ({ characters, setCharacters, activeApiKey, allStoryApiKeys, onStoryKeyUpdate }) => {
     const { t } = useLocalization();

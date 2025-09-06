@@ -13,8 +13,10 @@ interface StoryboardOptions {
 
 export interface CharacterDevelopmentOptions {
     idea: string;
-    imageBase64: string | null;
-    imageType: string | null;
+    referenceFiles: {
+        base64: string;
+        mimeType: string;
+    }[];
 }
 
 export interface DevelopedCharacterData {
@@ -24,6 +26,9 @@ export interface DevelopedCharacterData {
     design_language: string;
     key_features: string[];
     consistency_key: string;
+    character_personality: string;
+    physical_details: string;
+    scale_and_size: string;
 }
 
 export interface StoryIdeaOptions {
@@ -299,16 +304,23 @@ export const developCharacter = async (failoverParams: FailoverParams, options: 
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = getAiInstance(apiKey);
-            const { idea, imageBase64, imageType } = options;
+            const { idea, referenceFiles } = options;
 
-            const prompt = `You are a Toy Designer. Your main task is to analyze the given toy image and create a detailed "Model Sheet". Use the additional notes to refine the details if provided.
-        
-            **Your Task:**
-            1. Analyze the image as the primary source.
-            2. Use the following notes as additional context: "${idea}"
-            3. The result MUST be in JSON format.
-            4. All descriptive fields (brand_name, model_name, material, design_language, key_features) MUST be in Indonesian.
-            5. Create 'consistency_key' in English. It should be a unique and descriptive token (e.g., "red_sports_car_v1", "monster_truck_goro_x").`;
+            const prompt = `Anda adalah seorang Desainer Mainan Ahli. Tugas utama Anda adalah menganalisis kumpulan gambar dan/atau klip video referensi yang diberikan untuk membuat "Lembar Model Karakter" yang sangat detail. Gunakan catatan tambahan untuk menyempurnakan detail jika disediakan.
+
+            **Tugas Anda:**
+            1.  Analisis SEMUA gambar dan video referensi sebagai sumber kebenaran utama. Sintesis informasi dari semua sumber untuk menciptakan pemahaman holistik tentang karakter tersebut.
+            2.  Gunakan catatan tambahan berikut sebagai konteks: "${idea}"
+            3.  Hasilnya HARUS dalam format JSON.
+            4.  SEMUA bidang deskriptif (brand_name, model_name, material, design_language, key_features, character_personality, physical_details, scale_and_size) HARUS dalam Bahasa Indonesia.
+            5.  Buat 'consistency_key' dalam Bahasa Inggris. Ini harus berupa token yang unik dan deskriptif (misalnya, "red_sports_car_v2", "blue_monster_truck_goro_x").
+
+            **Aturan Penting untuk Bidang JSON:**
+            -   **design_language:** Berikan deskripsi visual yang sangat komprehensif.
+            -   **key_features:** Identifikasi 5-7 fitur visual yang paling menonjol dan unik.
+            -   **physical_details:** Jelaskan detail fisik yang sangat spesifik dan bernuansa, seperti "cat sedikit usang di fender kiri", "mata biru menyala saat marah", "stiker nomor 5 di pintu kanan".
+            -   **character_personality:** Jelaskan sifat, perilaku, dan ekspresi khas karakter.
+            -   **scale_and_size:** Jelaskan ukuran mainan secara relatif, seperti "Skala 1:64", "seukuran telapak tangan".`;
         
             const schema = {
                 type: Type.OBJECT,
@@ -318,23 +330,26 @@ export const developCharacter = async (failoverParams: FailoverParams, options: 
                     material: { type: Type.STRING },
                     design_language: { type: Type.STRING },
                     key_features: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    consistency_key: { type: Type.STRING }
+                    consistency_key: { type: Type.STRING },
+                    character_personality: { type: Type.STRING },
+                    physical_details: { type: Type.STRING },
+                    scale_and_size: { type: Type.STRING },
                 },
-                required: ["brand_name", "model_name", "material", "design_language", "key_features", "consistency_key"]
+                required: ["brand_name", "model_name", "material", "design_language", "key_features", "consistency_key", "character_personality", "physical_details", "scale_and_size"]
             };
             
-            const textPart = { text: prompt };
-            const requestParts: any[] = [textPart];
-        
-            if (imageBase64 && imageType) {
-                const imagePart = {
+            const requestParts: any[] = [];
+
+            referenceFiles.forEach(file => {
+                requestParts.push({
                     inlineData: {
-                        mimeType: imageType,
-                        data: imageBase64,
+                        mimeType: file.mimeType,
+                        data: file.base64,
                     },
-                };
-                requestParts.unshift(imagePart);
-            }
+                });
+            });
+        
+            requestParts.push({ text: prompt });
         
             // FIX: Add GenerateContentResponse type to the response variable.
             const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({

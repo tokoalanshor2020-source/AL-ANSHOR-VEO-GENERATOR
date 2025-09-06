@@ -9,11 +9,22 @@ export interface GeneratorOptions {
   resolution: '720p' | '1080p';
 }
 
+// FIX: Add missing ImageFile interface for the video generator form.
 export interface ImageFile {
   base64: string;
   mimeType: string;
   previewUrl: string;
 }
+
+export interface ReferenceFile {
+  id: string;
+  base64: string;
+  mimeType: string;
+  previewUrl: string;
+  type: 'image' | 'video';
+  file: File; // Keep the original file for size/duration checks
+}
+
 
 // --- Story Creator Types ---
 
@@ -29,6 +40,9 @@ export interface Character {
   keyFeatures: string[];
   consistency_key: string;
   actionDNA: string[];
+  character_personality?: string;
+  physical_details?: string;
+  scale_and_size?: string;
 }
 
 export interface StoryboardScene {
@@ -70,6 +84,7 @@ export interface PublishingKitData {
   youtube_title_en: string;
   youtube_description_id: string;
   youtube_description_en: string;
+
   youtube_tags_id: string[];
   youtube_tags_en: string[];
   affiliate_links: {
