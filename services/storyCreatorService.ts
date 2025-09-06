@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, type GenerateContentResponse, type GenerateImagesResponse } from "@google/genai";
 import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData } from '../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
@@ -175,7 +175,8 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
         
             Untuk SETIAP adegan, buat objek JSON yang detail sesuai skema.`;
 
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -238,7 +239,8 @@ export const generateBlueprintPrompt = async (failoverParams: FailoverParams, sc
             //** 6. NEGATIVE PROMPT **//
             NEGATIVE_PROMPT: [animation, 3d render, cgi, cartoon, illustration, painting, drawing, art, video game, unreal engine, octane render, blender render, digital art, perfect, clean, smooth, glossy, inconsistent character, changing model]`;
             
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
             return response.text;
         }
     });
@@ -280,7 +282,8 @@ export const generateCinematicPrompt = async (failoverParams: FailoverParams, sc
             
             Synthesize now.`;
             
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
             return response.text;
         }
     });
@@ -328,7 +331,8 @@ export const developCharacter = async (failoverParams: FailoverParams, options: 
                 requestParts.unshift(imagePart);
             }
         
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: { parts: requestParts },
                 config: {
@@ -358,7 +362,8 @@ export const generateActionDna = async (failoverParams: FailoverParams, characte
                 required: ["action_dna"]
             };
             
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -410,7 +415,8 @@ export const generateStoryIdeas = async (failoverParams: FailoverParams, options
                 required: ["ideas"]
             };
         
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -541,7 +547,8 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
                 - 'goal': Jelaskan tujuan cerita secara singkat (maksimal 7 kata). Contoh: "Merebut kembali mahkota yang dicuri"
             - Untuk field lainnya (\`concept_title\`, \`concept_description\`), buat versi Bahasa Indonesia (\`_id\`) dan Inggris (\`_en\`).`;
             
-             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+             // FIX: Add GenerateContentResponse type to the response variable.
+             const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -642,7 +649,8 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
                 required: ["title", "description", "tags", "ctaTexts"]
             };
         
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            // FIX: Add GenerateContentResponse type to the response variable.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -665,7 +673,8 @@ export const generateThumbnail = async (failoverParams: FailoverParams, prompt: 
             
             const fullPrompt = `Create a visually stunning and eye-catching YouTube thumbnail. The image must be vibrant, high-contrast, cinematic, and emotionally engaging, perfectly representing this scene: ${prompt}`;
         
-            const response = await makeGenerativeApiCall(() => ai.models.generateImages({
+            // FIX: Add GenerateImagesResponse type to the response variable.
+            const response: GenerateImagesResponse = await makeGenerativeApiCall(() => ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
                 prompt: fullPrompt,
                 config: {

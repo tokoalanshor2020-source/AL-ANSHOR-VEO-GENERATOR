@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type Operation } from "@google/genai";
 import type { GeneratorOptions } from '../types';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -112,7 +112,7 @@ export const generateVideo = async ({ allKeys, activeKey, onKeyUpdate, options }
             `;
         
             const requestPayload: any = {
-                model: 'veo-3.0-generate-preview',
+                model: 'veo-2.0-generate-001',
                 prompt: augmentedPrompt,
                 config: {
                     numberOfVideos: 1,
@@ -126,7 +126,9 @@ export const generateVideo = async ({ allKeys, activeKey, onKeyUpdate, options }
                 };
             }
             
-            let operation = await makeApiCallWithRetry(() => ai.models.generateVideos(requestPayload));
+            // FIX: Use the Operation type for the operation variable, as LroOperation and VideosOperation are not exported.
+            // FIX: The Operation type is generic. Since the response type for videos is not exported, we use `any` as the type argument.
+            let operation: Operation<any> = await makeApiCallWithRetry(() => ai.models.generateVideos(requestPayload));
         
             while (!operation.done) {
                 await delay(10000); // Poll every 10 seconds

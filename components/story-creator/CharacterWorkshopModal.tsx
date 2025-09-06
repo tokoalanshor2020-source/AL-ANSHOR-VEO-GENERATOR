@@ -33,7 +33,12 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
     const [actionDNA, setActionDNA] = useState<string[]>([]);
 
     const resetForm = useCallback(() => {
-        setImageFile(null);
+        setImageFile(prevFile => {
+            if (prevFile?.previewUrl) {
+                URL.revokeObjectURL(prevFile.previewUrl);
+            }
+            return null;
+        });
         setIdea('');
         setBrandName(initialCharacter?.brandName || '');
         setModelName(initialCharacter?.modelName || '');
@@ -57,15 +62,18 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
             reader.onload = (e) => {
                 const base64 = (e.target?.result as string).split(',')[1];
                 const previewUrl = URL.createObjectURL(file);
-                if (imageFile?.previewUrl) {
-                    URL.revokeObjectURL(imageFile.previewUrl);
-                }
-                setImageFile({ base64, mimeType: file.type, previewUrl });
+                
+                setImageFile(prevFile => {
+                    if (prevFile?.previewUrl) {
+                        URL.revokeObjectURL(prevFile.previewUrl);
+                    }
+                    return { base64, mimeType: file.type, previewUrl };
+                });
             };
             reader.readAsDataURL(file);
             event.target.value = ''; // Allow re-uploading the same file
         }
-    }, [imageFile]);
+    }, []);
 
     const getFailoverParams = (): FailoverParams => ({
         allKeys: allStoryApiKeys,
@@ -129,103 +137,93 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
     if (!isOpen) return null;
 
     return (
-         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-base-200 rounded-2xl shadow-2xl w-full max-w-2xl border border-base-300 max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="p-6 flex-shrink-0 text-center">
-                    <h2 className="text-2xl font-bold text-amber-400">
-                       {/* FIX: Cast result of t() to string */}
-                       {t('characterWorkshop.title') as string}
-                    </h2>
-                     {/* FIX: Cast result of t() to string */}
-                     <p className="text-sm text-gray-400 mt-1">{t('characterWorkshop.subtitle') as string}</p>
-                </div>
-
-                <div className="flex-grow overflow-y-auto px-6 space-y-6">
-                    {/* AI Assistant Section */}
-                    <div className="bg-base-300/40 p-4 rounded-lg border border-base-300">
-                        {/* FIX: Cast result of t() to string */}
-                        <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.aiAssistantSection') as string}</h3>
-                        {/* FIX: Cast result of t() to string */}
-                        <p className="text-xs text-gray-400 mb-3">{t('characterWorkshop.aiAssistantDescription') as string}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <input type="file" id="charImageInput" className="hidden" accept="image/*" onChange={handleImageChange} />
-                                <label htmlFor="charImageInput" className="cursor-pointer w-full flex flex-col items-center justify-center p-4 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[100px] hover:border-brand-primary">
-                                    {imageFile ? <img src={imageFile.previewUrl} alt="Preview" className="max-h-24 object-contain rounded"/> : <UploadIcon className="h-8 w-8 text-gray-500" />}
-                                    {/* FIX: Cast result of t() to string */}
-                                    <span className="text-sm mt-2 text-gray-400">{imageFile ? "Change Image" : t('characterWorkshop.uploadButton') as string}</span>
-                                </label>
+        <div className="fixed top-24 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
+            {/* Main scrollable content */}
+            <main className="flex-grow overflow-y-auto bg-base-100">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                        
+                        {/* AI Assistant Section (Left, Sticky) */}
+                        <div className="lg:sticky lg:top-8">
+                             <div className="bg-base-200 p-6 rounded-lg border border-base-300">
+                                <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.aiAssistantSection') as string}</h3>
+                                <p className="text-xs text-gray-400 mb-3">{t('characterWorkshop.aiAssistantDescription') as string}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <input type="file" id="charImageInput" className="hidden" accept="image/*" onChange={handleImageChange} />
+                                        <label htmlFor="charImageInput" className="cursor-pointer w-full flex flex-col items-center justify-center p-4 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[100px] hover:border-brand-primary transition-colors">
+                                            {imageFile ? <img src={imageFile.previewUrl} alt="Preview" className="max-h-24 object-contain rounded"/> : <UploadIcon className="h-8 w-8 text-gray-500" />}
+                                            <span className="text-sm mt-2 text-gray-400">{imageFile ? "Change Image" : t('characterWorkshop.uploadButton') as string}</span>
+                                        </label>
+                                    </div>
+                                    <textarea value={idea} onChange={e => setIdea(e.target.value)} placeholder={t('characterWorkshop.ideaPlaceholder') as string} className="w-full h-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500" rows={4}></textarea>
+                                </div>
+                                 <button onClick={handleDesignWithAi} disabled={isProcessingAi || !activeApiKey} className="mt-4 w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50 transition-colors">
+                                    {(isProcessingAi ? t('characterWorkshop.designingWithAiButton') : t('characterWorkshop.designWithAiButton')) as string}
+                                </button>
                             </div>
-                            <textarea value={idea} onChange={e => setIdea(e.target.value)} placeholder={t('characterWorkshop.ideaPlaceholder') as string} className="w-full h-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200 placeholder-gray-500" rows={4}></textarea>
                         </div>
-                         {/* FIX: Cast result of t() to string */}
-                         <button onClick={handleDesignWithAi} disabled={isProcessingAi || !activeApiKey} className="mt-3 w-full inline-flex justify-center items-center gap-2 px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">
-                            {(isProcessingAi ? t('characterWorkshop.designingWithAiButton') : t('characterWorkshop.designWithAiButton')) as string}
-                        </button>
-                    </div>
 
-                    {/* Manual Entry Section */}
-                     <div className="space-y-4 pb-4">
-                        {/* FIX: Cast result of t() to string */}
-                        <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.modelDetailsSection') as string}</h3>
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                {/* FIX: Cast result of t() to string */}
-                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.brandName') as string}</label>
-                                <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
+                        {/* Manual Entry Section (Right, Scrollable) */}
+                        <div className="bg-base-200 p-6 rounded-lg border border-base-300 space-y-4 mb-24">
+                            <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.modelDetailsSection') as string}</h3>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.brandName') as string}</label>
+                                    <input type="text" value={brandName} onChange={e => setBrandName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
+                                </div>
+                                 <div>
+                                    <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.modelName') as string}</label>
+                                    <input type="text" value={modelName} onChange={e => setModelName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
+                                </div>
+                           </div>
+                           <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.consistencyId') as string}</label>
+                                <input type="text" value={consistencyKey} onChange={e => setConsistencyKey(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
+                                <p className="text-xs text-gray-500 mt-1">{t('characterWorkshop.consistencyIdHint') as string}</p>
                             </div>
                              <div>
-                                {/* FIX: Cast result of t() to string */}
-                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.modelName') as string}</label>
-                                <input type="text" value={modelName} onChange={e => setModelName(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.mainMaterial') as string}</label>
+                                <input type="text" value={material} onChange={e => setMaterial(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
                             </div>
-                       </div>
-                       <div>
-                            {/* FIX: Cast result of t() to string */}
-                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.consistencyId') as string}</label>
-                            <input type="text" value={consistencyKey} onChange={e => setConsistencyKey(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
-                            {/* FIX: Cast result of t() to string */}
-                            <p className="text-xs text-gray-500 mt-1">{t('characterWorkshop.consistencyIdHint') as string}</p>
-                        </div>
-                         <div>
-                            {/* FIX: Cast result of t() to string */}
-                            <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.mainMaterial') as string}</label>
-                            <input type="text" value={material} onChange={e => setMaterial(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" />
-                        </div>
-                        <div>
-                             {/* FIX: Cast result of t() to string */}
-                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.designLanguage') as string}</label>
-                             <textarea value={designLanguage} onChange={e => setDesignLanguage(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" rows={2}></textarea>
-                        </div>
+                            <div>
+                                 <label className="block text-sm font-semibold text-gray-300 mb-1">{t('characterWorkshop.designLanguage') as string}</label>
+                                 <textarea value={designLanguage} onChange={e => setDesignLanguage(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200 placeholder-gray-500" rows={3}></textarea>
+                            </div>
 
-                        <TagInput
-                           label={t('characterWorkshop.keyFeatures') as string}
-                           tags={keyFeatures}
-                           onTagsChange={setKeyFeatures}
-                           placeholder={t('characterWorkshop.keyFeaturesPlaceholder') as string}
-                        />
+                            <TagInput
+                               label={t('characterWorkshop.keyFeatures') as string}
+                               tags={keyFeatures}
+                               onTagsChange={setKeyFeatures}
+                               placeholder={t('characterWorkshop.keyFeaturesPlaceholder') as string}
+                            />
 
-                        <div className="border-t border-base-300 my-4"></div>
+                            <div className="border-t border-base-300 my-4"></div>
 
-                         <TagInput
-                           label={t('characterWorkshop.actionDnaSection') as string}
-                           description={t('characterWorkshop.actionDnaDescription') as string}
-                           tags={actionDNA}
-                           onTagsChange={setActionDNA}
-                           placeholder={t('characterWorkshop.actionDnaPlaceholder') as string}
-                        />
+                             <TagInput
+                               label={t('characterWorkshop.actionDnaSection') as string}
+                               description={t('characterWorkshop.actionDnaDescription') as string}
+                               tags={actionDNA}
+                               onTagsChange={setActionDNA}
+                               placeholder={t('characterWorkshop.actionDnaPlaceholder') as string}
+                            />
+                        </div>
                     </div>
                 </div>
-
-                <div className="flex-shrink-0 p-4 mt-4 border-t border-base-300 flex justify-between items-center">
-                    {/* FIX: Cast result of t() to string */}
-                    <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">{t('closeButton') as string}</button>
-                    <button onClick={handleSave} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                        {/* FIX: Cast result of t() to string */}
-                        {(initialCharacter ? t('characterWorkshop.updateButton') : t('characterWorkshop.saveButton')) as string}
-                    </button>
+            </main>
+             {/* Footer */}
+            <footer className="flex-shrink-0 bg-base-200/80 backdrop-blur-sm border-t border-base-300 w-full sticky bottom-0 z-10">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex items-center justify-end h-20">
+                     <div className="flex items-center gap-4">
+                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700 transition-colors">
+                            {t('closeButton') as string}
+                        </button>
+                        <button onClick={handleSave} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
+                            {(initialCharacter ? t('characterWorkshop.updateButton') : t('characterWorkshop.saveButton')) as string}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </footer>
         </div>
     );
 };
