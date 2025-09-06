@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocalization } from '../../i18n';
-import type { Character, StoryIdea } from '../../types';
-import { generateStoryIdeas } from '../../services/storyCreatorService';
+import type { Character, StoryIdea, ThemeSuggestion } from '../../types';
+import { generateStoryIdeas, generateThemeIdeas } from '../../services/storyCreatorService';
 import { FailoverParams } from '../../services/geminiService';
 
 interface DirectorBridgeModalProps {
@@ -21,13 +21,60 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     
     // Form state
     const [contentFormat, setContentFormat] = useState('cinematic_adventure');
+    const [customContentFormat, setCustomContentFormat] = useState('');
     const [selectedCharacterNames, setSelectedCharacterNames] = useState<string[]>(['random']);
-    const [theme, setTheme] = useState('random');
+    const [theme, setTheme] = useState('');
     const [customTheme, setCustomTheme] = useState('');
+
+    // AI-generated themes state
+    const [aiThemes, setAiThemes] = useState<ThemeSuggestion[]>([]);
+    const [isGeneratingThemes, setIsGeneratingThemes] = useState(false);
     
     // Results state
     const [ideas, setIdeas] = useState<StoryIdea[]>([]);
     const [selectedIdea, setSelectedIdea] = useState<StoryIdea | null>(null);
+
+    const getFailoverParams = (): FailoverParams => ({
+        allKeys: allApiKeys,
+        activeKey: activeApiKey,
+        onKeyUpdate: onKeyUpdate,
+    });
+
+    const fetchThemeIdeas = useCallback(async (format: string, chars: string[]) => {
+        if (!activeApiKey || format === '' || chars.length === 0) return;
+        setIsGeneratingThemes(true);
+        setAiThemes([]);
+        setTheme('');
+        try {
+            const themes = await generateThemeIdeas(getFailoverParams(), {
+                contentFormat: format,
+                characterNames: chars
+            });
+            setAiThemes(themes);
+        } catch(e) {
+            console.error("Failed to fetch theme ideas:", e);
+            alert(e instanceof Error ? e.message : 'Failed to get AI theme suggestions');
+        } finally {
+            setIsGeneratingThemes(false);
+        }
+    }, [activeApiKey, onKeyUpdate, allApiKeys]);
+
+
+    useEffect(() => {
+        const finalFormat = contentFormat === 'custom_format' ? customContentFormat : contentFormat;
+        const finalCharacters = selectedCharacterNames;
+        
+        if (finalFormat.trim() && finalCharacters.length > 0 && !finalCharacters.includes('random')) {
+            const handler = setTimeout(() => {
+                fetchThemeIdeas(finalFormat, finalCharacters);
+            }, 500);
+            return () => clearTimeout(handler);
+        } else {
+            setAiThemes([]);
+            setTheme('');
+        }
+    }, [contentFormat, customContentFormat, selectedCharacterNames, fetchThemeIdeas]);
+
 
      const handleCharacterSelectionChange = (characterIdentifier: string, isChecked: boolean) => {
         if (characterIdentifier === 'random') {
@@ -46,22 +93,19 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         }
     };
 
-    const getFailoverParams = (): FailoverParams => ({
-        allKeys: allApiKeys,
-        activeKey: activeApiKey,
-        onKeyUpdate: onKeyUpdate,
-    });
-
     const handleGenerateIdeas = async () => {
         if (!activeApiKey) return;
         setIsGenerating(true);
         setIdeas([]);
         setSelectedIdea(null);
         try {
+            const finalFormat = contentFormat === 'custom_format' ? customContentFormat : contentFormat;
+            const finalTheme = theme === 'custom_theme' ? customTheme : theme;
+
             const generatedIdeas = await generateStoryIdeas(getFailoverParams(), {
-                contentFormat,
+                contentFormat: finalFormat,
                 characterNames: selectedCharacterNames,
-                theme: theme === 'custom_theme' ? customTheme : theme,
+                theme: finalTheme || 'random', // Pass a value if theme is not set
             });
             setIdeas(generatedIdeas);
             setStep(2);
@@ -85,6 +129,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     };
 
     if (!isOpen) return null;
+    
+    const contentFormatOptions = t('smartDirector.contentFormats') as { [key: string]: string };
 
     return (
         <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-40 flex flex-col font-sans" role="dialog" aria-modal="true">
@@ -101,11 +147,13 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step1Label') as string}</label>
                             <select value={contentFormat} onChange={e => setContentFormat(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200">
-                                <option value="cinematic_adventure">{t('smartDirector.contentFormats.cinematic_adventure') as string}</option>
-                                <option value="product_review">{t('smartDirector.contentFormats.product_review') as string}</option>
-                                <option value="unboxing">{t('smartDirector.contentFormats.unboxing') as string}</option>
-                                <option value="vs_challenge">{t('smartDirector.contentFormats.vs_challenge') as string}</option>
+                                {Object.entries(contentFormatOptions).map(([key, value]) => (
+                                    <option key={key} value={key}>{value}</option>
+                                ))}
                             </select>
+                             {contentFormat === 'custom_format' && (
+                                <input type="text" value={customContentFormat} onChange={e => setCustomContentFormat(e.target.value)} placeholder={t('smartDirector.customFormatPlaceholder') as string} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm mt-2 text-gray-200" />
+                            )}
                         </div>
                         
                         <div>
@@ -144,15 +192,17 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
 
                         <div>
                             <label className="block text-sm font-semibold text-gray-300 mb-1">{t('smartDirector.step3Label') as string}</label>
-                            <select value={theme} onChange={e => setTheme(e.target.value)} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200">
-                                <option value="random">{t('smartDirector.themeOptions.random') as string}</option>
-                                 <optgroup label={t('smartDirector.themeOptions.adventureGroup') as string}>
-                                    <option value="explore_new_area">{t('smartDirector.themeOptions.explore_new_area') as string}</option>
-                                    <option value="rescue_mission">{t('smartDirector.themeOptions.rescue_mission') as string}</option>
-                                </optgroup>
-                                 <optgroup label={t('smartDirector.themeOptions.challengeGroup') as string}>
-                                     <option value="overcome_obstacle">{t('smartDirector.themeOptions.overcome_obstacle') as string}</option>
-                                 </optgroup>
+                            <select value={theme} onChange={e => setTheme(e.target.value)} disabled={isGeneratingThemes || aiThemes.length === 0} className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-sm text-gray-200 disabled:opacity-50">
+                                {isGeneratingThemes && <option value="">{t('smartDirector.themeOptions.placeholder_loading') as string}</option>}
+                                {!isGeneratingThemes && aiThemes.length === 0 && <option value="">{t('smartDirector.themeOptions.placeholder_select') as string}</option>}
+                                
+                                {aiThemes.map((group, index) => (
+                                    <optgroup key={index} label={group.category_name}>
+                                        {group.themes.map((themeIdea, themeIndex) => (
+                                            <option key={themeIndex} value={themeIdea}>{themeIdea}</option>
+                                        ))}
+                                    </optgroup>
+                                ))}
                                  <option value="custom_theme">{t('smartDirector.themeOptions.custom_theme') as string}</option>
                             </select>
                              {theme === 'custom_theme' && (

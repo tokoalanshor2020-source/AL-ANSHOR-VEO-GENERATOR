@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, type GenerateContentResponse, type GenerateImagesResponse } from "@google/genai";
-import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData } from '../types';
+import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion } from '../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
 
@@ -30,6 +30,11 @@ export interface StoryIdeaOptions {
     contentFormat: string;
     characterNames: string[];
     theme: string;
+}
+
+export interface ThemeIdeaOptions {
+    contentFormat: string;
+    characterNames: string[];
 }
 
 export interface PublishingKitOptions {
@@ -427,6 +432,60 @@ export const generateStoryIdeas = async (failoverParams: FailoverParams, options
         
             const parsedResult = safeJsonParse(response.text);
             return parsedResult.ideas || [];
+        }
+    });
+};
+
+export const generateThemeIdeas = async (failoverParams: FailoverParams, options: ThemeIdeaOptions): Promise<ThemeSuggestion[]> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const { contentFormat, characterNames } = options;
+
+            const characterPromptPart = (characterNames.length === 0 || (characterNames.length === 1 && characterNames[0] === 'random'))
+                ? "karakter mainan acak"
+                : characterNames.join(', ');
+
+            const prompt = `Anda adalah seorang ahli strategi konten YouTube yang kreatif. Berdasarkan format konten dan karakter utama berikut, hasilkan 3 kategori tema yang unik. Setiap kategori harus berisi 3 ide tema spesifik yang menarik.
+            
+            - Format Konten: "${contentFormat}"
+            - Karakter Utama: "${characterPromptPart}"
+            
+            Hasilnya HARUS dalam format JSON dan semua nama kategori serta tema HARUS dalam Bahasa Indonesia.`;
+
+            const schema = {
+                type: Type.OBJECT,
+                properties: {
+                    theme_suggestions: {
+                        type: Type.ARRAY,
+                        items: {
+                            type: Type.OBJECT,
+                            properties: {
+                                category_name: { type: Type.STRING },
+                                themes: {
+                                    type: Type.ARRAY,
+                                    items: { type: Type.STRING }
+                                },
+                            },
+                            required: ["category_name", "themes"]
+                        }
+                    }
+                },
+                required: ["theme_suggestions"]
+            };
+            
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                }
+            }));
+        
+            const parsedResult = safeJsonParse(response.text);
+            return parsedResult.theme_suggestions || [];
         }
     });
 };

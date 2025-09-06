@@ -60,6 +60,11 @@ export interface StoryIdea {
     script_outline: string;
 }
 
+export interface ThemeSuggestion {
+    category_name: string;
+    themes: string[];
+}
+
 export interface PublishingKitData {
   youtube_title_id: string;
   youtube_title_en: string;
