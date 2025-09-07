@@ -1,5 +1,7 @@
+// services/storyCreatorService.ts
+
 import { GoogleGenAI, Type, type GenerateContentResponse, type GenerateImagesResponse } from "@google/genai";
-import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions } from '../types';
+import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions as RealStoryIdeaOptions } from '../../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
 
@@ -31,11 +33,9 @@ export interface DevelopedCharacterData {
     scale_and_size: string;
 }
 
-export interface StoryIdeaOptions {
-    contentFormat: string;
-    characterNames: string[];
-    theme: string;
-}
+// FIX: This interface was incorrectly duplicated in types.ts. Using the correct one.
+// type StoryIdeaOptions = RealStoryIdeaOptions;
+
 
 export interface PublishingKitOptions {
     storyboard: StoryboardScene[];
@@ -202,30 +202,68 @@ export const generateBlueprintPrompt = async (failoverParams: FailoverParams, sc
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = getAiInstance(apiKey);
-            const characterDetails = characters.map(c => `[${c.consistency_key}: ${c.designLanguage}, ${c.keyFeatures.join(', ')}]`).join(' ');
+
+            const characterDNA = characters.map(c => 
+                `Character: ${c.name} (${c.consistency_key})\n` +
+                `  - DNA: A ${c.material} ${c.modelName}. Design Language: ${c.designLanguage}.\n` +
+                `  - Key Visuals: ${c.keyFeatures.join(', ')}.\n` +
+                `  - Details: ${c.physical_details}.\n` +
+                `  - Size: ${c.scale_and_size}.\n` +
+                `  - Personality: ${c.character_personality}.`
+            ).join('\n\n');
+
+            const narrationScript = scene.sound_design?.narration_script || "";
 
             const prompt = `
-                Create a detailed "blueprint" prompt for an AI image generator to create a keyframe for a video scene.
-                This is for a cinematic video featuring toys.
-                
-                Scene Details:
-                - Scene Number: ${scene.scene_number}
-                - Title: ${scene.scene_title}
-                - Summary: ${scene.scene_summary}
-                - Character Actions: ${scene.character_actions.map(a => `${a.character_name} (${a.consistency_key}) ${a.action_description}`).join('. ')}
-                - Cinematography: ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, ${scene.cinematography.camera_movement}.
-                - Directing Style: ${directingSettings.artStyle}, ${directingSettings.weatherSet} weather, set at ${directingSettings.timeOfDay}. Location is ${directingSettings.locationSet}.
+                You are an expert prompt engineer and visual director for a toy cinematic universe. Your task is to translate a scene from a storyboard into an extremely detailed, multi-part prompt suitable for a high-end AI image generator. The goal is to create a single, perfect keyframe that captures the essence of the scene.
 
-                Character DNA (for visual consistency):
-                ${characterDetails}
+                **Input Data:**
 
-                Task: Write a concise, powerful, and visually descriptive prompt under 150 words. Focus ONLY on the visual elements. Describe the scene as if for a photograph. Include character details using their consistency_key. Do not add instructions like "create" or "generate".
+                1.  **Scene Information:**
+                    *   Title: ${scene.scene_title}
+                    *   Summary: ${scene.scene_summary}
+                    *   Actions: ${scene.character_actions.map(a => `${a.character_name} (${a.consistency_key}) ${a.action_description}`).join('. ')}
+                    *   Cinematography: ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, ${scene.cinematography.camera_movement}.
+
+                2.  **Character DNA (Crucial for visual consistency):**
+                    ${characterDNA}
+
+                3.  **Directing Style:**
+                    *   Art Style/Visual Mood: ${directingSettings.artStyle}
+                    *   Weather/Atmosphere: ${directingSettings.weatherSet === 'custom_weather' ? directingSettings.customWeather : directingSettings.weatherSet}
+                    *   Time of Day: ${directingSettings.timeOfDay}
+                    *   Location: ${directingSettings.locationSet === 'custom_location' ? directingSettings.customLocation : directingSettings.locationSet}
+                    *   Pacing: ${directingSettings.pacing}
+
+                **Your Task:**
+                Generate a single block of text. Your output MUST strictly follow the format below. Do not add any other text, explanations, or markdown. Fill in each section by synthesizing all the provided input data.
+
+                //** 1. VISUAL STYLE & QUALITY **//
+                STYLE: [Based on the Art Style, create a comma-separated list of keywords. e.g., "Professional product photography, hyper-realistic, macro, high detail, cinematic lighting"]
+
+                //** 2. SUBJECT & DETAILS **//
+                SUBJECT: [This is the most critical section. Describe the character(s) in immense detail. Use the provided 'Character DNA' to flesh out their appearance, material, pose, and expression. Mention the character's 'consistency_key' directly in the description. Describe any objects they are interacting with. Detail the 'Physical Evidence' to make the scene look like a real-world photograph of a high-quality toy, including micro-scratches, dust, and realistic textures on props.]
+                *   **Physical Evidence:** [Describe micro-details that prove this is a physical object, like subtle dust, scratches on metal parts, realistic texture on clothing or props.]
+
+                //** 3. ENVIRONMENT & BACKGROUND **//
+                ENVIRONMENT: [Describe the setting in rich detail based on the Location, Weather, and Time of Day. Create a believable and atmospheric background that supports the narrative of the scene.]
+
+                //** 4. COMPOSITION & PERSPECTIVE **//
+                COMPOSITION: [Translate the 'Cinematography' notes into a detailed description of the camera shot, angle, lens, and overall composition. Describe how the subject is framed and what the focus of the shot is.]
+
+                //** 5. LIGHTING & ATMOSPHERE **//
+                LIGHTING: [Describe the lighting in extreme detail, based on the Time of Day and Weather. Mention key light, fill light, and rim light. Explain how the light interacts with the subject and the environment to create a specific mood.]
+
+                //** 6. NEGATIVE PROMPT **//
+                NEGATIVE_PROMPT: animation, 3d render, cgi, cartoon, illustration, painting, drawing, art, video game, unreal engine, octane render, blender render, digital art, perfect, clean, smooth, glossy, inconsistent character, changing model
+                ${narrationScript ? `\n//** 7. NARRATION SCRIPT **//\n${narrationScript}` : ''}
             `;
             
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             }));
+            
             return response.text.trim();
         }
     });
@@ -237,19 +275,19 @@ export const generateCinematicPrompt = async (failoverParams: FailoverParams, sc
         apiExecutor: async (apiKey) => {
             const ai = getAiInstance(apiKey);
             const characterDetails = characters.map(c => `[Character DNA for ${c.consistency_key}: A ${c.material} ${c.modelName}. Design Language: ${c.designLanguage}. Key Visual Features: ${c.keyFeatures.join(', ')}. Details: ${c.physical_details}. Size: ${c.scale_and_size}. Personality: ${c.character_personality}]`).join('\n');
+            const narrationScript = scene.sound_design?.narration_script || "";
 
             const prompt = `
-                You are a prompt engineer for a text-to-video AI model (like VEO).
-                Your task is to convert a storyboard scene into a highly detailed, cinematic prompt.
+                You are a prompt engineer for a text-to-video AI model. Your task is to convert a storyboard scene into a two-part cinematic prompt.
 
-                Storyboard Scene Information:
+                **Storyboard Scene Information:**
                 - Scene: ${scene.scene_number} - ${scene.scene_title}
                 - Summary: ${scene.scene_summary}
                 - Character Actions: ${scene.character_actions.map(a => `${a.character_name} (${a.consistency_key}) performs: ${a.action_description}`).join('; ')}
                 - Cinematography: ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, movement is ${scene.cinematography.camera_movement}.
-                - Sound Design: Ambience is ${scene.sound_design.ambience}. SFX include ${scene.sound_design.sfx.join(', ')}.
+                - Narration Script: "${narrationScript}"
                 
-                Overall Directing Style:
+                **Overall Directing Style:**
                 - Art Style: ${directingSettings.artStyle}
                 - Location: ${directingSettings.locationSet === 'custom_location' ? directingSettings.customLocation : directingSettings.locationSet}
                 - Weather: ${directingSettings.weatherSet === 'custom_weather' ? directingSettings.customWeather : directingSettings.weatherSet}
@@ -257,17 +295,17 @@ export const generateCinematicPrompt = async (failoverParams: FailoverParams, sc
                 - Camera Style: ${directingSettings.cameraStyleSet === 'custom_camera' ? directingSettings.customCameraStyle : directingSettings.cameraStyleSet}
                 - Pacing: ${directingSettings.pacing}
 
-                Character Visual DNA (Crucial for consistency):
+                **Character Visual DNA (Crucial for consistency):**
                 ${characterDetails}
 
-                Your Task:
-                Synthesize ALL the information above into a single, comprehensive, and vivid paragraph.
-                This paragraph will be the final prompt for the video generation model.
-                - Start with the Character DNA section. This is the most important part for visual consistency.
-                - Describe the setting, atmosphere, and action in extreme detail.
-                - Incorporate all cinematography and directing style notes.
-                - Be evocative and use powerful, descriptive language.
-                - The final output should be a single block of text. Do not use markdown or headings.
+                **Your Task:**
+                Generate a response in two distinct parts, exactly as follows, without any extra text or markdown.
+
+                1.  **Visual Description Paragraph:** Synthesize ALL the information above (except the narration script itself) into a single, comprehensive, and vivid paragraph. This paragraph is the main visual prompt. Describe the setting, atmosphere, and character actions in extreme detail. Incorporate all cinematography and directing style notes. Use the Character DNA to ensure the character is described accurately, including their \`consistency_key\`. Be evocative and use powerful, descriptive language.
+
+                2.  **Narration Script Section:** After the visual description paragraph, add two newlines, then add the line "NARRATION SCRIPT", followed by another newline, and then the exact, verbatim narration script from the input.
+
+                If the narration script is empty, you MUST omit the "NARRATION SCRIPT" section entirely.
             `;
 
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
@@ -567,24 +605,25 @@ const storyIdeasSchema = {
     required: ["story_ideas"]
 };
 
-export const generateStoryIdeas = async (failoverParams: FailoverParams, options: StoryIdeaOptions): Promise<StoryIdea[]> => {
+export const generateStoryIdeas = async (failoverParams: FailoverParams, options: RealStoryIdeaOptions): Promise<StoryIdea[]> => {
     return executeWithFailover({
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = getAiInstance(apiKey);
-            const { contentFormat, characterNames, theme } = options;
+            const { contentFormat, characterNames, theme, language } = options;
             const prompt = `
                 You are a scriptwriter for a popular toy YouTube channel. Your task is to generate 3 creative and engaging story ideas.
 
                 Content Format: ${contentFormat}
                 Main Character(s): ${characterNames.join(', ')}
                 Story Theme: ${theme}
+                Target Language for Output: ${language}
 
                 Task: Generate a JSON object containing a list of 3 story ideas.
                 The JSON object must have one key "story_ideas", which is an array of objects.
                 Each object in the array must contain:
-                - "title_suggestion": A catchy, SEO-friendly title for the video.
-                - "script_outline": A 3-4 sentence summary of the story/script.
+                - "title_suggestion": A catchy, SEO-friendly title for the video. This MUST be in ${language}.
+                - "script_outline": A 3-4 sentence summary of the story/script. This MUST be in ${language}.
             `;
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',

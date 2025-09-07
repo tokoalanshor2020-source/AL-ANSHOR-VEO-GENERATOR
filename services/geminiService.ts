@@ -101,14 +101,22 @@ export const generateVideo = async ({ allKeys, activeKey, onKeyUpdate, options }
         apiExecutor: async (apiKey) => {
             const ai = new GoogleGenAI({ apiKey });
 
+             const videoParams = [
+                `- Resolution: ${options.resolution}`,
+                `- Sound: ${options.enableSound ? 'enabled' : 'disabled'}`
+            ];
+
+            // Only add aspect ratio if there is no reference image
+            if (!options.image) {
+                videoParams.unshift(`- Aspect Ratio: ${options.aspectRatio}`);
+            }
+
             const augmentedPrompt = `
               ${options.prompt}
         
               ---
               Video generation parameters:
-              - Aspect Ratio: ${options.aspectRatio}
-              - Resolution: ${options.resolution}
-              - Sound: ${options.enableSound ? 'enabled' : 'disabled'}
+              ${videoParams.join('\n')}
             `;
         
             const requestPayload: any = {

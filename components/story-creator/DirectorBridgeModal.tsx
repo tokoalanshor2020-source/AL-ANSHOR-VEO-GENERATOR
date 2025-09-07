@@ -107,6 +107,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                 contentFormat: finalFormat,
                 characterNames: selectedCharacterNames,
                 theme: finalTheme || 'random', // Pass a value if theme is not set
+                language: languageMap[language], // Ensure ideas are generated in the current UI language
             });
             setIdeas(generatedIdeas);
             setStep(2);

@@ -76,6 +76,13 @@ export interface StoryIdea {
     script_outline: string;
 }
 
+export interface StoryIdeaOptions {
+    contentFormat: string;
+    characterNames: string[];
+    theme: string;
+    language: string;
+}
+
 export interface ThemeSuggestion {
     category_name: string;
     themes: string[];
