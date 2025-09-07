@@ -306,6 +306,10 @@ export default function App() {
                 hasActiveVideoApiKey={!!activeVideoApiKey}
                 onManageKeysClick={() => setKeyManagerConfig({ type: 'video' })}
                 initialPrompt={promptForVideo}
+                characters={characters}
+                allVideoApiKeys={videoApiKeys}
+                activeVideoApiKey={activeVideoApiKey}
+                onVideoKeyUpdate={handleSetActiveVideoApiKey}
               />
             </div>
 

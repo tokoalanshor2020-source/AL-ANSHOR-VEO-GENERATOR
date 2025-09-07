@@ -94,6 +94,7 @@ export interface PublishingKitData {
     all_characters_template: string;
   };
   thumbnail_concepts: {
+    // FIX: Corrected typo from `concept_title_title` to `concept_title_id` to match the API schema.
     concept_title_id: string;
     concept_title_en: string;
     concept_description_id: string;
@@ -127,4 +128,9 @@ export interface DirectingSettings {
   artStyle: string;
   soundtrackMood: string;
   pacing: string;
+}
+export interface ThemeIdeaOptions {
+    contentFormat: string;
+    characterNames: string[];
+    language: string;
 }

@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, type GenerateContentResponse, type GenerateImagesResponse } from "@google/genai";
-import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion } from '../types';
+import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions } from '../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
 
@@ -35,11 +35,6 @@ export interface StoryIdeaOptions {
     contentFormat: string;
     characterNames: string[];
     theme: string;
-}
-
-export interface ThemeIdeaOptions {
-    contentFormat: string;
-    characterNames: string[];
 }
 
 export interface PublishingKitOptions {
@@ -79,7 +74,8 @@ const getAiInstance = (apiKey: string) => new GoogleGenAI({ apiKey });
 
 const safeJsonParse = (jsonString: string) => {
     try {
-        return JSON.parse(jsonString);
+        const cleanedString = jsonString.replace(/^```json\s*|```\s*$/g, '').trim();
+        return JSON.parse(cleanedString);
     } catch (e) {
         console.error("Failed to parse JSON:", jsonString);
         throw new Error("Received an invalid JSON response from the AI.");
@@ -155,356 +151,130 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
             const location = directingSettings.locationSet === 'custom_location' ? directingSettings.customLocation.trim() : directingSettings.locationSet;
             const weather = directingSettings.weatherSet === 'custom_weather' ? directingSettings.customWeather.trim() : directingSettings.weatherSet;
             const cameraStyle = directingSettings.cameraStyleSet === 'custom_camera' ? directingSettings.customCameraStyle.trim() : directingSettings.cameraStyleSet;
-            let narratorLanguage = directingSettings.narratorLanguageSet;
-            if (narratorLanguage === 'custom_language') {
-                narratorLanguage = directingSettings.customNarratorLanguage.trim() || 'id';
-            }
-            const narrationContext = narratorLanguage === 'no_narrator'
-                ? "Tidak ada narasi dalam cerita ini."
-                : `Bahasa Narator: ${narratorLanguage}.`;
+            const narratorLanguage = directingSettings.narratorLanguageSet === 'custom_language' ? directingSettings.customNarratorLanguage.trim() : directingSettings.narratorLanguageSet;
 
-            const prompt = `Anda adalah seorang Sutradara AI profesional. Berdasarkan ringkasan cerita dan deskripsi karakter berikut, pecah menjadi ${sceneCount} adegan dalam format JSON.
-        
-            **PERINTAH UTAMA: Prioritaskan konsistensi karakter di semua adegan. Gunakan "ID Konsistensi" dan "Deskripsi Detail" sebagai sumber kebenaran mutlak untuk penampilan karakter.**
-        
-            **Konteks Cerita (Character Bible):**
-            - Judul: "${logline}"
-            - Ringkasan Cerita: "${scenario}"
-            - Deskripsi Karakter (DNA Digital): ${characterDetails}
-            - Gaya Adegan: ${sceneStyle}
-            - Lokasi: ${location}
-            - Cuaca & Suasana: ${weather}
-            - Waktu: ${directingSettings.timeOfDay}
-            - Gaya Seni: ${directingSettings.artStyle}
-            - Gaya Visual Kamera: ${cameraStyle}
-            - Tempo Adegan: ${directingSettings.pacing}
-            - Suasana Soundtrack: ${directingSettings.soundtrackMood}
-            - ${narrationContext}
-        
-            **ATURAN PENTING:**
-            1.  Untuk 'narration_script', tulis naskah dialog yang akan dibacakan dalam **${narratorLanguage}**. Jika Bahasa Narator adalah 'no_narrator', biarkan string 'narration_script' kosong.
-            2.  **GAYA BAHASA NARASI:** Naskah harus meniru gaya pembawa acara yang sangat ceria, antusias, dan kekanakan. Gunakan banyak kata seru dan kalimat pendek. Naskah HANYA boleh berisi dialog bersih.
-            3.  **DURASI NARASI:** Pastikan dialog dapat dibacakan dalam **maksimal 4 detik**.
-            4.  Buat 'audio_mixing_guide' dalam Bahasa Indonesia, jelaskan kapan harus menggunakan 'audio ducking'.
-        
-            Untuk SETIAP adegan, buat objek JSON yang detail sesuai skema.`;
+            const prompt = `
+                Anda adalah seorang sutradara dan penulis naskah profesional untuk film pendek yang dibintangi oleh mainan.
+                Tugas Anda adalah membuat storyboard terperinci berdasarkan informasi berikut:
 
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: storyboardSchema
-                }
-            }));
+                Judul Cerita/Logline: ${logline}
+                Ringkasan Cerita/Skenario: ${scenario}
+                Jumlah Adegan yang Diminta: ${sceneCount}
+                ${characterDetails}
 
-            const parsedResult = safeJsonParse(response.text);
-            return parsedResult.storyboard || [];
-        }
-    });
-};
+                Pengaturan Penyutradaraan Tambahan:
+                - Set Adegan: ${sceneStyle}
+                - Set Lokasi Utama: ${location}
+                - Set Cuaca & Atmosfer: ${weather}
+                - Gaya Kamera (POV): ${cameraStyle}
+                - Bahasa Narator: ${narratorLanguage}
+                - Waktu: ${directingSettings.timeOfDay}
+                - Gaya Seni / Mood Visual: ${directingSettings.artStyle}
+                - Mood Soundtrack: ${directingSettings.soundtrackMood}
+                - Tempo Adegan: ${directingSettings.pacing}
 
-export const generateBlueprintPrompt = async (failoverParams: FailoverParams, sceneData: StoryboardScene, characters: Character[], directingSettings: DirectingSettings): Promise<string> => {
-    return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-
-            let styleModifier = "[Professional product photography, hyper-realistic, macro, high detail, cinematic lighting]";
-            if (directingSettings.sceneStyleSet === 'epic_destruction') {
-                styleModifier = "[Cinematic slow motion, professional product photography, hyper-realistic, high destruction detail, dramatic VFX]";
-            }
-
-            const characterInScene = characters.find(c => sceneData.character_actions.some(a => a.character_name === c.name));
-            const characterDNA = characterInScene 
-                ? `The character's immutable identity is defined by this DNA: {ID: "${characterInScene.consistency_key}", Description: "${characterInScene.designLanguage}", Key Features: "${characterInScene.keyFeatures.join(', ')}"}. YOU MUST ADHERE TO THIS DNA.`
-                : '';
-            
-            const prompt = `You are a professional director of photography. Translate a JSON Scene Object into a technical blueprint for a hyper-realistic photo.
-        
-            **Core Philosophy:** Dynamic Realism. This is NOT animation. The output must describe a cinematic photo of a real physical toy.
-            **CHARACTER CONSISTENCY IS PARAMOUNT.** ${characterDNA}
-            
-            **JSON Scene Object:**
-            \`\`\`json
-            ${JSON.stringify(sceneData, null, 2)}
-            \`\`\`
-        
-            ---
-            **Blueprint Generation Task:**
-            Fill out the following parts. All parts MUST be in English for technical precision.
-        
-            //** 1. VISUAL STYLE & QUALITY **//
-            STYLE: ${styleModifier}
-        
-            //** 2. SUBJECT & DETAILS **//
-            SUBJECT: [Based on 'character_actions', provide a VERY DETAILED description of the character, strictly adhering to the Character DNA provided above (ID, Description, Key Features). Emphasize physical evidence like micro-dust, subtle scratches, or authentic dirt.]
-        
-            //** 3. ENVIRONMENT & BACKGROUND **//
-            ENVIRONMENT: [Describe a dynamic environment based on the scene summary and cinematography.]
-        
-            //** 4. COMPOSITION & PERSPECTIVE **//
-            COMPOSITION: [Describe the shot with dynamic language based on 'cinematography'.]
-        
-            //** 5. LIGHTING & ATMOSPHERE **//
-            LIGHTING: [Describe realistic lighting based on the general mood.]
-            
-            //** 6. NEGATIVE PROMPT **//
-            NEGATIVE_PROMPT: [animation, 3d render, cgi, cartoon, illustration, painting, drawing, art, video game, unreal engine, octane render, blender render, digital art, perfect, clean, smooth, glossy, inconsistent character, changing model]`;
-            
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
-            return response.text;
-        }
-    });
-};
-
-export const generateCinematicPrompt = async (failoverParams: FailoverParams, sceneData: StoryboardScene, characters: Character[], directingSettings: DirectingSettings): Promise<string> => {
-     return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-
-            let narratorLanguage = directingSettings.narratorLanguageSet;
-             if (narratorLanguage === 'custom_language') {
-                narratorLanguage = directingSettings.customNarratorLanguage.trim() || 'id';
-            }
-        
-            let narrationInstruction = '';
-            if (narratorLanguage !== 'no_narrator' && sceneData.sound_design?.narration_script) {
-                narrationInstruction = `After the English prompt, add a clear "NARRATION SCRIPT" header and provide the narration script to be spoken in ${narratorLanguage}: "${sceneData.sound_design.narration_script}"`;
-            }
-            
-            const characterInScene = characters.find(c => sceneData.character_actions.some(a => a.character_name === c.name));
-            const characterDNA = characterInScene 
-                ? `The character's immutable identity is defined by its unique ID "${characterInScene.consistency_key}" and its description: "${characterInScene.designLanguage}, with key features like ${characterInScene.keyFeatures.join(', ')}".`
-                : '';
-        
-            const prompt = `You are an expert prompt synthesizer. Synthesize the following JSON Scene Object into a single, dense, cinematic narrative paragraph in English.
-        
-            **Rules:**
-            1.  **CHARACTER CONSISTENCY IS THE #1 PRIORITY.** ${characterDNA} You must start the prompt by referencing the character's unique ID.
-            2.  The output paragraph MUST be in English and a maximum of 1000 characters.
-            3.  Proactively add dynamic visual effects (VFX) like smoke, sparks, dust clouds, or small explosions where appropriate.
-            4.  ${narrationInstruction}
-        
-            **JSON Scene Object:**
-            \`\`\`json
-            ${JSON.stringify(sceneData, null, 2)}
-            \`\`\`
-            
-            Synthesize now.`;
-            
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt }));
-            return response.text;
-        }
-    });
-};
-
-export const developCharacter = async (failoverParams: FailoverParams, options: CharacterDevelopmentOptions): Promise<DevelopedCharacterData> => {
-    return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-            const { idea, referenceFiles } = options;
-
-            const prompt = `Anda adalah seorang Desainer Mainan Ahli. Tugas utama Anda adalah menganalisis kumpulan gambar dan/atau klip video referensi yang diberikan untuk membuat "Lembar Model Karakter" yang sangat detail. Gunakan catatan tambahan untuk menyempurnakan detail jika disediakan.
-
-            **Tugas Anda:**
-            1.  Analisis SEMUA gambar dan video referensi sebagai sumber kebenaran utama. Sintesis informasi dari semua sumber untuk menciptakan pemahaman holistik tentang karakter tersebut.
-            2.  Gunakan catatan tambahan berikut sebagai konteks: "${idea}"
-            3.  Hasilnya HARUS dalam format JSON.
-            4.  SEMUA bidang deskriptif (brand_name, model_name, material, design_language, key_features, character_personality, physical_details, scale_and_size) HARUS dalam Bahasa Indonesia.
-            5.  Buat 'consistency_key' dalam Bahasa Inggris. Ini harus berupa token yang unik dan deskriptif (misalnya, "red_sports_car_v2", "blue_monster_truck_goro_x").
-
-            **Aturan Penting untuk Bidang JSON:**
-            -   **design_language:** Berikan deskripsi visual yang sangat komprehensif.
-            -   **key_features:** Identifikasi 5-7 fitur visual yang paling menonjol dan unik.
-            -   **physical_details:** Jelaskan detail fisik yang sangat spesifik dan bernuansa, seperti "cat sedikit usang di fender kiri", "mata biru menyala saat marah", "stiker nomor 5 di pintu kanan".
-            -   **character_personality:** Jelaskan sifat, perilaku, dan ekspresi khas karakter.
-            -   **scale_and_size:** Jelaskan ukuran mainan secara relatif, seperti "Skala 1:64", "seukuran telapak tangan".`;
-        
-            const schema = {
-                type: Type.OBJECT,
-                properties: {
-                    brand_name: { type: Type.STRING },
-                    model_name: { type: Type.STRING },
-                    material: { type: Type.STRING },
-                    design_language: { type: Type.STRING },
-                    key_features: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    consistency_key: { type: Type.STRING },
-                    character_personality: { type: Type.STRING },
-                    physical_details: { type: Type.STRING },
-                    scale_and_size: { type: Type.STRING },
-                },
-                required: ["brand_name", "model_name", "material", "design_language", "key_features", "consistency_key", "character_personality", "physical_details", "scale_and_size"]
-            };
-            
-            const requestParts: any[] = [];
-
-            referenceFiles.forEach(file => {
-                requestParts.push({
-                    inlineData: {
-                        mimeType: file.mimeType,
-                        data: file.base64,
-                    },
-                });
-            });
-        
-            requestParts.push({ text: prompt });
-        
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: { parts: requestParts },
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: schema
-                }
-            }));
-        
-            return safeJsonParse(response.text);
-        }
-    });
-};
-
-export const generateActionDna = async (failoverParams: FailoverParams, characterData: DevelopedCharacterData): Promise<string[]> => {
-    return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-            
-            const prompt = `Berikan 5-7 kata kunci "DNA Aksi" untuk mainan ini: ${JSON.stringify(characterData)}. Hasilnya harus dalam format JSON.`;
-        
-            const schema = {
-                type: Type.OBJECT,
-                properties: { 
-                    action_dna: { type: Type.ARRAY, items: { type: Type.STRING } } 
-                },
-                required: ["action_dna"]
-            };
-            
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: schema
-                }
-            }));
-            
-            const parsed = safeJsonParse(response.text);
-            return parsed.action_dna || [];
-        }
-    });
-};
-
-export const generateStoryIdeas = async (failoverParams: FailoverParams, options: StoryIdeaOptions): Promise<StoryIdea[]> => {
-    return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-            const { contentFormat, characterNames, theme } = options;
-        
-            const characterPromptPart = (characterNames.length === 0 || (characterNames.length === 1 && characterNames[0] === 'random'))
-                ? "Pilihkan Secara Acak"
-                : characterNames.join(', ');
-            
-            const prompt = `Anda adalah penulis naskah YouTube. Berikan 3 ide kerangka naskah unik dalam Bahasa Indonesia.
-        
-            - Format Konten: "${contentFormat}"
-            - Karakter Utama: "${characterPromptPart}"
-            - Tema Cerita: "${theme}"
-        
-            Untuk setiap ide, berikan: 'title_suggestion' dan 'script_outline'.`;
-        
-            const schema = {
-                type: Type.OBJECT,
-                properties: {
-                    ideas: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                title_suggestion: { type: Type.STRING },
-                                script_outline: { type: Type.STRING },
-                            },
-                            required: ["title_suggestion", "script_outline"]
-                        }
-                    }
-                },
-                required: ["ideas"]
-            };
-        
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: schema
-                }
-            }));
-        
-            const parsedResult = safeJsonParse(response.text);
-            return parsedResult.ideas || [];
-        }
-    });
-};
-
-export const generateThemeIdeas = async (failoverParams: FailoverParams, options: ThemeIdeaOptions): Promise<ThemeSuggestion[]> => {
-    return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-            const { contentFormat, characterNames } = options;
-
-            const characterPromptPart = (characterNames.length === 0 || (characterNames.length === 1 && characterNames[0] === 'random'))
-                ? "karakter mainan acak"
-                : characterNames.join(', ');
-
-            const prompt = `Anda adalah seorang ahli strategi konten YouTube yang kreatif. Berdasarkan format konten dan karakter utama berikut, hasilkan 3 kategori tema yang unik. Setiap kategori harus berisi 3 ide tema spesifik yang menarik.
-            
-            - Format Konten: "${contentFormat}"
-            - Karakter Utama: "${characterPromptPart}"
-            
-            Hasilnya HARUS dalam format JSON dan semua nama kategori serta tema HARUS dalam Bahasa Indonesia.`;
-
-            const schema = {
-                type: Type.OBJECT,
-                properties: {
-                    theme_suggestions: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                category_name: { type: Type.STRING },
-                                themes: {
-                                    type: Type.ARRAY,
-                                    items: { type: Type.STRING }
-                                },
-                            },
-                            required: ["category_name", "themes"]
-                        }
-                    }
-                },
-                required: ["theme_suggestions"]
-            };
+                Tugas Anda:
+                Buatlah storyboard dalam format JSON yang valid. JSON harus berisi sebuah objek dengan satu kunci "storyboard", yang nilainya adalah sebuah array dari objek-objek adegan.
+                Setiap objek adegan harus secara ketat mengikuti skema yang ditentukan.
+                Pastikan untuk memasukkan tindakan karakter (character_actions) yang spesifik untuk setiap karakter yang disebutkan, lengkap dengan 'consistency_key' mereka.
+                Kembangkan sinopsis menjadi ${sceneCount} adegan yang mengalir secara logis.
+                Pastikan semua field dalam skema JSON terisi dengan konten yang relevan dan kreatif.
+                Jangan mengembalikan apapun selain objek JSON yang valid.
+            `;
             
             const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
                     responseMimeType: "application/json",
-                    responseSchema: schema
+                    responseSchema: storyboardSchema,
                 }
             }));
-        
-            const parsedResult = safeJsonParse(response.text);
-            return parsedResult.theme_suggestions || [];
+
+            const result = safeJsonParse(response.text);
+            return result.storyboard;
+        }
+    });
+};
+
+export const generateBlueprintPrompt = async (failoverParams: FailoverParams, scene: StoryboardScene, characters: Character[], directingSettings: DirectingSettings): Promise<string> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const characterDetails = characters.map(c => `[${c.consistency_key}: ${c.designLanguage}, ${c.keyFeatures.join(', ')}]`).join(' ');
+
+            const prompt = `
+                Create a detailed "blueprint" prompt for an AI image generator to create a keyframe for a video scene.
+                This is for a cinematic video featuring toys.
+                
+                Scene Details:
+                - Scene Number: ${scene.scene_number}
+                - Title: ${scene.scene_title}
+                - Summary: ${scene.scene_summary}
+                - Character Actions: ${scene.character_actions.map(a => `${a.character_name} (${a.consistency_key}) ${a.action_description}`).join('. ')}
+                - Cinematography: ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, ${scene.cinematography.camera_movement}.
+                - Directing Style: ${directingSettings.artStyle}, ${directingSettings.weatherSet} weather, set at ${directingSettings.timeOfDay}. Location is ${directingSettings.locationSet}.
+
+                Character DNA (for visual consistency):
+                ${characterDetails}
+
+                Task: Write a concise, powerful, and visually descriptive prompt under 150 words. Focus ONLY on the visual elements. Describe the scene as if for a photograph. Include character details using their consistency_key. Do not add instructions like "create" or "generate".
+            `;
+            
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            }));
+            return response.text.trim();
+        }
+    });
+};
+
+export const generateCinematicPrompt = async (failoverParams: FailoverParams, scene: StoryboardScene, characters: Character[], directingSettings: DirectingSettings): Promise<string> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const characterDetails = characters.map(c => `[Character DNA for ${c.consistency_key}: A ${c.material} ${c.modelName}. Design Language: ${c.designLanguage}. Key Visual Features: ${c.keyFeatures.join(', ')}. Details: ${c.physical_details}. Size: ${c.scale_and_size}. Personality: ${c.character_personality}]`).join('\n');
+
+            const prompt = `
+                You are a prompt engineer for a text-to-video AI model (like VEO).
+                Your task is to convert a storyboard scene into a highly detailed, cinematic prompt.
+
+                Storyboard Scene Information:
+                - Scene: ${scene.scene_number} - ${scene.scene_title}
+                - Summary: ${scene.scene_summary}
+                - Character Actions: ${scene.character_actions.map(a => `${a.character_name} (${a.consistency_key}) performs: ${a.action_description}`).join('; ')}
+                - Cinematography: ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, movement is ${scene.cinematography.camera_movement}.
+                - Sound Design: Ambience is ${scene.sound_design.ambience}. SFX include ${scene.sound_design.sfx.join(', ')}.
+                
+                Overall Directing Style:
+                - Art Style: ${directingSettings.artStyle}
+                - Location: ${directingSettings.locationSet === 'custom_location' ? directingSettings.customLocation : directingSettings.locationSet}
+                - Weather: ${directingSettings.weatherSet === 'custom_weather' ? directingSettings.customWeather : directingSettings.weatherSet}
+                - Time of Day: ${directingSettings.timeOfDay}
+                - Camera Style: ${directingSettings.cameraStyleSet === 'custom_camera' ? directingSettings.customCameraStyle : directingSettings.cameraStyleSet}
+                - Pacing: ${directingSettings.pacing}
+
+                Character Visual DNA (Crucial for consistency):
+                ${characterDetails}
+
+                Your Task:
+                Synthesize ALL the information above into a single, comprehensive, and vivid paragraph.
+                This paragraph will be the final prompt for the video generation model.
+                - Start with the Character DNA section. This is the most important part for visual consistency.
+                - Describe the setting, atmosphere, and action in extreme detail.
+                - Incorporate all cinematography and directing style notes.
+                - Be evocative and use powerful, descriptive language.
+                - The final output should be a single block of text. Do not use markdown or headings.
+            `;
+
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+            }));
+            return response.text.trim();
         }
     });
 };
@@ -522,7 +292,7 @@ const publishingKitSchema = {
             type: Type.OBJECT,
             properties: {
                 primary_character_template: { type: Type.STRING },
-                all_characters_template: { type: Type.STRING }
+                all_characters_template: { type: Type.STRING },
             },
             required: ["primary_character_template", "all_characters_template"]
         },
@@ -538,21 +308,13 @@ const publishingKitSchema = {
                     image_prompt: { type: Type.STRING },
                     cta_overlay_text_id: {
                         type: Type.OBJECT,
-                        properties: {
-                            hook: { type: Type.STRING },
-                            character: { type: Type.STRING },
-                            goal: { type: Type.STRING },
-                        },
-                        required: ["hook", "character", "goal"],
+                        properties: { hook: { type: Type.STRING }, character: { type: Type.STRING }, goal: { type: Type.STRING } },
+                        required: ["hook", "character", "goal"]
                     },
                     cta_overlay_text_en: {
                         type: Type.OBJECT,
-                        properties: {
-                            hook: { type: Type.STRING },
-                            character: { type: Type.STRING },
-                            goal: { type: Type.STRING },
-                        },
-                        required: ["hook", "character", "goal"],
+                        properties: { hook: { type: Type.STRING }, character: { type: Type.STRING }, goal: { type: Type.STRING } },
+                        required: ["hook", "character", "goal"]
                     },
                 },
                 required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "cta_overlay_text_id", "cta_overlay_text_en"]
@@ -569,231 +331,402 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
             const ai = getAiInstance(apiKey);
             const { storyboard, characters, logline } = options;
 
-            const fullStoryNarration = storyboard.map(scene => scene.sound_design.narration_script).filter(Boolean).join('\n\n');
-            const characterInfo = characters.length > 0
-                ? `The main characters in this story are: ${characters.map(c => `Name: ${c.name}, Consistency ID: ${c.consistency_key}, Detailed Description: ${c.designLanguage}, Key Features: ${c.keyFeatures.join(', ')}, Material: ${c.material}`).join('; ')}.`
-                : "No specific characters were selected.";
-            const primaryCharacter = characters.length > 0 ? characters[0].name : "this toy";
-        
-            const prompt = `You are an expert YouTube content strategist and viral SEO expert. Based on the following source data, create a "Magic Broadcast Kit" that is hyper-optimized for algorithmic success and high scores on VidIQ & TubeBuddy.
+            const prompt = `
+                You are a YouTube content strategist for a toy channel. Based on the provided story summary, generate a complete publishing kit.
+                
+                Story Logline: ${logline}
+                Story Summary: ${storyboard.map(s => s.scene_summary).join(' ')}
+                Characters: ${characters.map(c => c.name).join(', ')}
 
-            **Source Data:**
-            - Full Narrative Script: ${fullStoryNarration}
-            - Original Story Title: "${logline}"
-            - Primary Character: "${primaryCharacter}"
-            - All Characters in Story (Digital DNA): "${characterInfo}"
+                Task:
+                Generate a JSON object that strictly adheres to the provided schema.
+                - Create catchy, SEO-friendly titles in both Bahasa Indonesia (id) and English (en).
+                - Write detailed descriptions in both languages, including a story summary and call-to-actions.
+                - Generate relevant tags/keywords in both languages.
+                - Create affiliate link templates. Use "[LINK]" as a placeholder.
+                - Generate ONLY ONE creative thumbnail concept. For this concept:
+                    - Provide titles and descriptions in both languages.
+                    - Write a highly detailed AI image generator prompt for the thumbnail.
+                    - Provide short, punchy Call-To-Action (CTA) overlay text (hook, character, goal) in both languages.
+            `;
             
-            ---
-        
-            **TASK: Generate the Following YouTube Assets in JSON Format According to the Provided Schema**
-        
-            **1. YouTube Titles (youtube_title_id & youtube_title_en):**
-            - **Requirements:**
-                - Create highly engaging titles (positive clickbait) with a strong hook for both Indonesian and English audiences.
-                - Perform keyword research to ensure titles are highly SEO-friendly and will rank high in YouTube search.
-                - **MUST BE A MAXIMUM OF 100 CHARACTERS.**
-                - Target the highest possible scores on VidIQ and TubeBuddy.
-        
-            **2. YouTube Descriptions (youtube_description_id & youtube_description_en):**
-            - **Requirements:**
-                - Write descriptions rich with relevant SEO keywords, retelling the story summary compellingly.
-                - Include timestamps for key scenes if possible.
-                - Add 3-5 highly relevant and trending hashtags at the end of the description.
-                - **MUST BE A MAXIMUM OF 5000 CHARACTERS.**
-        
-            **3. YouTube Tags (youtube_tags_id & youtube_tags_en):**
-            - **Requirements:**
-                - Generate a list of highly relevant tags, targeting high-volume, low-competition keywords.
-                - Include long-tail and short-tail keywords.
-                - Designed to maximize visibility in YouTube recommendations and search.
-                - **TOTAL COMBINED CHARACTER COUNT FOR ALL TAGS MUST NOT EXCEED 500 CHARACTERS.**
-        
-            **4. Affiliate Links (affiliate_links):**
-            - Create an object with 'primary_character_template' and 'all_characters_template'. Use the placeholder [INSERT YOUR LINK HERE].
-        
-            **5. Thumbnail Concepts (thumbnail_concepts):**
-            - Create an array containing ONE powerful thumbnail concept.
-            - **For 'image_prompt' (CRITICAL):**
-                - You are an expert "Visual Prompt Engineer" for image AI models like Imagen.
-                - The prompt MUST be in **English** and highly detailed.
-                - **Synthesize ALL available data:** The YouTube titles you just created, the full narrative script, and most importantly, the characters' Digital DNA (including 'consistency_key' and visual descriptions).
-                - The prompt must describe the most dramatic or climactic scene from the story. Describe the character's action, expression, environment, dramatic cinematic lighting, vivid color palette, and visual style (e.g., ultra-realistic, 4K, high detail, motion blur for action).
-                - **Mandatory structure:** Start with the scene description, then a VERY detailed character description referencing their 'consistency_key', followed by background and lighting details.
-            - For 'cta_overlay_text_id' and 'cta_overlay_text_en', create a JSON object with three fields: 'hook', 'character', and 'goal'.
-                - 'hook': A very catchy, ALL CAPS, short hook (max 3 words). Example: "EPIC REVENGE!"
-                - 'character': Mention the highlighted role or character (max 5 words). Example: "The Brave Monster Truck"
-                - 'goal': Briefly describe the story's goal (max 7 words). Example: "Reclaiming the stolen crown"
-            - For other fields (\`concept_title\`, \`concept_description\`), create Indonesian (\`_id\`) and English (\`_en\`) versions.`;
-            
-             // FIX: Add GenerateContentResponse type to the response variable.
-             const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
                     responseMimeType: "application/json",
-                    responseSchema: publishingKitSchema
+                    responseSchema: publishingKitSchema,
                 }
             }));
-        
+
             return safeJsonParse(response.text);
         }
     });
 };
 
-export interface LocalizedAssets {
-    title: string;
-    description: string;
-    tags: string[];
-    ctaTexts: {
-        hook: string;
-        character: string;
-        goal: string;
-    }[];
-}
-
-export const generateLocalizedPublishingAssets = async (failoverParams: FailoverParams, options: PublishingKitOptions, targetLanguageName: string): Promise<LocalizedAssets> => {
-    return executeWithFailover({
-        ...failoverParams,
-        apiExecutor: async (apiKey) => {
-            const ai = getAiInstance(apiKey);
-            const { storyboard, characters, logline } = options;
-
-            const fullStoryNarration = storyboard.map(scene => scene.sound_design.narration_script).filter(Boolean).join('\n\n');
-            const characterInfo = characters.map(c => c.name).join(', ');
-            const numConcepts = 1;
-        
-            const prompt = `You are an expert YouTube content strategist and a native speaker of **${targetLanguageName}**.
-Based on the following source data, your task is to generate a complete, hyper-optimized YouTube publishing kit.
-Your entire output MUST be a single JSON object that strictly adheres to the provided schema.
-All string values within the JSON object MUST be written in **${targetLanguageName}**.
-
-**Source Data:**
-- Story Logline: "${logline}"
-- Main Characters: "${characterInfo}"
-- Full Story Narration: ${fullStoryNarration}
-
-**Generation Rules:**
-1.  **YouTube Title (title):** Must be highly engaging (positive clickbait), SEO-friendly for the target region, and under 100 characters.
-2.  **YouTube Description (description):** Must be rich with relevant SEO keywords and hashtags. Include a compelling story summary and timestamps. Max 5000 characters.
-3.  **YouTube Tags (tags):** A list of relevant, high-volume, low-competition keywords. Include long-tail and short-tail tags. Total combined length under 500 characters.
-4.  **Thumbnail CTA Texts (ctaTexts):** Generate exactly ${numConcepts} concept.
-    - **hook:** A short, ALL-CAPS, high-impact hook (max 3 words).
-    - **character:** A short phrase about the main character (max 5 words).
-    - **goal:** A short phrase describing the story's objective (max 7 words).
-
-Produce the JSON object now.`;
-            
-            const schema = {
-                type: Type.OBJECT,
-                properties: {
-                    title: { type: Type.STRING },
-                    description: { type: Type.STRING },
-                    tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    ctaTexts: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.OBJECT,
-                            properties: {
-                                hook: { type: Type.STRING },
-                                character: { type: Type.STRING },
-                                goal: { type: Type.STRING },
-                            },
-                            required: ["hook", "character", "goal"],
-                        }
-                    },
-                },
-                required: ["title", "description", "tags", "ctaTexts"]
-            };
-        
-            // FIX: Add GenerateContentResponse type to the response variable.
-            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: schema
-                }
-            }));
-        
-            return safeJsonParse(response.text);
-        }
-    });
-};
-
-
-export const generateThumbnail = async (failoverParams: FailoverParams, prompt: string, aspectRatio: string): Promise<ThumbnailData> => {
+export const generateReferenceImage = async (failoverParams: FailoverParams, prompt: string, aspectRatio: string): Promise<ThumbnailData> => {
     return executeWithFailover({
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = getAiInstance(apiKey);
             
-            const fullPrompt = `Create a visually stunning and eye-catching YouTube thumbnail. The image must be vibrant, high-contrast, cinematic, and emotionally engaging, perfectly representing this scene: ${prompt}`;
-        
-            // FIX: Add GenerateImagesResponse type to the response variable.
             const response: GenerateImagesResponse = await makeGenerativeApiCall(() => ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
-                prompt: fullPrompt,
+                prompt: prompt,
                 config: {
-                  numberOfImages: 1,
-                  outputMimeType: 'image/png',
-                  aspectRatio: aspectRatio as "1:1" | "3:4" | "4:3" | "9:16" | "16:9",
+                    numberOfImages: 1,
+                    outputMimeType: 'image/png',
+                    aspectRatio: aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
                 },
             }));
-        
+
             if (!response.generatedImages || response.generatedImages.length === 0) {
-                throw new Error("Image generation failed. The model returned no candidates.");
+                throw new Error("AI did not return an image.");
             }
-        
-            const base64ImageBytes: string = response.generatedImages[0].image.imageBytes;
-            
-            if (!base64ImageBytes) {
-                throw new Error("Image generation succeeded but no image data was returned.");
-            }
-        
+            const image = response.generatedImages[0];
             return {
-                base64: base64ImageBytes,
+                base64: image.image.imageBytes,
                 mimeType: 'image/png',
             };
         }
     });
 };
 
-const drawTextWithOutline = (
-    ctx: CanvasRenderingContext2D,
-    text: string,
-    x: number,
-    y: number,
-    fontSize: number,
-    isAllCaps: boolean
-) => {
-    const displayText = isAllCaps ? text.toUpperCase() : text;
-    const outlineWidth = Math.max(6, 12 * (fontSize / 100)); // Scale outline with font size
-
-    ctx.font = `900 ${fontSize}px sans-serif`;
-    
-    // Stroked text for outline
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = outlineWidth;
-    ctx.lineJoin = 'round';
-    ctx.miterLimit = 2;
-    ctx.strokeText(displayText, x, y);
-
-    // Gradient filled text
-    const gradient = ctx.createLinearGradient(0, y - fontSize, 0, y);
-    gradient.addColorStop(0, '#FFFFFF');
-    gradient.addColorStop(1, '#FBBF24'); // Amber-400
-    ctx.fillStyle = gradient;
-    ctx.fillText(displayText, x, y);
+const developedCharacterSchema = {
+    type: Type.OBJECT,
+    properties: {
+        brand_name: { type: Type.STRING },
+        model_name: { type: Type.STRING },
+        material: { type: Type.STRING },
+        design_language: { type: Type.STRING },
+        key_features: { type: Type.ARRAY, items: { type: Type.STRING } },
+        consistency_key: { type: Type.STRING },
+        character_personality: { type: Type.STRING },
+        physical_details: { type: Type.STRING },
+        scale_and_size: { type: Type.STRING },
+    },
+    required: ["brand_name", "model_name", "material", "design_language", "key_features", "consistency_key", "character_personality", "physical_details", "scale_and_size"]
 };
 
-export const createImageWithOverlay = (imageData: ThumbnailData, textParts: { hook: string; character: string; goal: string; }): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error("Could not create canvas context"));
-
-        const img = new Image();
-        
-        img.onload = () => {
-            canvas.width = img.width;
+export const developCharacter = async (failoverParams: FailoverParams, options: CharacterDevelopmentOptions): Promise<DevelopedCharacterData> => {
+     return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const { idea, referenceFiles } = options;
             
+            const parts: any[] = [{ text: `
+                You are an expert toy designer and storyteller. Your task is to analyze user-provided information (an idea and optional reference images/videos) about a toy and flesh out its details into a structured character profile.
+
+                User's Idea: "${idea}"
+
+                Based on the user's idea and any provided media, generate a complete character profile as a valid JSON object.
+                - **brand_name**: A plausible, fictional brand for the toy (e.g., "Hot Wheels", "Lego Technic", "Bandai").
+                - **model_name**: The specific model name of the toy.
+                - **material**: The primary material of the toy (e.g., "Die-cast metal", "ABS Plastic").
+                - **design_language**: Describe the overall aesthetic (e.g., "Sleek and aerodynamic with sharp angles").
+                - **key_features**: A list of 3-5 distinct visual features that make the character recognizable (Visual DNA).
+                - **consistency_key**: A unique, memorable token for use in prompts (e.g., "[Rino_RedRacer_v1]").
+                - **character_personality**: A brief description of the character's personality.
+                - **physical_details**: Nuanced details like scratches, specific colors, decals, etc.
+                - **scale_and_size**: The toy's scale and real-world size comparison.
+
+                Strictly adhere to the provided JSON schema.
+            ` }];
+
+            if(referenceFiles.length > 0) {
+                referenceFiles.forEach(file => {
+                    parts.push({
+                        inlineData: {
+                            data: file.base64,
+                            mimeType: file.mimeType
+                        }
+                    });
+                });
+            }
+
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts },
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: developedCharacterSchema
+                }
+            }));
+            
+            return safeJsonParse(response.text);
+        }
+    });
+};
+
+const actionDnaSchema = {
+    type: Type.OBJECT,
+    properties: {
+        actions: { type: Type.ARRAY, items: { type: Type.STRING } }
+    },
+    required: ["actions"]
+};
+
+export const generateActionDna = async (failoverParams: FailoverParams, characterData: DevelopedCharacterData): Promise<string[]> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const prompt = `
+                Based on the following toy character profile, generate a list of 5-7 dynamic "Action DNA" verbs or short phrases that describe what this character can DO.
+                
+                Character Profile:
+                - Name: ${characterData.brand_name} ${characterData.model_name}
+                - Personality: ${characterData.character_personality}
+                - Physical Details: ${characterData.physical_details}
+                - Key Features: ${characterData.key_features.join(', ')}
+
+                Examples of good Action DNA: "drifts smoothly", "jumps high", "crashes spectacularly", "emits sparks", "transforms quickly".
+
+                Generate a JSON object with a single key "actions" containing an array of strings.
+            `;
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: actionDnaSchema
+                }
+            }));
+            const result = safeJsonParse(response.text);
+            return result.actions;
+        }
+    });
+};
+
+const themeIdeasSchema = {
+    type: Type.OBJECT,
+    properties: {
+        theme_suggestions: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    category_name: { type: Type.STRING },
+                    themes: { type: Type.ARRAY, items: { type: Type.STRING } }
+                },
+                required: ["category_name", "themes"]
+            }
+        }
+    },
+    required: ["theme_suggestions"]
+};
+
+export const generateThemeIdeas = async (failoverParams: FailoverParams, options: ThemeIdeaOptions): Promise<ThemeSuggestion[]> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const { contentFormat, characterNames, language } = options;
+            const prompt = `
+                You are a creative director for a toy-focused YouTube channel.
+                
+                Content Format: ${contentFormat}
+                Main Characters: ${characterNames.join(', ')}
+
+                Task: Brainstorm a list of engaging story themes suitable for the given format and characters.
+                - The entire response, including category names and theme descriptions, MUST be in the following language: ${language}.
+                - Group the themes into 2-3 logical categories.
+                - Provide 3-5 themes per category.
+                - Output a valid JSON object with a single key "theme_suggestions", which is an array of objects. Each object must have "category_name" and "themes" (an array of strings), all localized into ${language}.
+            `;
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: themeIdeasSchema
+                }
+            }));
+            const result = safeJsonParse(response.text);
+            return result.theme_suggestions;
+        }
+    });
+};
+
+const storyIdeasSchema = {
+    type: Type.OBJECT,
+    properties: {
+        story_ideas: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    title_suggestion: { type: Type.STRING },
+                    script_outline: { type: Type.STRING }
+                },
+                required: ["title_suggestion", "script_outline"]
+            }
+        }
+    },
+    required: ["story_ideas"]
+};
+
+export const generateStoryIdeas = async (failoverParams: FailoverParams, options: StoryIdeaOptions): Promise<StoryIdea[]> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const { contentFormat, characterNames, theme } = options;
+            const prompt = `
+                You are a scriptwriter for a popular toy YouTube channel. Your task is to generate 3 creative and engaging story ideas.
+
+                Content Format: ${contentFormat}
+                Main Character(s): ${characterNames.join(', ')}
+                Story Theme: ${theme}
+
+                Task: Generate a JSON object containing a list of 3 story ideas.
+                The JSON object must have one key "story_ideas", which is an array of objects.
+                Each object in the array must contain:
+                - "title_suggestion": A catchy, SEO-friendly title for the video.
+                - "script_outline": A 3-4 sentence summary of the story/script.
+            `;
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: storyIdeasSchema
+                }
+            }));
+            const result = safeJsonParse(response.text);
+            return result.story_ideas;
+        }
+    });
+};
+
+const localizedAssetsSchema = {
+    type: Type.OBJECT,
+    properties: {
+        title: { type: Type.STRING },
+        description: { type: Type.STRING },
+        tags: { type: Type.ARRAY, items: { type: Type.STRING } },
+        ctaTexts: {
+            type: Type.ARRAY,
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    hook: { type: Type.STRING },
+                    character: { type: Type.STRING },
+                    goal: { type: Type.STRING },
+                },
+                required: ["hook", "character", "goal"]
+            }
+        }
+    },
+    required: ["title", "description", "tags", "ctaTexts"]
+};
+
+// This is the LocalizedAsset type from PublishingKitView.tsx
+export const generateLocalizedPublishingAssets = async (failoverParams: FailoverParams, options: PublishingKitOptions, language: string): Promise<any> => {
+     return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const { storyboard, characters, logline } = options;
+            const prompt = `
+                You are a multilingual YouTube content strategist. Your task is to localize a publishing kit for a toy video into the target language: ${language}.
+
+                Original Story Logline: ${logline}
+                Story Summary: ${storyboard.map(s => s.scene_summary).join(' ')}
+                Characters: ${characters.map(c => c.name).join(', ')}
+
+                Task: Generate a JSON object with localized assets for ${language}.
+                - **title**: A catchy, SEO-friendly title in ${language}.
+                - **description**: A detailed description in ${language}.
+                - **tags**: An array of relevant tags/keywords in ${language}.
+                - **ctaTexts**: An array of objects for thumbnail text overlays, localized into ${language}. Each object must have "hook", "character", and "goal" keys. Provide text for ONE thumbnail concept.
+            `;
+            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: localizedAssetsSchema
+                }
+            }));
+            return safeJsonParse(response.text);
+        }
+    });
+};
+
+export const generateThumbnail = async (failoverParams: FailoverParams, prompt: string, aspectRatio: string): Promise<ThumbnailData> => {
+     return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const response: GenerateImagesResponse = await makeGenerativeApiCall(() => ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: `ultra-realistic, dramatic lighting, 8k, cinematic thumbnail for a youtube video. ${prompt}`,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/png',
+                    aspectRatio: aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
+                },
+            }));
+
+            if (!response.generatedImages || response.generatedImages.length === 0) {
+                throw new Error("AI did not return an image for the thumbnail.");
+            }
+            const image = response.generatedImages[0];
+            return {
+                base64: image.image.imageBytes,
+                mimeType: 'image/png',
+            };
+        }
+    });
+};
+
+export const createImageWithOverlay = async (imageData: ThumbnailData, ctaText: { hook: string; character: string; goal: string }): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return reject(new Error('Could not get canvas context'));
+            }
+
+            const aspectRatio = img.width / img.height;
+            canvas.width = 1280;
+            canvas.height = 1280 / aspectRatio;
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            const FONT_FAMILY = 'Impact, sans-serif';
+            
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = canvas.width * 0.01;
+
+            const drawText = (text: string, yPos: number, fontSize: number) => {
+                ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
+                ctx.strokeText(text.toUpperCase(), canvas.width / 2, yPos);
+                ctx.fillText(text.toUpperCase(), canvas.width / 2, yPos);
+            }
+            
+            const HOOK_FONT_SIZE = canvas.height * 0.15;
+            const CHAR_FONT_SIZE = canvas.height * 0.20;
+            const GOAL_FONT_SIZE = canvas.height * 0.12;
+            
+            const PADDING = canvas.height * 0.08;
+
+            drawText(ctaText.hook, PADDING + HOOK_FONT_SIZE, HOOK_FONT_SIZE);
+            drawText(ctaText.character, canvas.height / 2 + CHAR_FONT_SIZE / 2, CHAR_FONT_SIZE);
+            drawText(ctaText.goal, canvas.height - PADDING, GOAL_FONT_SIZE);
+
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => {
+            reject(new Error('Failed to load base64 image'));
+        };
+        img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    });
+};

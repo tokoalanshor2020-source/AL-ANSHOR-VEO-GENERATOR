@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocalization } from '../../i18n';
+import { useLocalization, languageMap } from '../../i18n';
 import type { Character, StoryIdea, ThemeSuggestion } from '../../types';
 import { generateStoryIdeas, generateThemeIdeas } from '../../services/storyCreatorService';
 import { FailoverParams } from '../../services/geminiService';
@@ -15,7 +15,7 @@ interface DirectorBridgeModalProps {
 }
 
 export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen, onClose, onApplyIdea, characters, allApiKeys, activeApiKey, onKeyUpdate }) => {
-    const { t } = useLocalization();
+    const { t, language } = useLocalization();
     const [step, setStep] = useState(1);
     const [isGenerating, setIsGenerating] = useState(false);
     
@@ -48,7 +48,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         try {
             const themes = await generateThemeIdeas(getFailoverParams(), {
                 contentFormat: format,
-                characterNames: chars
+                characterNames: chars,
+                language: languageMap[language]
             });
             setAiThemes(themes);
         } catch(e) {
@@ -57,7 +58,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         } finally {
             setIsGeneratingThemes(false);
         }
-    }, [activeApiKey, onKeyUpdate, allApiKeys]);
+    }, [activeApiKey, onKeyUpdate, allApiKeys, language]);
 
 
     useEffect(() => {
