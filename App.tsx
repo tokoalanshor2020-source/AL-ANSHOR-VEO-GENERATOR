@@ -331,7 +331,7 @@ export default function App() {
       </main>
         
       <footer className="w-full mt-12 pb-8 text-center text-gray-500 text-sm">
-        <p>Powered by Google's VEO & Gemini Models</p>
+        <p>Powered by MOH RIYAN ADI SAPUTRA</p>
       </footer>
     </div>
   );

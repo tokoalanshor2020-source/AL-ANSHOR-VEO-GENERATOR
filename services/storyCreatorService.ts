@@ -191,7 +191,8 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
                 }
             }));
 
-            const result = safeJsonParse(response.text);
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            const result = safeJsonParse((response as GenerateContentResponse).text);
             return result.storyboard;
         }
     });
@@ -264,7 +265,8 @@ export const generateBlueprintPrompt = async (failoverParams: FailoverParams, sc
                 contents: prompt,
             }));
             
-            return response.text.trim();
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            return (response as GenerateContentResponse).text.trim();
         }
     });
 };
@@ -312,7 +314,8 @@ export const generateCinematicPrompt = async (failoverParams: FailoverParams, sc
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             }));
-            return response.text.trim();
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            return (response as GenerateContentResponse).text.trim();
         }
     });
 };
@@ -397,7 +400,8 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
                 }
             }));
 
-            return safeJsonParse(response.text);
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            return safeJsonParse((response as GenerateContentResponse).text);
         }
     });
 };
@@ -492,7 +496,8 @@ export const developCharacter = async (failoverParams: FailoverParams, options: 
                 }
             }));
             
-            return safeJsonParse(response.text);
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            return safeJsonParse((response as GenerateContentResponse).text);
         }
     });
 };
@@ -531,7 +536,8 @@ export const generateActionDna = async (failoverParams: FailoverParams, characte
                     responseSchema: actionDnaSchema
                 }
             }));
-            const result = safeJsonParse(response.text);
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            const result = safeJsonParse((response as GenerateContentResponse).text);
             return result.actions;
         }
     });
@@ -689,7 +695,8 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
                     responseSchema: localizedAssetsSchema
                 }
             }));
-            return safeJsonParse(response.text);
+            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+            return safeJsonParse((response as GenerateContentResponse).text);
         }
     });
 };
