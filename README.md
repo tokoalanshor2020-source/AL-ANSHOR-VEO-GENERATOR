@@ -243,4 +243,3 @@ pm2 restart alanshor
 systemctl reload nginx
 
 ```
-
