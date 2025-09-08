@@ -161,7 +161,18 @@ export const generateVideo = async ({ allKeys, activeKey, onKeyUpdate, options }
         
             const videoBlob = await videoResponse.blob();
             
-            return URL.createObjectURL(videoBlob);
+            // Convert blob to a data URL to be more robust, especially in new tabs or sandboxed environments.
+            // This avoids potential issues with blob URL lifecycle and permissions that can cause ERR_FILE_NOT_FOUND.
+            return new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    resolve(reader.result as string);
+                };
+                reader.onerror = (error) => {
+                    reject(new Error("Failed to read video blob into data URL: " + error));
+                };
+                reader.readAsDataURL(videoBlob);
+            });
         }
     });
 };

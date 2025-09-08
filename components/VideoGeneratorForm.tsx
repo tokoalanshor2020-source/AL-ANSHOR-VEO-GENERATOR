@@ -176,6 +176,48 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Prompt Section */}
+      <div className="space-y-2">
+        <label htmlFor="prompt" className="block text-lg font-semibold text-gray-200">{t('promptLabel') as string}</label>
+        <textarea
+          id="prompt"
+          rows={12}
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder={t('promptPlaceholder') as string}
+          className="w-full bg-base-300 border-gray-600 rounded-lg p-3 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200 placeholder-gray-500"
+        ></textarea>
+        <p className="text-sm text-gray-500">{t('promptHint') as string}</p>
+      </div>
+
+      {/* Reference Image Generator */}
+      <div className="bg-base-300/50 p-4 rounded-lg border border-base-300 space-y-3">
+          <h3 className="text-md font-semibold text-gray-300">{t('videoGenerator.referenceImageGeneratorTitle') as string}</h3>
+          <p className="text-xs text-gray-400">{t('videoGenerator.referenceImageGeneratorDescription') as string}</p>
+          
+          <div className="flex justify-between items-center">
+              <select value={refImgAspectRatio} onChange={(e) => setRefImgAspectRatio(e.target.value as GeneratorOptions['aspectRatio'])} className="bg-base-300 border border-gray-600 rounded-lg p-2 text-sm text-gray-200">
+                  <option value="16:9">16:9</option>
+                  <option value="9:16">9:16</option>
+                  <option value="1:1">1:1</option>
+                  <option value="4:3">4:3</option>
+                  <option value="3:4">3:4</option>
+              </select>
+              <button type="button" onClick={handleGenerateReferenceImage} disabled={isGeneratingRefImg || !activeVideoApiKey || !prompt.trim()} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">
+                  {isGeneratingRefImg ? t('videoGenerator.generatingImageButton') as string : t('videoGenerator.generateImageButton') as string}
+              </button>
+          </div>
+            {generatedRefImg && (
+              <div className="mt-3 text-center space-y-3">
+                  <img src={generatedRefImg.previewUrl} alt="Generated reference" className="max-w-xs mx-auto rounded-lg shadow-md" />
+                  <button type="button" onClick={handleAddGeneratedImage} className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                      {t('videoGenerator.addImageButton') as string}
+                  </button>
+              </div>
+          )}
+      </div>
+      
+       {/* Reference Image Upload Section */}
       <div>
         <label className="block text-lg font-semibold text-gray-200">{t('referenceImageLabel') as string}</label>
         <div className="mt-1">
@@ -202,50 +244,6 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
             )}
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {/* Prompt Section */}
-        <div className="space-y-2">
-          <label htmlFor="prompt" className="block text-lg font-semibold text-gray-200">{t('promptLabel') as string}</label>
-          <textarea
-            id="prompt"
-            rows={16}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder={t('promptPlaceholder') as string}
-            className="w-full bg-base-300 border-gray-600 rounded-lg p-3 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200 placeholder-gray-500"
-          ></textarea>
-          <p className="text-sm text-gray-500">{t('promptHint') as string}</p>
-        </div>
-
-        {/* Reference Image Generator */}
-        <div className="bg-base-300/50 p-4 rounded-lg border border-base-300 space-y-3 lg:sticky lg:top-8">
-            <h3 className="text-md font-semibold text-gray-300">{t('videoGenerator.referenceImageGeneratorTitle') as string}</h3>
-            <p className="text-xs text-gray-400">This will use the main prompt on the left to generate an image.</p>
-            
-            <div className="flex justify-between items-center">
-                <select value={refImgAspectRatio} onChange={(e) => setRefImgAspectRatio(e.target.value as GeneratorOptions['aspectRatio'])} className="bg-base-300 border border-gray-600 rounded-lg p-2 text-sm text-gray-200">
-                    <option value="16:9">16:9</option>
-                    <option value="9:16">9:16</option>
-                    <option value="1:1">1:1</option>
-                    <option value="4:3">4:3</option>
-                    <option value="3:4">3:4</option>
-                </select>
-                <button type="button" onClick={handleGenerateReferenceImage} disabled={isGeneratingRefImg || !activeVideoApiKey || !prompt.trim()} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50">
-                    {isGeneratingRefImg ? t('videoGenerator.generatingImageButton') as string : t('videoGenerator.generateImageButton') as string}
-                </button>
-            </div>
-             {generatedRefImg && (
-                <div className="mt-3 text-center space-y-3">
-                    <img src={generatedRefImg.previewUrl} alt="Generated reference" className="max-w-xs mx-auto rounded-lg shadow-md" />
-                    <button type="button" onClick={handleAddGeneratedImage} className="w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-                        {t('videoGenerator.addImageButton') as string}
-                    </button>
-                </div>
-            )}
-        </div>
-      </div>
-
 
       <div className="space-y-6">
         <h3 className="text-lg font-semibold text-gray-200">{t('generationSettings') as string}</h3>
@@ -293,13 +291,13 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
         </div>
       )}
 
-      <div>
+      <div className="border-t border-base-300 pt-6 text-center">
         <button
           type="submit"
-          disabled={isGenerating || !hasActiveVideoApiKey}
-          className="w-full flex justify-center py-4 px-6 border border-transparent rounded-lg shadow-lg text-lg font-bold text-white bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          disabled={isGenerating}
+          className="w-full font-bold py-4 px-10 text-xl rounded-xl shadow-lg bg-brand-primary hover:bg-brand-dark disabled:bg-base-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
         >
-          {isGenerating ? t('generatingButton') as string : t('generateButton') as string}
+          {(isGenerating ? t('generatingButton') : t('generateButton')) as string}
         </button>
       </div>
     </form>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocalization } from '../../i18n';
 import { MagicWandIcon } from '../icons/MagicWandIcon';
+import { RocketIcon } from '../icons/RocketIcon';
 import { DirectorBridgeModal } from './DirectorBridgeModal';
 import { DirectingDesk } from './DirectingDesk';
 import type { Character, StoryIdea, DirectingSettings } from '../../types';
@@ -21,6 +22,7 @@ interface ScriptEditorProps {
     activeApiKey: string | null;
     directingSettings: DirectingSettings;
     setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
+    onProceedToVideo: (prompt: string) => void;
 }
 
 export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
@@ -36,6 +38,18 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
 
     return (
         <div className="p-6 space-y-6">
+             <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-base-300">
+                <h3 className="text-lg font-bold text-cyan-400">{t('storyCreator.haveIdea') as string}</h3>
+                <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescriptionDirect') as string}</p>
+                <button 
+                    onClick={() => props.onProceedToVideo('')}
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700"
+                >
+                    <RocketIcon />
+                    {t('storyCreator.openDirectVideo') as string}
+                </button>
+            </div>
+
             <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-base-300">
                 {/* FIX: Cast result of t() to string */}
                 <h3 className="text-lg font-bold text-amber-400">{t('storyCreator.needIdea') as string}</h3>

@@ -77,6 +77,30 @@ export default function App() {
 
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const promptId = urlParams.get('init_video_prompt_id');
+
+    if (promptId) {
+        try {
+            const storedPrompt = sessionStorage.getItem(promptId);
+            if (storedPrompt !== null) {
+                setView('video-generator');
+                setPromptForVideo(storedPrompt);
+                sessionStorage.removeItem(promptId); // Clean up
+
+                // Clean the URL to avoid re-triggering on refresh
+                urlParams.delete('init_video_prompt_id');
+                const newRelativeUrl = `${window.location.pathname}?${urlParams.toString()}`.replace(/\?$/, '');
+                window.history.replaceState({}, document.title, newRelativeUrl);
+            }
+        } catch (e) {
+            console.error("Failed to initialize video generator from session storage", e);
+            setError("Could not load the prompt for this video generation tab.");
+        }
+    }
+  }, []); // Run only on initial mount
+
+  useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = dir;
   }, [language, dir]);
@@ -197,16 +221,39 @@ export default function App() {
   }, [activeVideoApiKey, videoApiKeys, handleSetActiveVideoApiKey, t]);
   
   const handleProceedToVideoGenerator = (prompt: string) => {
-    setPromptForVideo(prompt);
-    setView('video-generator');
-    window.scrollTo(0, 0);
+    const generateUUID = () => {
+        if (window.crypto && window.crypto.randomUUID) {
+            return window.crypto.randomUUID();
+        }
+        // Fallback for older browsers
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = (Math.random() * 16) | 0;
+            const v = c === 'x' ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
+    };
+
+    const promptId = `prompt-${generateUUID()}`;
+    try {
+        sessionStorage.setItem(promptId, prompt);
+        const url = new URL(window.location.href);
+        url.searchParams.set('init_video_prompt_id', promptId);
+        window.open(url.toString(), '_blank');
+    } catch (e) {
+        console.error("Failed to open new tab for video generator", e);
+        setError("Could not open a new tab. Please check your browser's pop-up blocker settings.");
+    }
   };
   
   const handleBackToStoryCreator = () => {
-    setVideoUrl(null);
-    setError(null);
-    setView('story-creator');
-    window.scrollTo(0, 0);
+    if (window.opener && !window.opener.closed) {
+        window.close();
+    } else {
+        setVideoUrl(null);
+        setError(null);
+        setView('story-creator');
+        window.scrollTo(0, 0);
+    }
   };
 
   const handleNewStoryReset = () => {
