@@ -81,7 +81,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "Welcome to the AL ANSHOR VEO GENERATOR! This guide will walk you through creating amazing videos from start to finish.",
         setup: {
             title: "1. Initial Setup: API Keys",
-            body: "The application requires two types of API keys to function. You can manage them by clicking the key buttons in the header: <br/>- <strong>Story API Key:</strong> Used for all text-based generation (storyboards, publishing kits). <br/>- <strong>Video & Thumbnail API Key:</strong> Used for generating both the final video and thumbnail images. <br/>You must add at least one valid key for each type and set one as 'active' to begin."
+            body: "The application requires two types of API keys to function. You can manage them by clicking the key buttons in the header: <br/>- <strong>Story API Key:</strong> Used for all text-based generation (storyboards, publishing kits). {You can use a free Gemini API account} <br/>- <strong>Video & Thumbnail API Key:</strong> Used to generate the final video and thumbnail images. {You must use a paid Gemini API / Google Cloud Project account} <br/>You must add at least one valid key for each type and set one as 'active' to begin.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=en&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Click here to get an API Key</a>"
         },
         story: {
             title: "2. Creating Your Story",
@@ -376,7 +376,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "Selamat datang di AL ANSHOR VEO GENERATOR! Panduan ini akan memandu Anda membuat video luar biasa dari awal hingga akhir.",
         setup: {
             title: "1. Pengaturan Awal: Kunci API",
-            body: "Aplikasi ini memerlukan dua jenis kunci API untuk berfungsi. Anda dapat mengelolanya dengan mengklik tombol kunci di header: <br/>- <strong>Kunci API Cerita:</strong> Digunakan untuk semua pembuatan berbasis teks (papan cerita, kit siaran). <br/>- <strong>Kunci API Video & Thumbnail:</strong> Digunakan untuk menghasilkan video final dan gambar thumbnail. <br/>Anda harus menambahkan setidaknya satu kunci yang valid untuk setiap jenis dan menetapkannya sebagai 'aktif' untuk memulai."
+            body: "Aplikasi ini memerlukan dua jenis kunci API untuk berfungsi. Anda dapat mengelolanya dengan mengklik tombol kunci di header: <br/>- <strong>Kunci API Cerita:</strong> Digunakan untuk semua pembuatan berbasis teks (papan cerita, kit siaran). {Bisa menggunakan akun API Gemini Gratisan} <br/>- <strong>Kunci API Video & Thumbnail:</strong> Digunakan untuk menghasilkan video final dan gambar thumbnail. { Harus menggunakan akun API Gemini Berbayar/Consoleskillboost} <br/>Anda harus menambahkan setidaknya satu kunci yang valid untuk setiap jenis dan menetapkannya sebagai 'aktif' untuk memulai.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=id&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Klik disini untuk mendapatkan API</a>"
         },
         story: {
             title: "2. Membuat Cerita Anda",
@@ -672,7 +672,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "¡Bienvenido al GENERADOR VEO AL ANSHOR! Esta guía te guiará para crear videos increíbles de principio a fin.",
         setup: {
             title: "1. Configuración Inicial: Claves API",
-            body: "La aplicación requiere dos tipos de claves API para funcionar. Puedes gestionarlas haciendo clic en los botones de clave en el encabezado: <br/>- <strong>Clave API de Historia:</strong> Usada para toda la generación basada en texto (guiones gráficos, kits de publicación). <br/>- <strong>Clave API de Video y Miniatura:</strong> Usada para generar tanto el video final como las imágenes en miniatura. <br/>Debes añadir al menos una clave válida para cada tipo y establecer una como 'activa' para comenzar."
+            body: "La aplicación requiere dos tipos de claves API para funcionar. Puedes gestionarlas haciendo clic en los botones de clave en el encabezado: <br/>- <strong>Clave API de Historia:</strong> Usada para toda la generación basada en texto (guiones gráficos, kits de publicación). {Puedes usar una cuenta gratuita de Gemini API} <br/>- <strong>Clave API de Video y Miniatura:</strong> Usada para generar tanto el video final como las imágenes en miniatura. {Debes usar una cuenta de pago de Gemini API / Google Cloud Project} <br/>Debes añadir al menos una clave válida para cada tipo y establecer una como 'activa' para comenzar.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=es&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Haz clic aquí para obtener una Clave API</a>"
         },
         story: {
             title: "2. Creando Tu Historia",
@@ -967,7 +967,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "欢迎使用AL ANSHOR VEO生成器！本指南将引导您从头到尾创建出色的视频。",
         setup: {
             title: "1. 初始设置：API密钥",
-            body: "该应用程序需要两种类型的API密钥才能运行。您可以通过单击标题中的密钥按钮来管理它们：<br/>- <strong>故事API密钥：</strong>用于所有基于文本的生成（故事板、发布工具包）。<br/>- <strong>视频和缩略图API密钥：</strong>用于生成最终视频和缩略图图像。<br/>您必须为每种类型添加至少一个有效密钥，并设置一个为“活动”状态才能开始。"
+            body: "该应用程序需要两种类型的API密钥才能运行。您可以通过单击标题中的密钥按钮来管理它们：<br/>- <strong>故事API密钥：</strong>用于所有基于文本的生成（故事板、发布工具包）。{可以使用免费的Gemini API帐户} <br/>- <strong>视频和缩略图API密钥：</strong>用于生成最终视频和缩略图图像。{必须使用付费的Gemini API / Google Cloud Project帐户} <br/>您必须为每种类型添加至少一个有效密钥，并设置一个为“活动”状态才能开始。<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=zh&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">点击此处获取API密钥</a>"
         },
         story: {
             title: "2. 创作您的故事",
@@ -1262,7 +1262,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "AL ANSHOR VEO जेनरेटर में आपका स्वागत है! यह गाइड आपको शुरू से अंत तक अद्भुत वीडियो बनाने में मदद करेगा।",
         setup: {
             title: "1. प्रारंभिक सेटअप: API कुंजियाँ",
-            body: "एप्लिकेशन को कार्य करने के लिए दो प्रकार की API कुंजियों की आवश्यकता होती है। आप उन्हें हेडर में कुंजी बटन पर क्लिक करके प्रबंधित कर सकते हैं: <br/>- <strong>कहानी API कुंजी:</strong> सभी पाठ-आधारित उत्पादन (स्टोरीबोर्ड, प्रकाशन किट) के लिए उपयोग की जाती है। <br/>- <strong>वीडियो और थंबनेल API कुंजी:</strong> अंतिम वीडियो और थंबनेल चित्र दोनों बनाने के लिए उपयोग की जाती है। <br/>आपको प्रत्येक प्रकार के लिए कम से कम एक वैध कुंजी जोड़नी होगी और शुरू करने के लिए एक को 'सक्रिय' के रूप में सेट करना होगा।"
+            body: "एप्लिकेशन को कार्य करने के लिए दो प्रकार की API कुंजियों की आवश्यकता होती है। आप उन्हें हेडर में कुंजी बटन पर क्लिक करके प्रबंधित कर सकते हैं: <br/>- <strong>कहानी API कुंजी:</strong> सभी पाठ-आधारित उत्पादन (स्टोरीबोर्ड, प्रकाशन किट) के लिए उपयोग की जाती है। {आप एक निःशुल्क जेमिनी API खाते का उपयोग कर सकते हैं} <br/>- <strong>वीडियो और थंबनेल API कुंजी:</strong> अंतिम वीडियो और थंबनेल चित्र दोनों बनाने के लिए उपयोग की जाती है। {आपको एक सशुल्क जेमिनी API / गूगल क्लाउड प्रोजेक्ट खाते का उपयोग करना होगा} <br/>आपको प्रत्येक प्रकार के लिए कम से-कम एक वैध कुंजी जोड़नी होगी और शुरू करने के लिए एक को 'सक्रिय' के रूप में सेट करना होगा।<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=hi&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">API कुंजी प्राप्त करने के लिए यहां क्लिक करें</a>"
         },
         story: {
             title: "2. अपनी कहानी बनाना",
@@ -1557,7 +1557,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "مرحبًا بك في مولد الفيديو AL ANSHOR VEO! سيرشدك هذا الدليل لإنشاء مقاطع فيديو مذهلة من البداية إلى النهاية.",
         setup: {
             title: "1. الإعداد الأولي: مفاتيح API",
-            body: "يتطلب التطبيق نوعين من مفاتيح API ليعمل. يمكنك إدارتها عن طريق النقر فوق أزرار المفاتيح في الرأس: <br/>- <strong>مفتاح API للقصة:</strong> يُستخدم لجميع عمليات الإنشاء القائمة على النصوص (لوحات القصة، مجموعات النشر). <br/>- <strong>مفتاح API للفيديو والصور المصغرة:</strong> يُستخدم لإنشاء الفيديو النهائي والصور المصغرة. <br/>يجب عليك إضافة مفتاح واحد صالح على الأقل لكل نوع وتعيين واحد على أنه 'نشط' للبدء."
+            body: "يتطلب التطبيق نوعين من مفاتيح API ليعمل. يمكنك إدارتها عن طريق النقر فوق أزرار المفاتيح في الرأس: <br/>- <strong>مفتاح API للقصة:</strong> يُستخدم لجميع عمليات الإنشاء القائمة على النصوص (لوحات القصة، مجموعات النشر). {يمكنك استخدام حساب Gemini API مجاني} <br/>- <strong>مفتاح API للفيديو والصور المصغرة:</strong> يُستخدم لإنشاء الفيديو النهائي والصور المصغرة. {يجب استخدام حساب Gemini API مدفوع / حساب Google Cloud Project} <br/>يجب عليك إضافة مفتاح واحد صالح على الأقل لكل نوع وتعيين واحد على أنه 'نشط' للبدء.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=ar&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">انقر هنا للحصول على مفتاح API</a>"
         },
         story: {
             title: "2. إنشاء قصتك",
@@ -1852,7 +1852,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "Bem-vindo ao GERADOR DE VÍDEO AL ANSHOR VEO! Este guia irá orientá-lo na criação de vídeos incríveis do início ao fim.",
         setup: {
             title: "1. Configuração Inicial: Chaves de API",
-            body: "A aplicação requer dois tipos de chaves de API para funcionar. Você pode gerenciá-las clicando nos botões de chave no cabeçalho: <br/>- <strong>Chave de API de História:</strong> Usada para toda a geração baseada em texto (storyboards, kits de publicação). <br/>- <strong>Chave de API de Vídeo e Miniatura:</strong> Usada para gerar tanto o vídeo final quanto as imagens de miniatura. <br/>Você deve adicionar pelo menos uma chave válida para cada tipo e definir uma como 'ativa' para começar."
+            body: "A aplicação requer dois tipos de chaves de API para funcionar. Você pode gerenciá-las clicando nos botões de chave no cabeçalho: <br/>- <strong>Chave de API de História:</strong> Usada para toda a geração baseada em texto (storyboards, kits de publicação). {Você pode usar uma conta gratuita da API Gemini} <br/>- <strong>Chave de API de Vídeo e Miniatura:</strong> Usada para gerar tanto o vídeo final quanto as imagens de miniatura. {Você deve usar uma conta paga da API Gemini / Google Cloud Project} <br/>Você deve adicionar pelo menos uma chave válida para cada tipo e definir uma como 'ativa' para começar.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=pt&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Clique aqui para obter uma Chave de API</a>"
         },
         story: {
             title: "2. Criando Sua História",
@@ -2147,7 +2147,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "AL ANSHOR VEO জেনারেটরে স্বাগতম! এই গাইডটি আপনাকে শুরু থেকে শেষ পর্যন্ত আশ্চর্যজনক ভিডিও তৈরি করতে সাহায্য করবে।",
         setup: {
             title: "1. প্রাথমিক সেটআপ: API কী",
-            body: "অ্যাপ্লিকেশনটি কাজ করার জন্য দুটি ধরণের API কী প্রয়োজন। আপনি হেডারে কী বোতামগুলিতে ক্লিক করে সেগুলি পরিচালনা করতে পারেন: <br/>- <strong>গল্প API কী:</strong> সমস্ত পাঠ্য-ভিত্তিক প্রজন্ম (স্টোরিবোর্ড, প্রকাশনা কিট) জন্য ব্যবহৃত হয়। <br/>- <strong>ভিডিও ও থাম্বনেইল API কী:</strong> চূড়ান্ত ভিডিও এবং থাম্বনেইল চিত্র উভয়ই তৈরির জন্য ব্যবহৃত হয়। <br/>আপনাকে প্রতিটি ধরণের জন্য কমপক্ষে একটি বৈধ কী যোগ করতে হবে এবং শুরু করার জন্য একটিকে 'সক্রিয়' হিসাবে সেট করতে হবে।"
+            body: "অ্যাপ্লিকেশনটি কাজ করার জন্য দুটি ধরণের API কী প্রয়োজন। আপনি হেডারে কী বোতামগুলিতে ক্লিক করে সেগুলি পরিচালনা করতে পারেন: <br/>- <strong>গল্প API কী:</strong> সমস্ত পাঠ্য-ভিত্তিক প্রজন্ম (স্টোরিবোর্ড, প্রকাশনা কিট) জন্য ব্যবহৃত হয়। {আপনি একটি বিনামূল্যে জেমিনি API অ্যাকাউন্ট ব্যবহার করতে পারেন} <br/>- <strong>ভিডিও ও থাম্বনেইল API কী:</strong> চূড়ান্ত ভিডিও এবং থাম্বনেইল চিত্র উভয়ই তৈরির জন্য ব্যবহৃত হয়। {আপনাকে একটি পেইড জেমিনি API / গুগল ক্লাউড প্রজেক্ট অ্যাকাউন্ট ব্যবহার করতে হবে} <br/>আপনাকে প্রতিটি ধরণের জন্য কমপক্ষে একটি বৈধ কী যোগ করতে হবে এবং শুরু করার জন্য একটিকে 'সক্রিয়' হিসাবে সেট করতে হবে।<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=bn&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">API কী পেতে এখানে ক্লিক করুন</a>"
         },
         story: {
             title: "2. আপনার গল্প তৈরি করা",
@@ -2442,7 +2442,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "Добро пожаловать в ГЕНЕРАТОР ВИДЕО AL ANSHOR VEO! Это руководство поможет вам создавать потрясающие видео от начала до конца.",
         setup: {
             title: "1. Начальная настройка: Ключи API",
-            body: "Для работы приложения требуются два типа ключей API. Вы можете управлять ими, нажимая кнопки ключей в заголовке: <br/>- <strong>Ключ API для историй:</strong> Используется для всей текстовой генерации (раскадровки, издательские комплекты). <br/>- <strong>Ключ API для видео и миниатюр:</strong> Используется для создания как финального видео, так и изображений миниатюр. <br/>Вы должны добавить хотя бы один действительный ключ для каждого типа и установить один из них как 'активный', чтобы начать."
+            body: "Для работы приложения требуются два типа ключей API. Вы можете управлять ими, нажимая кнопки ключей в заголовке: <br/>- <strong>Ключ API для историй:</strong> Используется для всей текстовой генерации (раскадровки, издательские комплекты). {Вы можете использовать бесплатную учетную запись Gemini API} <br/>- <strong>Ключ API для видео и миниатюр:</strong> Используется для создания как финального видео, так и изображений миниатюр. {Вы должны использовать платную учетную запись Gemini API / проект Google Cloud} <br/>Вы должны добавить хотя бы один действительный ключ для каждого типа и установить один из них как 'активный', чтобы начать.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=ru&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Нажмите здесь, чтобы получить ключ API</a>"
         },
         story: {
             title: "2. Создание вашей истории",
@@ -2737,7 +2737,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "AL ANSHOR VEOビデオジェネレーターへようこそ！このガイドでは、素晴らしいビデオを最初から最後まで作成する方法を説明します。",
         setup: {
             title: "1. 初期設定：APIキー",
-            body: "アプリケーションが機能するには2種類のAPIキーが必要です。ヘッダーのキーボタンをクリックして管理できます：<br/>- <strong>ストーリーAPIキー：</strong>すべてのテキストベースの生成（ストーリーボード、パブリッシングキット）に使用されます。<br/>- <strong>ビデオ＆サムネイルAPIキー：</strong>最終的なビデオとサムネイル画像の両方の生成に使用されます。<br/>各タイプに少なくとも1つの有効なキーを追加し、1つを「アクティブ」に設定して開始する必要があります。"
+            body: "アプリケーションが機能するには2種類のAPIキーが必要です。ヘッダーのキーボタンをクリックして管理できます：<br/>- <strong>ストーリーAPIキー：</strong>すべてのテキストベースの生成（ストーリーボード、パブリッシングキット）に使用されます。{無料のGemini APIアカウントを使用できます} <br/>- <strong>ビデオ＆サムネイルAPIキー：</strong>最終的なビデオとサムネイル画像の両方の生成に使用されます。{有料のGemini API / Google Cloud Projectアカウントを使用する必要があります} <br/>各タイプに少なくとも1つの有効なキーを追加し、1つを「アクティブ」に設定して開始する必要があります。<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=ja&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">APIキーを取得するにはここをクリックしてください</a>"
         },
         story: {
             title: "2. ストーリーの作成",
@@ -3032,7 +3032,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "Willkommen beim AL ANSHOR VEO GENERATOR! Diese Anleitung führt Sie durch die Erstellung erstaunlicher Videos von Anfang bis Ende.",
         setup: {
             title: "1. Ersteinrichtung: API-Schlüssel",
-            body: "Die Anwendung benötigt zwei Arten von API-Schlüsseln, um zu funktionieren. Sie können sie verwalten, indem Sie auf die Schlüssel-Schaltflächen in der Kopfzeile klicken: <br/>- <strong>Story-API-Schlüssel:</strong> Wird für alle textbasierten Generierungen (Storyboards, Veröffentlichungs-Kits) verwendet. <br/>- <strong>Video- & Thumbnail-API-Schlüssel:</strong> Wird zur Erstellung des endgültigen Videos und der Thumbnail-Bilder verwendet. <br/>Sie müssen für jeden Typ mindestens einen gültigen Schlüssel hinzufügen und einen als 'aktiv' festlegen, um zu beginnen."
+            body: "Die Anwendung benötigt zwei Arten von API-Schlüsseln, um zu funktionieren. Sie können sie verwalten, indem Sie auf die Schlüssel-Schaltflächen in der Kopfzeile klicken: <br/>- <strong>Story-API-Schlüssel:</strong> Wird für alle textbasierten Generierungen (Storyboards, Veröffentlichungs-Kits) verwendet. {Sie können ein kostenloses Gemini-API-Konto verwenden} <br/>- <strong>Video- & Thumbnail-API-Schlüssel:</strong> Wird zur Erstellung des endgültigen Videos und der Thumbnail-Bilder verwendet. {Sie müssen ein kostenpflichtiges Gemini-API- / Google Cloud Project-Konto verwenden} <br/>Sie müssen für jeden Typ mindestens einen gültigen Schlüssel hinzufügen und einen als 'aktiv' festlegen, um zu beginnen.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=de&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Klicken Sie hier, um einen API-Schlüssel zu erhalten</a>"
         },
         story: {
             title: "2. Erstellen Ihrer Geschichte",
@@ -3327,7 +3327,7 @@ const translations: { [key in Language]: Translations } = {
         intro: "Bienvenue dans le GÉNÉRATEUR VIDÉO AL ANSHOR VEO ! Ce guide vous guidera dans la création de vidéos incroyables du début à la fin.",
         setup: {
             title: "1. Configuration initiale : Clés API",
-            body: "L'application nécessite deux types de clés API pour fonctionner. Vous pouvez les gérer en cliquant sur les boutons de clé dans l'en-tête : <br/>- <strong>Clé API Histoire :</strong> Utilisée pour toute la génération textuelle (storyboards, kits de publication). <br/>- <strong>Clé API Vidéo & Miniature :</strong> Utilisée pour la génération de la vidéo finale et des images miniatures. <br/>Vous devez ajouter au moins une clé valide pour chaque type et en définir une comme 'active' pour commencer."
+            body: "L'application nécessite deux types de clés API pour fonctionner. Vous pouvez les gérer en cliquant sur les boutons de clé dans l'en-tête : <br/>- <strong>Clé API Histoire :</strong> Utilisée pour toute la génération textuelle (storyboards, kits de publication). {Vous pouvez utiliser un compte API Gemini gratuit} <br/>- <strong>Clé API Vidéo & Miniature :</strong> Utilisée pour la génération de la vidéo finale et des images miniatures. {Vous devez utiliser un compte API Gemini payant / compte Google Cloud Project} <br/>Vous devez ajouter au moins une clé valide pour chaque type et en définir une comme 'active' pour commencer.<br/><a href=\"https://console.cloud.google.com/marketplace/product/google/generativelanguage.googleapis.com?q=search&referrer=search&hl=fr&project=gen-lang-client-0742835952\" class=\"text-amber-400 hover:underline\" target=\"_blank\" rel=\"noopener noreferrer\">Cliquez ici pour obtenir une clé API</a>"
         },
         story: {
             title: "2. Création de votre histoire",
