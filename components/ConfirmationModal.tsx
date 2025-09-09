@@ -22,7 +22,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ title, mes
                         {t('closeButton') as string}
                     </button>
                     <button onClick={onConfirm} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-dark">
-                        OK
+                        {t('confirmButton') as string}
                     </button>
                 </div>
             </div>

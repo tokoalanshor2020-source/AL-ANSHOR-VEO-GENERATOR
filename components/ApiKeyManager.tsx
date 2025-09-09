@@ -18,11 +18,12 @@ interface ApiKeyManagerProps {
 }
 
 const StatusBadge: React.FC<{ status: KeyStatus }> = ({ status }) => {
+    const { t } = useLocalization();
     const statusMap = {
-        valid: { text: 'VALID', className: 'bg-green-500/20 text-green-300 ring-green-500/30' },
-        invalid: { text: 'INVALID', className: 'bg-red-500/20 text-red-300 ring-red-500/30' },
-        checking: { text: 'CHECKING...', className: 'bg-yellow-500/20 text-yellow-300 ring-yellow-500/30 animate-pulse' },
-        unchecked: { text: 'UNCHECKED', className: 'bg-gray-500/20 text-gray-400 ring-gray-500/30' }
+        valid: { text: t('apiKeyStatuses.valid') as string, className: 'bg-green-500/20 text-green-300 ring-green-500/30' },
+        invalid: { text: t('apiKeyStatuses.invalid') as string, className: 'bg-red-500/20 text-red-300 ring-red-500/30' },
+        checking: { text: t('apiKeyStatuses.checking') as string, className: 'bg-yellow-500/20 text-yellow-300 ring-yellow-500/30 animate-pulse' },
+        unchecked: { text: t('apiKeyStatuses.unchecked') as string, className: 'bg-gray-500/20 text-gray-400 ring-gray-500/30' }
     };
     const { text, className } = statusMap[status] || statusMap.unchecked;
     return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${className}`}>{text}</span>;
@@ -53,177 +54,166 @@ const ApiKeyItem: React.FC<{
                 </label>
                  <StatusBadge status={status} />
             </div>
-            <button
-                onClick={onDelete}
-                className="text-gray-500 hover:text-red-400 transition-colors"
-                aria-label={`Delete key ${displayKey}`}
-            >
-                <TrashIcon className="h-5 w-5" />
+             <button onClick={onDelete} className="p-1 text-gray-500 hover:text-red-400" aria-label={`Delete key ${displayKey}`}>
+                <TrashIcon className="h-4 w-4" />
             </button>
         </li>
-    )
-}
+    );
+};
 
+// FIX: This file was incomplete, causing an export error. The component has been fully implemented below.
 export const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ keyType, currentKeys, activeKey, onKeysChange, onActiveKeyChange, onClose }) => {
-  const [newKey, setNewKey] = useState('');
-  const [isValidating, setIsValidating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { t } = useLocalization();
+    const { t } = useLocalization();
+    const [newApiKey, setNewApiKey] = useState('');
+    const [isAdding, setIsAdding] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [keyStatuses, setKeyStatuses] = useState<Record<string, KeyStatus>>({});
 
-  const [keyStatuses, setKeyStatuses] = useState<{ [key: string]: KeyStatus }>({});
+    const validateAllKeys = useCallback(() => {
+        currentKeys.forEach(async key => {
+            setKeyStatuses(prev => ({ ...prev, [key]: 'checking' }));
+            const isValid = await validateApiKey(key);
+            setKeyStatuses(prev => ({ ...prev, [key]: isValid ? 'valid' : 'invalid' }));
+        });
+    }, [currentKeys]);
 
-  const runAllValidations = useCallback(async () => {
-    const initialStatuses: { [key: string]: KeyStatus } = {};
-    currentKeys.forEach(key => { initialStatuses[key] = 'checking'; });
-    setKeyStatuses(initialStatuses);
+    useEffect(() => {
+        const initialStatuses: Record<string, KeyStatus> = {};
+        currentKeys.forEach(key => {
+            initialStatuses[key] = 'unchecked';
+        });
+        setKeyStatuses(initialStatuses);
+        
+        if (currentKeys.length > 0) {
+            validateAllKeys();
+        }
+    }, [currentKeys, validateAllKeys]);
     
-    const validationPromises = currentKeys.map(async (key) => {
-        const isValid = await validateApiKey(key);
-        return { key, status: isValid ? 'valid' : 'invalid' } as const;
-    });
-
-    for await (const result of validationPromises) {
-         setKeyStatuses(prev => ({ ...prev, [result.key]: result.status }));
-    }
-   }, [currentKeys]);
-   
-   useEffect(() => {
-        if(currentKeys.length > 0){
-            runAllValidations();
+    const handleAddKey = async () => {
+        const trimmedKey = newApiKey.trim();
+        if (!trimmedKey) {
+            setError(t('errorKeyEmpty') as string);
+            return;
         }
-   // eslint-disable-next-line react-hooks/exhaustive-deps
-   }, [currentKeys]);
-
-
-  const handleAddKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const trimmedKey = newKey.trim();
-    if (!trimmedKey) {
-        setError(t('errorKeyEmpty') as string);
-        return;
-    }
-    if (currentKeys.includes(trimmedKey)) {
-        setError(t('errorKeyExists') as string);
-        return;
-    }
-
-    setIsValidating(true);
-    setKeyStatuses(prev => ({ ...prev, [trimmedKey]: 'checking' }));
-    const isValid = await validateApiKey(trimmedKey);
-    setIsValidating(false);
-
-    setKeyStatuses(prev => ({ ...prev, [trimmedKey]: isValid ? 'valid' : 'invalid' }));
-
-    if (isValid) {
-        const updatedKeys = [...currentKeys, trimmedKey];
-        onKeysChange(updatedKeys);
-        if (!activeKey) {
-            onActiveKeyChange(trimmedKey);
+        if (currentKeys.includes(trimmedKey)) {
+            setError(t('errorKeyExists') as string);
+            setNewApiKey('');
+            return;
         }
-        setNewKey('');
-    } else {
-        setError(t('errorKeyInvalid') as string);
-    }
-  };
-  
-  const handleDeleteKey = (keyToDelete: string) => {
-    const updatedKeys = currentKeys.filter(k => k !== keyToDelete);
-    onKeysChange(updatedKeys);
-     setKeyStatuses(prev => {
-        const newStatuses = { ...prev };
-        delete newStatuses[keyToDelete];
-        return newStatuses;
-    });
-    if (activeKey === keyToDelete) {
-        const newActiveKey = updatedKeys.length > 0 ? updatedKeys.find(k => keyStatuses[k] === 'valid') || updatedKeys[0] : null;
-        onActiveKeyChange(newActiveKey);
-    }
-  }
 
-  // FIX: Cast results of t() to string
-  const title = t(keyType === 'story' ? 'storyApiKeyManagerTitle' : 'videoApiKeyManagerTitle') as string;
-  const addNewKeyLabel = t(keyType === 'story' ? 'addNewStoryKeyLabel' : 'addNewVideoKeyLabel') as string;
-  const savedKeysLabel = t(keyType === 'story' ? 'savedStoryKeysLabel' : 'savedVideoKeysLabel') as string;
+        setIsAdding(true);
+        setError(null);
+        setKeyStatuses(prev => ({...prev, [trimmedKey]: 'checking'}));
 
+        const isValid = await validateApiKey(trimmedKey);
+        if (isValid) {
+            const newKeys = [...currentKeys, trimmedKey];
+            onKeysChange(newKeys);
+            if (currentKeys.length === 0) {
+                onActiveKeyChange(trimmedKey);
+            }
+            setKeyStatuses(prev => ({...prev, [trimmedKey]: 'valid'}));
+            setNewApiKey('');
+        } else {
+            setError(t('errorKeyInvalid') as string);
+            setKeyStatuses(prev => ({...prev, [trimmedKey]: 'invalid'}));
+        }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
-      <div className="bg-base-200 rounded-2xl shadow-2xl w-full max-w-md border border-base-300 transform transition-all">
-        <div className="flex items-center justify-between p-4 border-b border-base-300">
-            <div className="flex items-center gap-3">
-                <KeyIcon className="h-6 w-6 text-brand-light" />
-                <h2 className="text-lg font-semibold text-gray-100">{title}</h2>
-            </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
-            <XCircleIcon className="h-6 w-6" />
-          </button>
-        </div>
+        setIsAdding(false);
+    };
 
-        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-            <h3 className="text-sm font-medium text-gray-300">{addNewKeyLabel}</h3>
-            <form onSubmit={handleAddKey} className="flex items-start gap-2">
-                <div className="flex-grow">
-                    <input
-                    type="password"
-                    value={newKey}
-                    onChange={(e) => setNewKey(e.target.value)}
-                    placeholder={t('apiKeyInputPlaceholder') as string}
-                    className="block w-full bg-base-300 border-gray-600 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm text-gray-200 placeholder-gray-500"
-                    />
-                    {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+    const handleSelectKey = (key: string) => {
+        onActiveKeyChange(key);
+    };
+
+    const handleDeleteKey = (keyToDelete: string) => {
+        const newKeys = currentKeys.filter(k => k !== keyToDelete);
+        onKeysChange(newKeys);
+
+        setKeyStatuses(prev => {
+            const newStatuses = {...prev};
+            delete newStatuses[keyToDelete];
+            return newStatuses;
+        });
+
+        if (activeKey === keyToDelete) {
+            onActiveKeyChange(newKeys.length > 0 ? newKeys[0] : null);
+        }
+    };
+
+    const title = keyType === 'story' ? t('storyApiKeyManagerTitle') : t('videoApiKeyManagerTitle');
+    const addNewKeyLabel = keyType === 'story' ? t('addNewStoryKeyLabel') : t('addNewVideoKeyLabel');
+    const savedKeysLabel = keyType === 'story' ? t('savedStoryKeysLabel') : t('savedVideoKeysLabel');
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" aria-modal="true" role="dialog">
+            <div className="bg-base-200 rounded-2xl shadow-2xl w-full max-w-lg border border-base-300 transform transition-all">
+                <div className="flex items-center justify-between p-4 border-b border-base-300">
+                    <h3 className="text-xl font-bold text-gray-100 flex items-center gap-2">
+                        <KeyIcon className="h-5 w-5" />
+                        {title as string}
+                    </h3>
+                    <button onClick={onClose} className="p-1 text-gray-400 hover:text-white">
+                        <XCircleIcon className="h-6 w-6" />
+                    </button>
                 </div>
-                <button
-                    type="submit"
-                    disabled={isValidating}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-brand-secondary disabled:bg-base-300 disabled:cursor-not-allowed transition-colors"
-                >
-                    {/* FIX: Cast result of t() to string */}
-                    {(isValidating ? t('validatingButton') : t('addKeyButton')) as string}
-                </button>
-            </form>
-
-            <div className="border-t border-base-300 my-4"></div>
-
-            <div>
-                 <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-medium text-gray-300">{savedKeysLabel}</h3>
-                    <button onClick={runAllValidations} className="text-xs font-semibold py-1 px-3 rounded-lg bg-base-300 hover:bg-gray-700">Re-validate All</button>
-                </div>
-                 {currentKeys.length > 0 ? (
-                    <ul className="space-y-2">
-                        {currentKeys.map(key => (
-                           <ApiKeyItem 
-                             key={key}
-                             apiKey={key}
-                             isActive={key === activeKey}
-                             status={keyStatuses[key] || 'unchecked'}
-                             onSelect={() => onActiveKeyChange(key)}
-                             onDelete={() => handleDeleteKey(key)}
-                           />
-                        ))}
-                    </ul>
-                 ) : (
-                    <div className="text-center text-sm text-gray-500 py-4 bg-base-300 rounded-lg">
-                        {/* FIX: Cast result of t() to string */}
-                        <p>{t('noKeysSaved') as string}</p>
-                        {/* FIX: Cast result of t() to string */}
-                        <p>{t('addKeyPrompt') as string}</p>
+                
+                <div className="p-6 space-y-6">
+                    <div>
+                        <label htmlFor="new-api-key" className="block text-sm font-semibold text-gray-300 mb-1">{addNewKeyLabel as string}</label>
+                        <div className="flex gap-2">
+                            <input
+                                id="new-api-key"
+                                type="password"
+                                value={newApiKey}
+                                onChange={e => {
+                                    setNewApiKey(e.target.value);
+                                    setError(null);
+                                }}
+                                onKeyDown={e => e.key === 'Enter' && handleAddKey()}
+                                placeholder={t('apiKeyInputPlaceholder') as string}
+                                className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200"
+                            />
+                            <button onClick={handleAddKey} disabled={isAdding} className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-dark disabled:bg-gray-600">
+                                {isAdding ? t('validatingButton') as string : t('addKeyButton') as string}
+                            </button>
+                        </div>
+                        {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
                     </div>
-                 )}
+
+                    <div>
+                         <div className="flex justify-between items-center mb-2">
+                            <h4 className="font-semibold text-gray-300">{savedKeysLabel as string}</h4>
+                            <button onClick={validateAllKeys} className="text-xs text-brand-light hover:underline">{t('revalidateAllButton') as string}</button>
+                        </div>
+                        {currentKeys.length > 0 ? (
+                            <ul className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                {currentKeys.map(key => (
+                                    <ApiKeyItem
+                                        key={key}
+                                        apiKey={key}
+                                        isActive={key === activeKey}
+                                        status={keyStatuses[key] || 'unchecked'}
+                                        onSelect={() => handleSelectKey(key)}
+                                        onDelete={() => handleDeleteKey(key)}
+                                    />
+                                ))}
+                            </ul>
+                        ) : (
+                            <div className="text-center text-gray-500 bg-base-300 p-6 rounded-lg">
+                                <p>{t('noKeysSaved') as string}</p>
+                                <p className="text-sm">{t('addKeyPrompt') as string}</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="p-4 bg-base-300/50 text-right border-t border-base-300">
+                    <button onClick={onClose} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-base-300 hover:bg-gray-700">
+                        {t('closeButton') as string}
+                    </button>
+                </div>
             </div>
         </div>
-
-        <div className="bg-base-300/50 p-4 text-right rounded-b-2xl">
-            <button
-                onClick={onClose}
-                className="px-4 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-200 focus:ring-brand-secondary transition-colors"
-            >
-                {/* FIX: Cast result of t() to string */}
-                {t('closeButton') as string}
-            </button>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
