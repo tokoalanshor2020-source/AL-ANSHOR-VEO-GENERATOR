@@ -130,6 +130,11 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             onManageKeysClick();
             return;
         }
+        if (!props.activeVideoApiKey) {
+            alert(t('alertSetVideoThumbnailApiKey') as string);
+            // This won't be called if the button is disabled, but it's good practice.
+            return;
+        }
         setIsGeneratingKit(true);
         setError(null);
         try {
@@ -146,7 +151,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
             setIsGeneratingKit(false);
         }
 
-    }, [activeStoryApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit, setActiveTab, allStoryApiKeys, onStoryKeyUpdate]);
+    }, [activeStoryApiKey, props.activeVideoApiKey, storyboard, characters, logline, onManageKeysClick, t, setPublishingKit, setActiveTab, allStoryApiKeys, onStoryKeyUpdate]);
 
     return (
         <div className="flex flex-col md:flex-row gap-6 md:items-start">
@@ -158,9 +163,9 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
                 storyboard={storyboard}
                 onGeneratePublishingKit={handleGeneratePublishingKit}
                 isGeneratingKit={isGeneratingKit}
-                // FIX: Pass missing allStoryApiKeys and onStoryKeyUpdate props
                 allStoryApiKeys={allStoryApiKeys}
                 onStoryKeyUpdate={onStoryKeyUpdate}
+                activeVideoApiKey={props.activeVideoApiKey}
             />
             <MainContent
                 {...props}

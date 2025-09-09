@@ -176,6 +176,7 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
                 Tugas Anda:
                 Buatlah storyboard dalam format JSON yang valid. JSON harus berisi sebuah objek dengan satu kunci "storyboard", yang nilainya adalah sebuah array dari objek-objek adegan.
                 Setiap objek adegan harus secara ketat mengikuti skema yang ditentukan.
+                PENTING: Untuk setiap adegan, 'narration_script' harus sangat singkat, idealnya tidak lebih dari 15-20 kata, agar cocok untuk klip video berdurasi sekitar 8 detik.
                 Pastikan untuk memasukkan tindakan karakter (character_actions) yang spesifik untuk setiap karakter yang disebutkan, lengkap dengan 'consistency_key' mereka.
                 Kembangkan sinopsis menjadi ${sceneCount} adegan yang mengalir secara logis.
                 Pastikan semua field dalam skema JSON terisi dengan konten yang relevan dan kreatif.
@@ -305,9 +306,9 @@ export const generateCinematicPrompt = async (failoverParams: FailoverParams, sc
 
                 1.  **Visual Description Paragraph:** Synthesize ALL the information above (except the narration script itself) into a single, comprehensive, and vivid paragraph. This paragraph is the main visual prompt. Describe the setting, atmosphere, and character actions in extreme detail. Incorporate all cinematography and directing style notes. Use the Character DNA to ensure the character is described accurately, including their \`consistency_key\`. Be evocative and use powerful, descriptive language.
 
-                2.  **Narration Script Section:** After the visual description paragraph, add two newlines, then add the line "NARRATION SCRIPT", followed by another newline, and then the exact, verbatim narration script from the input.
+                2.  **Narration Script Section:** After the visual description paragraph, add two newlines, then add the line "NARRATION SCRIPT", followed by another newline, and then the narration script. CRUCIAL: The narration script must be edited to be very concise, suitable for an 8-second video clip (around 15-20 words). If the original script is too long, you MUST shorten it while preserving the core meaning.
 
-                If the narration script is empty, you MUST omit the "NARRATION SCRIPT" section entirely.
+                If the original narration script is empty, you MUST omit the "NARRATION SCRIPT" section entirely.
             `;
 
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({

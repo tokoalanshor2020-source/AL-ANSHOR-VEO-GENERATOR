@@ -243,10 +243,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -542,10 +543,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Kit Siaran Ajaib",
+        title: "Mesin Penghasil Metadata",
         description: "Cerita sudah siap! Sekarang, buat semua aset untuk diunggah ke YouTube dengan satu klik.",
         generateButton: "Buatkan Semuanya!",
         generatingButton: "Membuat...",
+        apiKeyInstruction: "Harap isi Kunci API Video & Thumbnail terlebih dahulu untuk melanjutkan."
       },
     },
     characterWorkshop: {
@@ -842,10 +844,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Kit de Transmisión Mágica",
+        title: "Generador de Metadatos",
         description: "¡La historia está lista! Ahora, crea todos los recursos para subir a YouTube con un solo clic.",
         generateButton: "¡Crear Todo!",
         generatingButton: "Creando...",
+        apiKeyInstruction: "Por favor, añade una Clave API de Video y Miniatura para continuar."
       },
     },
     characterWorkshop: {
@@ -1141,10 +1144,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "魔法广播套件",
+        title: "元数据生成器",
         description: "故事准备好了！现在，一键创建所有上传到YouTube的资源。",
         generateButton: "全部创建！",
         generatingButton: "创建中...",
+        apiKeyInstruction: "请添加视频和缩略图API密钥以继续。"
       },
     },
     characterWorkshop: {
@@ -1441,10 +1445,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -1740,10 +1745,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -2039,10 +2045,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -2338,10 +2345,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -2637,10 +2645,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -2936,10 +2945,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -3235,10 +3245,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {
@@ -3534,10 +3545,11 @@ const translations: { [key in Language]: Translations } = {
         }
       },
        publishingKitSection: {
-        title: "Magic Broadcast Kit",
+        title: "Metadata Generator",
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
+        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
       },
     },
     characterWorkshop: {

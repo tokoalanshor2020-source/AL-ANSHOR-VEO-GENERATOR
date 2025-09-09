@@ -14,6 +14,7 @@ interface SidebarProps {
     storyboard: StoryboardScene[];
     onGeneratePublishingKit: () => void;
     isGeneratingKit: boolean;
+    activeVideoApiKey: string | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = (props) => {
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
                 onGenerate={props.onGeneratePublishingKit}
                 isGenerating={props.isGeneratingKit}
                 activeApiKey={props.activeApiKey}
+                activeVideoApiKey={props.activeVideoApiKey}
             />
         </aside>
     );
