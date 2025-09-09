@@ -348,10 +348,12 @@ const publishingKitSchema = {
                     concept_description_id: { type: Type.STRING },
                     concept_description_en: { type: Type.STRING },
                     image_prompt: { type: Type.STRING },
+                    advanced_prompt_json_id: { type: Type.STRING },
+                    advanced_prompt_json_en: { type: Type.STRING },
                     concept_caption_id: { type: Type.STRING },
                     concept_caption_en: { type: Type.STRING },
                 },
-                required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "concept_caption_id", "concept_caption_en"]
+                required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "advanced_prompt_json_id", "advanced_prompt_json_en", "concept_caption_id", "concept_caption_en"]
             }
         }
     },
@@ -400,15 +402,24 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
                     *   **Length:** The total character count of all tags combined MUST NOT exceed 500 characters.
 
                 4.  **Thumbnail Concept (thumbnail_concepts - generate ONLY ONE):**
-                    *   **Visual Storytelling:** The concept must depict the most dramatic, action-packed, or intriguing moment of the story.
-                    *   **Detailed Image Prompt (image_prompt):**
-                        *   Write a "masterpiece" level prompt for an AI image generator like Imagen 4.0.
-                        *   It must be extremely detailed, covering subject, environment, lighting, composition, and mood to create a photorealistic, cinematic thumbnail.
-                        *   **Include the designed caption text within this prompt**, formatted like this for the artist's reference: // OVERLAY TEXT: "CAPTION LINE 1" \\n "CAPTION LINE 2" //
-                    *   **Engaging Caption (concept_caption_id, concept_caption_en):**
-                        *   Design a compelling, multi-line caption to be overlaid on the thumbnail.
-                        *   Use 2-3 short, powerful lines separated by a newline character (\\n).
-                        *   The text should be bold, exciting, and create a strong sense of urgency or curiosity. AVOID simple, boring text. Example: "EPIC JUMP!\\nWILL HE MAKE IT?!".
+                    *   **Simple Image Prompt (image_prompt):** Write a "masterpiece" level prompt for an AI image generator (like Imagen 4.0) that is extremely detailed, covering subject, environment, lighting, and composition to create a photorealistic, cinematic thumbnail. This prompt must be in English.
+                    *   **Simple Caption (concept_caption_id, concept_caption_en):** Design an extremely high-energy, viral, clickbait-style multi-line caption. MUST use ALL CAPS. Use 2-3 short, powerful lines separated by a newline (\\n). Example (ID): "MOBIL INI NEKAT!\\nTERJEBAK DI RERUNTUHAN KUNO!". Example (EN): "IMPOSSIBLE JUMP!\\nTRAPPED IN ANCIENT RUINS!".
+                    *   **Advanced JSON Prompt (advanced_prompt_json_id, advanced_prompt_json_en):**
+                        *   Generate a STRING containing a valid JSON object that serves as a complete blueprint for a graphic designer.
+                        *   **IMPORTANT RULE:** For BOTH the Indonesian (id) and English (en) versions, the values for \`visual_prompt\` and \`composition_strategy\` MUST be written **in English**.
+                        *   The text for the overlay captions (\`overlay_elements[].text\`) and the top-level comment (\`comment\`) MUST be localized for each respective language (Bahasa Indonesia for _id, English for _en).
+                        *   Follow this exact JSON structure:
+                            \`\`\`json
+                            {
+                              "comment": "[Localized comment about the blueprint]",
+                              "visual_prompt": "[Detailed visual prompt in ENGLISH]",
+                              "composition_strategy": "[Composition strategy in ENGLISH]",
+                              "overlay_elements": [
+                                { "text": "[LOCALIZED CAPTION LINE 1]", "font": "Impact", "color": "Bright Yellow (#FFFF00)", "size_ratio": 0.2, "position_hint": "Top-left, large.", "style_notes": "Heavy black stroke." },
+                                { "text": "[LOCALIZED CAPTION LINE 2]", "font": "Impact", "color": "White (#FFFFFF)", "size_ratio": 0.15, "position_hint": "Below the first line.", "style_notes": "Heavy black stroke." }
+                              ]
+                            }
+                            \`\`\`
                 
                 - Create affiliate link templates. Use "[LINK]" as a placeholder.
             `;
@@ -679,9 +690,10 @@ const regeneratedLocalizedAssetsSchema = {
                 concept_title: { type: Type.STRING },
                 concept_description: { type: Type.STRING },
                 image_prompt: { type: Type.STRING },
+                advanced_prompt_json: { type: Type.STRING },
                 concept_caption: { type: Type.STRING },
             },
-            required: ["concept_title", "concept_description", "image_prompt", "concept_caption"]
+            required: ["concept_title", "concept_description", "image_prompt", "advanced_prompt_json", "concept_caption"]
         }
     },
     required: ["title", "description", "tags", "thumbnail_concept"]
@@ -712,8 +724,9 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
                 4.  **thumbnail_concept**: A regenerated thumbnail concept containing:
                     - **concept_title**: A new, engaging title for the thumbnail idea, written in ${language}.
                     - **concept_description**: A new, brief description of the thumbnail scene, written in ${language}.
-                    - **concept_caption**: A new, compelling, multi-line thumbnail caption in ${language}. Use '\\n' for line breaks. Example for Spanish: "¡SALTO ÉPICO!\\n¿LO LOGRARÁ?".
-                    - **image_prompt**: A masterpiece-level image prompt written **in English**. This prompt should be a revised, potentially improved version of the original reference prompt. CRUCIALLY, it MUST incorporate the new \`concept_caption\` (in its original ${language}) inside a comment for the artist, formatted exactly like this: // OVERLAY TEXT: "CAPTION LINE 1" \\n "CAPTION LINE 2" //.
+                    - **image_prompt**: A masterpiece-level image prompt written **in English**. This prompt should be a revised, potentially improved version of the original reference prompt.
+                    - **concept_caption**: A new, high-energy, viral, clickbait-style multi-line thumbnail caption in ${language}. **MUST use ALL CAPS.** Use '\\n' for line breaks. Example (ID): "NEKAT MASUK SINI!\\nAPA YANG TERJADI?!". Example (ES): "¡SALTO ÉPICO!\\n¿LO LOGRARÁ?".
+                    - **advanced_prompt_json**: A new STRING containing a valid JSON object. This JSON is a design blueprint. CRITICAL INSTRUCTION: The values for \`visual_prompt\` and \`composition_strategy\` inside this JSON string MUST be written **in English**. The values for \`comment\` and the \`text\` within the \`overlay_elements\` array MUST be localized into ${language}. The overall structure must be preserved.
             `;
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',

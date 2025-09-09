@@ -26,6 +26,7 @@ interface ThumbnailConceptAsset {
     concept_title: string;
     concept_description: string;
     image_prompt: string;
+    advanced_prompt_json: string;
     concept_caption: string;
 }
 
@@ -65,6 +66,8 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     const [isGeneratingThumb, setIsGeneratingThumb] = useState<boolean>(false);
     const [thumbImageUrl, setThumbImageUrl] = useState<string | null>(null);
     const [aspectRatio, setAspectRatio] = useState<string>('16:9');
+    const [parsedJson, setParsedJson] = useState('');
+    const [promptSource, setPromptSource] = useState<'simple' | 'advanced'>('simple');
 
     const failoverParams: FailoverParams = { allKeys, activeKey, onKeyUpdate };
 
@@ -79,6 +82,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                     concept_title: concept.concept_title_id,
                     concept_description: concept.concept_description_id,
                     image_prompt: concept.image_prompt,
+                    advanced_prompt_json: concept.advanced_prompt_json_id,
                     concept_caption: concept.concept_caption_id,
                 }
             },
@@ -90,6 +94,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                     concept_title: concept.concept_title_en,
                     concept_description: concept.concept_description_en,
                     image_prompt: concept.image_prompt,
+                    advanced_prompt_json: concept.advanced_prompt_json_en,
                     concept_caption: concept.concept_caption_en,
                 }
             }
@@ -141,6 +146,20 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
         }
     }, [debouncedLang, assets, generateLocalizedAssets, language]);
 
+    const currentAsset = assets[selectedLang];
+    const currentConcept = currentAsset?.thumbnail_concept;
+
+    useEffect(() => {
+        if (currentConcept?.advanced_prompt_json) {
+            try {
+                const parsed = JSON.parse(currentConcept.advanced_prompt_json);
+                setParsedJson(JSON.stringify(parsed, null, 2));
+            } catch (e) {
+                setParsedJson("Error: Could not parse JSON from AI.\n\n" + currentConcept.advanced_prompt_json);
+            }
+        }
+    }, [currentConcept?.advanced_prompt_json]);
+
 
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newLang = e.target.value as Language;
@@ -174,7 +193,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
         }
     };
     
-     const handleGenerateThumbnail = async (prompt: string) => {
+     const handleGenerateThumbnail = async () => {
         if (!activeKey) {
             alert(t('alertSetVideoThumbnailApiKey'));
             return;
@@ -190,8 +209,40 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
         setIsGeneratingThumb(true);
         setError(null);
         
+        let promptToUse = '';
+        const currentConcept = assets[selectedLang]?.thumbnail_concept;
+
+        if (!currentConcept) {
+            setError("Thumbnail concept not found.");
+            setIsGeneratingThumb(false);
+            return;
+        }
+
+        if (promptSource === 'simple') {
+            promptToUse = currentConcept.image_prompt;
+        } else {
+            try {
+                const parsed = JSON.parse(currentConcept.advanced_prompt_json);
+                promptToUse = parsed.visual_prompt;
+                if (!promptToUse || typeof promptToUse !== 'string') {
+                    throw new Error("'visual_prompt' field is missing or not a string in the Advanced JSON.");
+                }
+            } catch (e) {
+                console.error("JSON Parsing Error:", e);
+                setError(e instanceof Error ? e.message : "Failed to parse Advanced JSON prompt.");
+                setIsGeneratingThumb(false);
+                return;
+            }
+        }
+
+        if (!promptToUse.trim()) {
+            setError("Selected prompt source is empty.");
+            setIsGeneratingThumb(false);
+            return;
+        }
+        
         try {
-            const imageData = await generateThumbnail(failoverParams, prompt, aspectRatio);
+            const imageData = await generateThumbnail(failoverParams, promptToUse, aspectRatio);
             const finalImage = await createImageWithOverlay(imageData, caption);
             setThumbImageUrl(finalImage);
         } catch (e) {
@@ -203,9 +254,6 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
         }
     };
 
-    const currentAsset = assets[selectedLang];
-    const currentConcept = currentAsset?.thumbnail_concept;
-    
     return (
         <div className="p-6 space-y-8">
             <div className="bg-base-300/50 p-4 rounded-lg border border-base-300">
@@ -284,20 +332,57 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                             </div>
                             
                             <div className="mt-3 flex-grow flex flex-col">
-                                <pre className="flex-grow p-2 text-xs bg-base-300 rounded whitespace-pre-wrap font-mono overflow-auto">{currentConcept.image_prompt}</pre>
+                                <h5 className="font-bold text-gray-300 text-sm mb-1">Simple Image Prompt</h5>
+                                <pre className="p-2 text-xs bg-base-300 rounded whitespace-pre-wrap font-mono overflow-auto">{currentConcept.image_prompt}</pre>
                                 <div className="mt-2">
                                     <CopyButton textToCopy={currentConcept.image_prompt} />
                                 </div>
                             </div>
                             
-                            <div className="mt-auto pt-3 space-y-2">
-                                <div className="flex justify-between items-center mb-2">
+                             <div className="mt-4 flex-grow flex flex-col">
+                                <h5 className="font-bold text-gray-300 text-sm mb-1">Advanced JSON Prompt</h5>
+                                <pre className="p-2 text-xs bg-base-300 rounded whitespace-pre-wrap font-mono overflow-auto max-h-48">{parsedJson}</pre>
+                                <div className="mt-2">
+                                    <CopyButton textToCopy={currentConcept.advanced_prompt_json} />
+                                </div>
+                            </div>
+
+                            <div className="mt-auto pt-3 space-y-3">
+                                <div>
+                                    <h5 className="text-xs font-semibold text-gray-400 mb-2">Prompt Source</h5>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center text-sm text-gray-200 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="promptSource"
+                                                value="simple"
+                                                checked={promptSource === 'simple'}
+                                                onChange={() => setPromptSource('simple')}
+                                                className="h-4 w-4 text-brand-primary bg-base-100 border-gray-500 focus:ring-brand-secondary"
+                                            />
+                                            <span className="ml-2">Simple Prompt</span>
+                                        </label>
+                                        <label className="flex items-center text-sm text-gray-200 cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="promptSource"
+                                                value="advanced"
+                                                checked={promptSource === 'advanced'}
+                                                onChange={() => setPromptSource('advanced')}
+                                                className="h-4 w-4 text-brand-primary bg-base-100 border-gray-500 focus:ring-brand-secondary"
+                                            />
+                                            <span className="ml-2">Advanced JSON Prompt</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center">
                                     <AspectRatioSelector 
                                         selected={aspectRatio}
                                         onChange={setAspectRatio}
                                     />
                                 </div>
-                                <button disabled={isGeneratingThumb || isGenerating} onClick={() => handleGenerateThumbnail(currentConcept.image_prompt)} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
+                                <button disabled={isGeneratingThumb || isGenerating} onClick={handleGenerateThumbnail} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
                                     {isGeneratingThumb ? "Generating..." : "Generate Thumbnail"}
                                 </button>
                                 {thumbImageUrl && <a href={thumbImageUrl} download={`thumbnail.png`} className="block text-center w-full bg-brand-primary hover:bg-brand-dark text-white font-semibold py-2 rounded-lg flex-shrink-0">Download</a>}

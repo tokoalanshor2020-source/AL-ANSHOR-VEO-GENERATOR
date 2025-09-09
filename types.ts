@@ -106,6 +106,8 @@ export interface PublishingKitData {
     concept_description_id: string;
     concept_description_en: string;
     image_prompt: string;
+    advanced_prompt_json_id: string;
+    advanced_prompt_json_en: string;
     concept_caption_id: string;
     concept_caption_en: string;
   }[];
