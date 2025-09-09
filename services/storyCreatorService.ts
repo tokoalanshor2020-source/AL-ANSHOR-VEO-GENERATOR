@@ -348,18 +348,10 @@ const publishingKitSchema = {
                     concept_description_id: { type: Type.STRING },
                     concept_description_en: { type: Type.STRING },
                     image_prompt: { type: Type.STRING },
-                    cta_overlay_text_id: {
-                        type: Type.OBJECT,
-                        properties: { hook: { type: Type.STRING }, character: { type: Type.STRING }, goal: { type: Type.STRING } },
-                        required: ["hook", "character", "goal"]
-                    },
-                    cta_overlay_text_en: {
-                        type: Type.OBJECT,
-                        properties: { hook: { type: Type.STRING }, character: { type: Type.STRING }, goal: { type: Type.STRING } },
-                        required: ["hook", "character", "goal"]
-                    },
+                    concept_caption_id: { type: Type.STRING },
+                    concept_caption_en: { type: Type.STRING },
                 },
-                required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "cta_overlay_text_id", "cta_overlay_text_en"]
+                required: ["concept_title_id", "concept_title_en", "concept_description_id", "concept_description_en", "image_prompt", "concept_caption_id", "concept_caption_en"]
             }
         }
     },
@@ -374,22 +366,51 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
             const { storyboard, characters, logline } = options;
 
             const prompt = `
-                You are a YouTube content strategist for a toy channel. Based on the provided story summary, generate a complete publishing kit.
-                
-                Story Logline: ${logline}
-                Story Summary: ${storyboard.map(s => s.scene_summary).join(' ')}
-                Characters: ${characters.map(c => c.name).join(', ')}
+                You are a world-class YouTube content strategist and SEO expert, specializing in the toy niche for channels similar to "Hot Wheels" or "Blippi Toys". Your analysis must be on par with premium tools like VidIQ and TubeBuddy.
 
-                Task:
-                Generate a JSON object that strictly adheres to the provided schema.
-                - Create catchy, SEO-friendly titles in both Bahasa Indonesia (id) and English (en).
-                - Write detailed descriptions in both languages, including a story summary and call-to-actions.
-                - Generate relevant tags/keywords in both languages.
+                **Input Data:**
+                - Story Logline: ${logline}
+                - Story Summary: ${storyboard.map(s => s.scene_summary).join(' ')}
+                - Main Characters: ${characters.map(c => c.name).join(', ')}
+
+                **Your Task:**
+                Generate a complete, professional publishing kit as a single JSON object that strictly adheres to the provided schema. The output must be optimized for maximum reach, engagement, and search ranking on YouTube. Generate content for both Bahasa Indonesia (id) and English (en).
+
+                **CRITICAL REQUIREMENTS:**
+
+                1.  **YouTube Titles (youtube_title_id, youtube_title_en):**
+                    *   **Hook First:** Start with a powerful, attention-grabbing hook.
+                    *   **High-Value Keywords:** Seamlessly integrate high search volume keywords relevant to the story (e.g., "toy car race", "monster truck rescue", "epic crash").
+                    *   **Clarity & Intrigue:** Clearly state the video's content while creating curiosity.
+                    *   **Length:** MUST NOT exceed 100 characters.
+
+                2.  **YouTube Descriptions (youtube_description_id, youtube_description_en):**
+                    *   **Compelling Summary:** Write an engaging summary of the story that expands on the title.
+                    *   **SEO Integration:** Naturally weave in primary and secondary keywords throughout the text.
+                    *   **Structure:** Structure the description for readability (short paragraphs).
+                    *   **Hashtags:** Conclude with 3-5 highly relevant, broad hashtags (e.g., #hotwheels #toycars #diecast).
+                    *   **Length:** MUST NOT exceed 5000 characters.
+
+                3.  **YouTube Tags (youtube_tags_id, youtube_tags_en):**
+                    *   **VidIQ/TubeBuddy Strategy:** Generate a list of tags that would achieve a high score in these tools. Use a mix of:
+                        *   Specific, long-tail keywords (e.g., "red race car vs blue monster truck").
+                        *   Broader, high-volume keywords (e.g., "toy cars", "diecast racing").
+                        *   Character names and branding keywords.
+                    *   **Algorithm-Friendly:** The tags must be highly relevant to the title, description, and video content.
+                    *   **Length:** The total character count of all tags combined MUST NOT exceed 500 characters.
+
+                4.  **Thumbnail Concept (thumbnail_concepts - generate ONLY ONE):**
+                    *   **Visual Storytelling:** The concept must depict the most dramatic, action-packed, or intriguing moment of the story.
+                    *   **Detailed Image Prompt (image_prompt):**
+                        *   Write a "masterpiece" level prompt for an AI image generator like Imagen 4.0.
+                        *   It must be extremely detailed, covering subject, environment, lighting, composition, and mood to create a photorealistic, cinematic thumbnail.
+                        *   **Include the designed caption text within this prompt**, formatted like this for the artist's reference: // OVERLAY TEXT: "CAPTION LINE 1" \\n "CAPTION LINE 2" //
+                    *   **Engaging Caption (concept_caption_id, concept_caption_en):**
+                        *   Design a compelling, multi-line caption to be overlaid on the thumbnail.
+                        *   Use 2-3 short, powerful lines separated by a newline character (\\n).
+                        *   The text should be bold, exciting, and create a strong sense of urgency or curiosity. AVOID simple, boring text. Example: "EPIC JUMP!\\nWILL HE MAKE IT?!".
+                
                 - Create affiliate link templates. Use "[LINK]" as a placeholder.
-                - Generate ONLY ONE creative thumbnail concept. For this concept:
-                    - Provide titles and descriptions in both languages.
-                    - Write a highly detailed AI image generator prompt for the thumbnail.
-                    - Provide short, punchy Call-To-Action (CTA) overlay text (hook, character, goal) in both languages.
             `;
             
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
@@ -646,57 +667,63 @@ export const generateStoryIdeas = async (failoverParams: FailoverParams, options
     });
 };
 
-const localizedAssetsSchema = {
+const regeneratedLocalizedAssetsSchema = {
     type: Type.OBJECT,
     properties: {
         title: { type: Type.STRING },
         description: { type: Type.STRING },
         tags: { type: Type.ARRAY, items: { type: Type.STRING } },
-        ctaTexts: {
-            type: Type.ARRAY,
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    hook: { type: Type.STRING },
-                    character: { type: Type.STRING },
-                    goal: { type: Type.STRING },
-                },
-                required: ["hook", "character", "goal"]
-            }
+        thumbnail_concept: {
+            type: Type.OBJECT,
+            properties: {
+                concept_title: { type: Type.STRING },
+                concept_description: { type: Type.STRING },
+                image_prompt: { type: Type.STRING },
+                concept_caption: { type: Type.STRING },
+            },
+            required: ["concept_title", "concept_description", "image_prompt", "concept_caption"]
         }
     },
-    required: ["title", "description", "tags", "ctaTexts"]
+    required: ["title", "description", "tags", "thumbnail_concept"]
 };
 
-// This is the LocalizedAsset type from PublishingKitView.tsx
-export const generateLocalizedPublishingAssets = async (failoverParams: FailoverParams, options: PublishingKitOptions, language: string): Promise<any> => {
+export const generateLocalizedPublishingAssets = async (failoverParams: FailoverParams, options: PublishingKitOptions & { originalImagePrompt: string }, language: string): Promise<any> => {
      return executeWithFailover({
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = getAiInstance(apiKey);
-            const { storyboard, characters, logline } = options;
+            const { storyboard, characters, logline, originalImagePrompt } = options;
             const prompt = `
-                You are a multilingual YouTube content strategist. Your task is to localize a publishing kit for a toy video into the target language: ${language}.
+                You are a world-class YouTube content strategist and SEO expert (equivalent to VidIQ/TubeBuddy Pro), specializing in creating viral content for toy channels.
+                Your task is to regenerate a complete, high-quality publishing kit NATIVELY for the target language: ${language}. This is not a translation; it is a full recreation optimized for the target audience.
 
-                Original Story Logline: ${logline}
-                Story Summary: ${storyboard.map(s => s.scene_summary).join(' ')}
-                Characters: ${characters.map(c => c.name).join(', ')}
+                **Input Data:**
+                - Story Logline: ${logline}
+                - Story Summary: ${storyboard.map(s => s.scene_summary).join(' ')}
+                - Main Characters: ${characters.map(c => c.name).join(', ')}
+                - Original English Image Prompt for creative reference: ${originalImagePrompt}
 
-                Task: Generate a JSON object with localized assets for ${language}.
-                - **title**: A catchy, SEO-friendly title in ${language}.
-                - **description**: A detailed description in ${language}.
-                - **tags**: An array of relevant tags/keywords in ${language}.
-                - **ctaTexts**: An array of objects for thumbnail text overlays, localized into ${language}. Each object must have "hook", "character", and "goal" keys. Provide text for ONE thumbnail concept.
+                **Your Task:**
+                Generate a single JSON object with regenerated assets for the "${language}" language, strictly following these rules:
+
+                1.  **title**: A catchy, SEO-friendly title in ${language}. It must be under 100 characters and start with a strong hook relevant to ${language}-speaking audiences.
+                2.  **description**: A detailed, engaging video description in ${language}. It must include relevant keywords for that language's search trends and end with 3-5 appropriate hashtags.
+                3.  **tags**: An array of high-value YouTube tags in ${language}. Create a mix of specific long-tail and broad high-volume tags, not exceeding a total of 500 characters.
+                4.  **thumbnail_concept**: A regenerated thumbnail concept containing:
+                    - **concept_title**: A new, engaging title for the thumbnail idea, written in ${language}.
+                    - **concept_description**: A new, brief description of the thumbnail scene, written in ${language}.
+                    - **concept_caption**: A new, compelling, multi-line thumbnail caption in ${language}. Use '\\n' for line breaks. Example for Spanish: "¡SALTO ÉPICO!\\n¿LO LOGRARÁ?".
+                    - **image_prompt**: A masterpiece-level image prompt written **in English**. This prompt should be a revised, potentially improved version of the original reference prompt. CRUCIALLY, it MUST incorporate the new \`concept_caption\` (in its original ${language}) inside a comment for the artist, formatted exactly like this: // OVERLAY TEXT: "CAPTION LINE 1" \\n "CAPTION LINE 2" //.
             `;
             const response = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
                     responseMimeType: "application/json",
-                    responseSchema: localizedAssetsSchema
+                    responseSchema: regeneratedLocalizedAssetsSchema
                 }
             }));
-            // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
+
             return safeJsonParse((response as GenerateContentResponse).text);
         }
     });
@@ -729,7 +756,7 @@ export const generateThumbnail = async (failoverParams: FailoverParams, prompt: 
     });
 };
 
-export const createImageWithOverlay = async (imageData: ThumbnailData, ctaText: { hook: string; character: string; goal: string }): Promise<string> => {
+export const createImageWithOverlay = async (imageData: ThumbnailData, caption: string): Promise<string> => {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -745,11 +772,15 @@ export const createImageWithOverlay = async (imageData: ThumbnailData, ctaText: 
 
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             
+            const lines = caption.split('\n').map(line => line.trim()).filter(Boolean);
+            if (lines.length === 0) {
+                resolve(canvas.toDataURL('image/png'));
+                return;
+            }
+            
             ctx.fillStyle = 'white';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'bottom';
             const FONT_FAMILY = 'Impact, sans-serif';
-            
             ctx.strokeStyle = 'black';
             ctx.lineWidth = canvas.width * 0.01;
 
@@ -757,17 +788,35 @@ export const createImageWithOverlay = async (imageData: ThumbnailData, ctaText: 
                 ctx.font = `bold ${fontSize}px ${FONT_FAMILY}`;
                 ctx.strokeText(text.toUpperCase(), canvas.width / 2, yPos);
                 ctx.fillText(text.toUpperCase(), canvas.width / 2, yPos);
-            }
-            
-            const HOOK_FONT_SIZE = canvas.height * 0.15;
-            const CHAR_FONT_SIZE = canvas.height * 0.20;
-            const GOAL_FONT_SIZE = canvas.height * 0.12;
+            };
             
             const PADDING = canvas.height * 0.08;
 
-            drawText(ctaText.hook, PADDING + HOOK_FONT_SIZE, HOOK_FONT_SIZE);
-            drawText(ctaText.character, canvas.height / 2 + CHAR_FONT_SIZE / 2, CHAR_FONT_SIZE);
-            drawText(ctaText.goal, canvas.height - PADDING, GOAL_FONT_SIZE);
+            if (lines.length === 1) {
+                ctx.textBaseline = 'middle';
+                const fontSize = canvas.height * 0.20;
+                drawText(lines[0], canvas.height / 2, fontSize);
+            } else if (lines.length === 2) {
+                ctx.textBaseline = 'bottom';
+                const topFontSize = canvas.height * 0.18;
+                drawText(lines[0], PADDING + topFontSize, topFontSize);
+                
+                const bottomFontSize = canvas.height * 0.15;
+                drawText(lines[1], canvas.height - PADDING, bottomFontSize);
+            } else { // 3 or more lines
+                ctx.textBaseline = 'bottom';
+                const topFontSize = canvas.height * 0.15;
+                drawText(lines[0], PADDING + topFontSize, topFontSize);
+                
+                ctx.textBaseline = 'middle';
+                const middleFontSize = canvas.height * 0.20;
+                // Minor offset for better visual centering
+                drawText(lines[1], canvas.height / 2 + middleFontSize / 10, middleFontSize);
+
+                ctx.textBaseline = 'bottom';
+                const bottomFontSize = canvas.height * 0.12;
+                drawText(lines[2], canvas.height - PADDING, bottomFontSize);
+            }
 
             resolve(canvas.toDataURL('image/png'));
         };

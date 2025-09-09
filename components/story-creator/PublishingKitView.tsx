@@ -22,15 +22,18 @@ const CopyButton: React.FC<{ textToCopy: string | string[] }> = ({ textToCopy })
     return <button onClick={handleCopy} className="text-xs font-semibold py-1 px-3 rounded-lg bg-base-300 hover:bg-gray-700">{copied ? 'Copied!' : 'Copy'}</button>;
 };
 
+interface ThumbnailConceptAsset {
+    concept_title: string;
+    concept_description: string;
+    image_prompt: string;
+    concept_caption: string;
+}
+
 interface LocalizedAsset {
     title: string;
     description: string;
     tags: string[];
-    ctaTexts: {
-      hook: string;
-      character: string;
-      goal: string;
-    }[];
+    thumbnail_concept: ThumbnailConceptAsset;
 }
 
 const AspectRatioSelector: React.FC<{ selected: string; onChange: (value: string) => void }> = ({ selected, onChange }) => {
@@ -66,18 +69,29 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     const failoverParams: FailoverParams = { allKeys, activeKey, onKeyUpdate };
 
     useEffect(() => {
+        const concept = kitData.thumbnail_concepts[0];
         const initialAssets: { [key: string]: LocalizedAsset } = {
             id: {
                 title: kitData.youtube_title_id,
                 description: kitData.youtube_description_id,
                 tags: kitData.youtube_tags_id,
-                ctaTexts: kitData.thumbnail_concepts.map(c => c.cta_overlay_text_id),
+                thumbnail_concept: {
+                    concept_title: concept.concept_title_id,
+                    concept_description: concept.concept_description_id,
+                    image_prompt: concept.image_prompt,
+                    concept_caption: concept.concept_caption_id,
+                }
             },
             en: {
                 title: kitData.youtube_title_en,
                 description: kitData.youtube_description_en,
                 tags: kitData.youtube_tags_en,
-                ctaTexts: kitData.thumbnail_concepts.map(c => c.cta_overlay_text_en),
+                thumbnail_concept: {
+                    concept_title: concept.concept_title_en,
+                    concept_description: concept.concept_description_en,
+                    image_prompt: concept.image_prompt,
+                    concept_caption: concept.concept_caption_en,
+                }
             }
         };
         setAssets(initialAssets);
@@ -107,7 +121,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
             try {
                 const result = await generateLocalizedPublishingAssets(
                     failoverParams,
-                    { storyboard, characters, logline },
+                    { storyboard, characters, logline, originalImagePrompt: kitData.thumbnail_concepts[0].image_prompt },
                     languageMap[langToGen]
                 );
                 setAssets(prev => ({ ...prev, [langToGen]: result }));
@@ -119,7 +133,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                 setIsGenerating(false);
             }
         }
-    }, [activeKey, assets, characters, logline, storyboard, t, failoverParams]);
+    }, [activeKey, assets, characters, logline, storyboard, t, failoverParams, kitData.thumbnail_concepts]);
 
     useEffect(() => {
         if (debouncedLang !== language || !assets[debouncedLang]) {
@@ -166,9 +180,9 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
             return;
         }
         
-        const ctaTextParts = assets[selectedLang]?.ctaTexts[0];
-        if (!ctaTextParts) {
-            console.error("CTA text parts not found for the selected language.");
+        const caption = assets[selectedLang]?.thumbnail_concept?.concept_caption;
+        if (!caption) {
+            console.error("Caption text not found for the selected language.");
             setError("Could not find text for thumbnail overlay.");
             return;
         }
@@ -178,7 +192,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
         
         try {
             const imageData = await generateThumbnail(failoverParams, prompt, aspectRatio);
-            const finalImage = await createImageWithOverlay(imageData, ctaTextParts);
+            const finalImage = await createImageWithOverlay(imageData, caption);
             setThumbImageUrl(finalImage);
         } catch (e) {
             const errorMessage = e instanceof Error ? e.message : 'Unknown error';
@@ -190,7 +204,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
     };
 
     const currentAsset = assets[selectedLang];
-    const concept = kitData.thumbnail_concepts && kitData.thumbnail_concepts[0];
+    const currentConcept = currentAsset?.thumbnail_concept;
     
     return (
         <div className="p-6 space-y-8">
@@ -256,23 +270,23 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
 
             <div>
                 <h3 className="text-2xl font-bold text-cyan-300 mb-2">Thumbnail Idea</h3>
-                {concept && (
+                {currentConcept && (
                      <div className="flex justify-center">
                         <div className="w-full max-w-lg bg-base-300/50 p-4 rounded-lg border border-base-300 flex flex-col">
                             <h4 className="font-bold text-amber-400 flex-shrink-0">
-                                {language === 'id' ? concept.concept_title_id : concept.concept_title_en}
+                                {currentConcept.concept_title}
                             </h4>
                             <p className="text-sm text-gray-400 mt-1 mb-3 flex-shrink-0">
-                                {language === 'id' ? concept.concept_description_id : concept.concept_description_en}
+                                {currentConcept.concept_description}
                             </p>
                             <div className="aspect-video bg-base-300 flex items-center justify-center rounded-lg border-2 border-dashed border-gray-600 flex-shrink-0">
                                 {thumbImageUrl ? <img src={thumbImageUrl} alt="Generated thumbnail" className="w-full h-full object-cover rounded-lg"/> : isGeneratingThumb ? 'Generating...' : '...'}
                             </div>
                             
                             <div className="mt-3 flex-grow flex flex-col">
-                                <pre className="flex-grow p-2 text-xs bg-base-300 rounded whitespace-pre-wrap font-mono overflow-auto">{concept.image_prompt}</pre>
+                                <pre className="flex-grow p-2 text-xs bg-base-300 rounded whitespace-pre-wrap font-mono overflow-auto">{currentConcept.image_prompt}</pre>
                                 <div className="mt-2">
-                                    <CopyButton textToCopy={concept.image_prompt} />
+                                    <CopyButton textToCopy={currentConcept.image_prompt} />
                                 </div>
                             </div>
                             
@@ -283,7 +297,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                                         onChange={setAspectRatio}
                                     />
                                 </div>
-                                <button disabled={isGeneratingThumb || isGenerating} onClick={() => handleGenerateThumbnail(concept.image_prompt)} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
+                                <button disabled={isGeneratingThumb || isGenerating} onClick={() => handleGenerateThumbnail(currentConcept.image_prompt)} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
                                     {isGeneratingThumb ? "Generating..." : "Generate Thumbnail"}
                                 </button>
                                 {thumbImageUrl && <a href={thumbImageUrl} download={`thumbnail.png`} className="block text-center w-full bg-brand-primary hover:bg-brand-dark text-white font-semibold py-2 rounded-lg flex-shrink-0">Download</a>}
