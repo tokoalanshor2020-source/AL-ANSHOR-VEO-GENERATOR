@@ -23,7 +23,8 @@ interface MainContentProps {
     sceneCount: number;
     setSceneCount: (value: number) => void;
     isGenerating: boolean;
-    onGenerateStoryboard: () => void;
+    // FIX: Update prop type to accept an async function.
+    onGenerateStoryboard: () => Promise<void>;
     storyboard: StoryboardScene[];
     error: string | null;
     onProceedToVideo: (prompt: string) => void;

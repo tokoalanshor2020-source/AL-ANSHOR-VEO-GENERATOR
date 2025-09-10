@@ -1,7 +1,7 @@
 // services/storyCreatorService.ts
 
 import { GoogleGenAI, Type, type GenerateContentResponse, type GenerateImagesResponse } from "@google/genai";
-import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions as RealStoryIdeaOptions } from '../../types';
+import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions as RealStoryIdeaOptions, GeneratedPrompts, ReferenceFile } from '../../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
 
@@ -612,7 +612,8 @@ export const generateThemeIdeas = async (failoverParams: FailoverParams, options
                 - Provide 3-5 themes per category.
                 - Output a valid JSON object with a single key "theme_suggestions", which is an array of objects. Each object must have "category_name" and "themes" (an array of strings), all localized into ${language}.
             `;
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+// FIX: The type of 'response' is not being correctly inferred. Add explicit type to access the 'text' property.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -664,7 +665,8 @@ export const generateStoryIdeas = async (failoverParams: FailoverParams, options
                 - "title_suggestion": A catchy, SEO-friendly title for the video. This MUST be in ${language}.
                 - "script_outline": A 3-4 sentence summary of the story/script. This MUST be in ${language}.
             `;
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+// FIX: The type of 'response' is not being correctly inferred. Add explicit type to access the 'text' property.
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -837,5 +839,65 @@ export const createImageWithOverlay = async (imageData: ThumbnailData, caption: 
             reject(new Error('Failed to load base64 image'));
         };
         img.src = `data:${imageData.mimeType};base64,${imageData.base64}`;
+    });
+};
+
+const generatedPromptsSchema = {
+    type: Type.OBJECT,
+    properties: {
+        simple_prompt: { type: Type.STRING, description: "A single, rich, descriptive paragraph for the video generation AI." },
+        json_prompt: { type: Type.STRING, description: "A string containing a valid, well-formatted JSON object with a detailed cinematic breakdown." },
+    },
+    required: ["simple_prompt", "json_prompt"]
+};
+
+
+export const analyzeReferences = async (failoverParams: FailoverParams, files: ReferenceFile[]): Promise<GeneratedPrompts> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+
+            const fileParts = files.map(file => ({
+                inlineData: {
+                    data: file.base64,
+                    mimeType: file.mimeType,
+                }
+            }));
+            
+            const prompt = `
+                You are a master film director and scriptwriter. Analyze the following reference images and/or video clips.
+                Your task is to synthesize them into a compelling story idea and generate two types of prompts for a text-to-video AI.
+
+                **Analysis Task:**
+                1.  **Detailed Analysis:** Meticulously analyze every aspect of the provided media: scene composition, character actions, weather, mood, lighting, art style, visual atmosphere, camera angles, movement, pacing, and potential narrative or sound design. Leave no detail unexamined.
+                2.  **Prompt Generation:** Based on your complete analysis, generate two distinct prompts:
+
+                    a) **Simple Cinematic Prompt (simple_prompt):** A single, rich, descriptive paragraph. This prompt should vividly describe the synthesized scene, ready to be fed directly into a video generation AI. It should be narrative and evocative.
+
+                    b) **Detailed JSON Prompt (json_prompt):** A comprehensive JSON object string that breaks down the scene into its core cinematic components. This is for advanced users who need granular control. The JSON string should have keys like "scene_details", "cinematography", "art_style", "sound_design", etc. The values should be detailed descriptions.
+
+                **Output Format:**
+                Return a single, valid JSON object that strictly adheres to the provided schema. The \`json_prompt\` value must be a string containing a valid, well-formatted JSON object.
+            `;
+
+            const contents = {
+                parts: [
+                    { text: prompt },
+                    ...fileParts
+                ]
+            };
+
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: contents,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: generatedPromptsSchema,
+                }
+            }));
+            
+            return safeJsonParse(response.text);
+        }
     });
 };

@@ -1,20 +1,28 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocalization, languageMap } from '../../i18n';
-import type { Character, StoryIdea, ThemeSuggestion } from '../../types';
+import type { Character, StoryIdea, ThemeSuggestion, DirectingSettings } from '../../types';
 import { generateStoryIdeas, generateThemeIdeas } from '../../services/storyCreatorService';
 import { FailoverParams } from '../../services/geminiService';
+import { DirectingDesk } from './DirectingDesk';
 
-interface DirectorBridgeModalProps {
+interface DirectorBridgeModalProps extends FailoverParams {
     isOpen: boolean;
     onClose: () => void;
-    onApplyIdea: (idea: StoryIdea) => void;
     characters: Character[];
-    allApiKeys: string[];
-    activeApiKey: string | null;
-    onKeyUpdate: (key: string) => void;
+    // Editor State and Functions
+    logline: string;
+    setLogline: (value: string) => void;
+    scenario: string;
+    setScenario: (value: string) => void;
+    sceneCount: number;
+    setSceneCount: (value: number) => void;
+    directingSettings: DirectingSettings;
+    setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
+    isGenerating: boolean;
+    onGenerateStoryboard: () => Promise<void>;
 }
 
-export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen, onClose, onApplyIdea, characters, allApiKeys, activeApiKey, onKeyUpdate }) => {
+export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = (props) => {
     const { t, language } = useLocalization();
     const [step, setStep] = useState(1);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -33,15 +41,20 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     // Results state
     const [ideas, setIdeas] = useState<StoryIdea[]>([]);
     const [selectedIdea, setSelectedIdea] = useState<StoryIdea | null>(null);
+    
+    const canGenerateStoryboard = props.logline.trim() !== '' && props.scenario.trim() !== '';
 
     const getFailoverParams = (): FailoverParams => ({
-        allKeys: allApiKeys,
-        activeKey: activeApiKey,
-        onKeyUpdate: onKeyUpdate,
+        // FIX: Use `props.allKeys` instead of `props.allApiKeys`.
+        allKeys: props.allKeys,
+        // FIX: Use `props.activeKey` instead of `props.activeApiKey`.
+        activeKey: props.activeKey,
+        onKeyUpdate: props.onKeyUpdate,
     });
 
     const fetchThemeIdeas = useCallback(async (format: string, chars: string[]) => {
-        if (!activeApiKey || format === '' || chars.length === 0) return;
+        // FIX: Use `props.activeKey` instead of `props.activeApiKey`.
+        if (!props.activeKey || format === '' || chars.length === 0) return;
         setIsGeneratingThemes(true);
         setAiThemes([]);
         setTheme('');
@@ -58,7 +71,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         } finally {
             setIsGeneratingThemes(false);
         }
-    }, [activeApiKey, onKeyUpdate, allApiKeys, language]);
+    // FIX: Use `props.activeKey` and `props.allKeys` in the dependency array.
+    }, [props.activeKey, props.onKeyUpdate, props.allKeys, language]);
 
 
     useEffect(() => {
@@ -87,7 +101,6 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                     return [...withoutRandom, characterIdentifier];
                 } else {
                     const newSelection = withoutRandom.filter(name => name !== characterIdentifier);
-                    // If it becomes empty, default back to random
                     return newSelection.length === 0 ? ['random'] : newSelection;
                 }
             });
@@ -95,7 +108,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
     };
 
     const handleGenerateIdeas = async () => {
-        if (!activeApiKey) return;
+        // FIX: Use `props.activeKey` instead of `props.activeApiKey`.
+        if (!props.activeKey) return;
         setIsGenerating(true);
         setIdeas([]);
         setSelectedIdea(null);
@@ -106,8 +120,8 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
             const generatedIdeas = await generateStoryIdeas(getFailoverParams(), {
                 contentFormat: finalFormat,
                 characterNames: selectedCharacterNames,
-                theme: finalTheme || 'random', // Pass a value if theme is not set
-                language: languageMap[language], // Ensure ideas are generated in the current UI language
+                theme: finalTheme || 'random',
+                language: languageMap[language],
             });
             setIdeas(generatedIdeas);
             setStep(2);
@@ -124,13 +138,20 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         setStep(1);
     };
 
-    const handleApply = () => {
+    const handleSelectIdea = () => {
         if (selectedIdea) {
-            onApplyIdea(selectedIdea);
+            props.setLogline(selectedIdea.title_suggestion);
+            props.setScenario(selectedIdea.script_outline);
+            setStep(3);
         }
     };
+    
+    const handleCreateStoryboard = async () => {
+        await props.onGenerateStoryboard();
+        props.onClose(); // Close the modal after generation is complete
+    };
 
-    if (!isOpen) return null;
+    if (!props.isOpen) return null;
     
     const contentFormatOptions = t('smartDirector.contentFormats') as { [key: string]: string };
 
@@ -138,7 +159,6 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
         <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-20 flex flex-col font-sans" role="dialog" aria-modal="true">
             <main className="flex-grow overflow-y-auto">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-                {/* Step 1: Form */}
                 {step === 1 && (
                     <div className="space-y-4 max-w-2xl mx-auto">
                         <div className="text-center">
@@ -172,10 +192,10 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                                     <label htmlFor="char-random" className="ml-3 text-gray-300">{t('smartDirector.characterOptions.random') as string}</label>
                                 </div>
                                 
-                                {characters.length > 0 && (
+                                {props.characters.length > 0 && (
                                     <div>
                                         <p className="font-semibold text-gray-400 mt-2 mb-1">{t('smartDirector.characterOptions.yourGarage') as string}</p>
-                                        {characters.map(c => (
+                                        {props.characters.map(c => (
                                             <div key={c.id} className="flex items-center pl-2">
                                                 <input
                                                     type="checkbox"
@@ -214,7 +234,6 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                     </div>
                 )}
                 
-                {/* Step 2: Results */}
                 {step === 2 && (
                     <div className="space-y-3 max-w-2xl mx-auto mb-24">
                         <div className="text-center">
@@ -232,13 +251,69 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                         ))}
                     </div>
                 )}
+
+                {step === 3 && (
+                     <div className="space-y-6 max-w-3xl mx-auto mb-24">
+                         <div className="text-center">
+                            <h2 className="text-2xl font-bold text-amber-400">{t('smartDirector.step3Title') as string}</h2>
+                        </div>
+                        <div>
+                            <label htmlFor="logline" className="block mb-2 font-semibold text-gray-300">{t('storyCreator.storyTitle') as string}</label>
+                            <input
+                                type="text"
+                                id="logline"
+                                value={props.logline}
+                                onChange={e => props.setLogline(e.target.value)}
+                                placeholder={t('storyCreator.storyTitlePlaceholder') as string}
+                                className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-gray-200"
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="scenario" className="block mb-2 font-semibold text-gray-300">{t('storyCreator.storyScript') as string}</label>
+                            <textarea
+                                id="scenario"
+                                rows={8}
+                                value={props.scenario}
+                                onChange={e => props.setScenario(e.target.value)}
+                                placeholder={t('storyCreator.storyScriptPlaceholder') as string}
+                                className="w-full bg-base-300 border border-gray-600 rounded-lg p-3 text-gray-200"
+                            ></textarea>
+                        </div>
+                        
+                        <DirectingDesk settings={props.directingSettings} setSettings={props.setDirectingSettings} />
+                        
+                        <div>
+                            <label htmlFor="sceneCount" className="block mb-2 text-sm font-semibold text-gray-300">{t('storyCreator.sceneCount') as string}</label>
+                            <input
+                                type="number"
+                                id="sceneCount"
+                                min="1"
+                                max="10"
+                                value={props.sceneCount}
+                                onChange={e => props.setSceneCount(Number(e.target.value))}
+                                className="w-full bg-base-300 border border-gray-600 rounded-lg p-2 text-sm text-gray-200"
+                            />
+                        </div>
+
+                        <div className="border-t border-base-300 pt-6 text-center">
+                            <button
+                                onClick={handleCreateStoryboard}
+                                disabled={!canGenerateStoryboard || props.isGenerating}
+                                className="w-full font-bold py-4 px-10 text-xl rounded-xl shadow-lg bg-brand-primary hover:bg-brand-dark disabled:bg-base-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {(props.isGenerating ? t('generatingButton') : t('storyCreator.createStoryboard')) as string}
+                            </button>
+                        </div>
+                     </div>
+                )}
                 </div>
             </main>
 
             <footer className="flex-shrink-0 bg-base-200/80 backdrop-blur-sm border-t border-base-300 w-full sticky bottom-0 z-10">
                  <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex items-center h-20" role="toolbar">
                     <div className="flex justify-end items-center w-full gap-4">
-                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
+                        <button onClick={props.onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
                             {t('smartDirector.cancelButton') as string}
                         </button>
                         
@@ -252,7 +327,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = ({ isOpen
                                 <button onClick={handleTryAgain} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
                                     {t('smartDirector.tryAgainButton') as string}
                                 </button>
-                                <button onClick={handleApply} disabled={!selectedIdea} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50">
+                                <button onClick={handleSelectIdea} disabled={!selectedIdea} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50">
                                     {t('smartDirector.applyIdeaButton') as string}
                                 </button>
                             </>

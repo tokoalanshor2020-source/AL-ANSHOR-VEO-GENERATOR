@@ -134,3 +134,8 @@ export interface ThemeIdeaOptions {
     characterNames: string[];
     language: string;
 }
+
+export interface GeneratedPrompts {
+  simple_prompt: string;
+  json_prompt: string;
+}

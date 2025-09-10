@@ -192,6 +192,7 @@ export default function App() {
 
   const handleGenerateVideo = useCallback(async (options: GeneratorOptions) => {
     if (!activeVideoApiKey) {
+// FIX: Cast result of t() to string
       setError(t('alertSetVideoApiKey') as string);
       setKeyManagerConfig({type: 'video'});
       return;
@@ -213,7 +214,8 @@ export default function App() {
     } catch (e) {
       console.error(e);
       const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-      const displayError = errorMessage === 'errorRateLimit' ? t('errorRateLimit') : errorMessage;
+// FIX: Cast result of t() to string
+      const displayError = errorMessage === 'errorRateLimit' ? t('errorRateLimit') as string : errorMessage;
       setError(displayError as string);
     } finally {
       setIsLoading(false);
@@ -344,6 +346,7 @@ export default function App() {
                 onClick={handleBackToStoryCreator}
                 className="mb-6 inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
               >
+{/* FIX: Cast result of t() to string */}
                   &larr; {t('backToStoryboard') as string}
               </button>
             <div className="bg-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border border-base-300">

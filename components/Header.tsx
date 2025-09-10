@@ -5,6 +5,8 @@ import { useLocalization } from '../i18n';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { QuestionMarkCircleIcon } from './icons/QuestionMarkCircleIcon';
 import { CogIcon } from './icons/CogIcon';
+import { DocumentTextIcon } from './icons/DocumentTextIcon';
+import { PlayIcon } from './icons/PlayIcon';
 
 
 interface HeaderProps {
@@ -17,11 +19,16 @@ export const Header: React.FC<HeaderProps> = ({ onManageStoryKeysClick, onManage
   const { t } = useLocalization();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  const [isTutorialMenuOpen, setIsTutorialMenuOpen] = useState(false);
+  const tutorialRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
         if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
             setIsSettingsOpen(false);
+        }
+        if (tutorialRef.current && !tutorialRef.current.contains(event.target as Node)) {
+            setIsTutorialMenuOpen(false);
         }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -38,6 +45,16 @@ export const Header: React.FC<HeaderProps> = ({ onManageStoryKeysClick, onManage
   const handleManageVideoKeys = () => {
     onManageVideoKeysClick();
     setIsSettingsOpen(false);
+  };
+
+  const handleOpenTextTutorial = () => {
+    onOpenTutorialClick();
+    setIsTutorialMenuOpen(false);
+  };
+
+  const handleOpenVideoTutorial = () => {
+    window.open('https://www.youtube.com/playlist?list=PL34uOzbrHaJ-FEQBaQc0TWIllkakOtJPl', '_blank');
+    setIsTutorialMenuOpen(false);
   };
 
   return (
@@ -58,14 +75,44 @@ export const Header: React.FC<HeaderProps> = ({ onManageStoryKeysClick, onManage
       
       <div className="flex items-center gap-2 sm:gap-4">
         <LanguageSwitcher />
-        <button 
-            onClick={onOpenTutorialClick}
-            className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
-            aria-label={t('tutorialButton') as string}
-        >
-            <QuestionMarkCircleIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">{t('tutorialButton') as string}</span>
-        </button>
+
+        <div className="relative" ref={tutorialRef}>
+            <button
+                onClick={() => setIsTutorialMenuOpen(prev => !prev)}
+                className="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-base-300 hover:bg-brand-primary/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-base-100 focus:ring-brand-secondary transition-colors"
+                aria-haspopup="true"
+                aria-expanded={isTutorialMenuOpen}
+            >
+                <QuestionMarkCircleIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">{t('tutorialButton') as string}</span>
+            </button>
+            {isTutorialMenuOpen && (
+                 <div
+                    className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-base-200 ring-1 ring-black ring-opacity-5 z-50 focus:outline-none"
+                    role="menu"
+                    aria-orientation="vertical"
+                >
+                    <div className="py-1" role="none">
+                         <button 
+                            onClick={handleOpenTextTutorial}
+                            className="text-gray-300 group flex items-center gap-3 w-full px-4 py-2 text-sm text-left hover:bg-base-300 hover:text-white"
+                            role="menuitem"
+                        >
+                            <DocumentTextIcon className="h-4 w-4" />
+                            <span>{t('tutorial.textTutorial') as string}</span>
+                        </button>
+                         <button 
+                            onClick={handleOpenVideoTutorial}
+                            className="text-gray-300 group flex items-center gap-3 w-full px-4 py-2 text-sm text-left hover:bg-base-300 hover:text-white"
+                            role="menuitem"
+                        >
+                            <PlayIcon className="h-4 w-4" />
+                            <span>{t('tutorial.videoTutorial') as string}</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
         
         <div className="relative" ref={settingsRef}>
             <button
