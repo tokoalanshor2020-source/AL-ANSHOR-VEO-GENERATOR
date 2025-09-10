@@ -15,6 +15,8 @@ const ACTIVE_STORY_API_KEY_STORAGE_KEY = 'gemini-active-story-api-key';
 const VIDEO_API_KEYS_STORAGE_KEY = 'gemini-video-api-keys';
 const ACTIVE_VIDEO_API_KEY_STORAGE_KEY = 'gemini-active-video-api-key';
 const CHARACTERS_STORAGE_KEY = 'gemini-story-characters';
+const STORY_CREATOR_SESSION_KEY = 'gemini-story-creator-session';
+
 
 type AppView = 'story-creator' | 'video-generator';
 type KeyManagerType = 'story' | 'video';
@@ -67,13 +69,27 @@ export default function App() {
         return [];
     }
   });
-  const [storyboard, setStoryboard] = useState<StoryboardScene[]>([]);
-  const [logline, setLogline] = useState('');
-  const [scenario, setScenario] = useState('');
-  const [sceneCount, setSceneCount] = useState(3);
-  const [directingSettings, setDirectingSettings] = useState<DirectingSettings>(initialDirectingSettings);
-  const [publishingKit, setPublishingKit] = useState<PublishingKitData | null>(null);
-  const [activeTab, setActiveTab] = useState<ActiveTab>('editor');
+
+  const [initialSession] = useState(() => {
+    try {
+        const storedSession = localStorage.getItem(STORY_CREATOR_SESSION_KEY);
+        if (storedSession) {
+            return JSON.parse(storedSession);
+        }
+    } catch (e) {
+        console.error("Failed to parse story session from localStorage", e);
+        localStorage.removeItem(STORY_CREATOR_SESSION_KEY);
+    }
+    return {};
+  });
+
+  const [storyboard, setStoryboard] = useState<StoryboardScene[]>(initialSession.storyboard || []);
+  const [logline, setLogline] = useState(initialSession.logline || '');
+  const [scenario, setScenario] = useState(initialSession.scenario || '');
+  const [sceneCount, setSceneCount] = useState(initialSession.sceneCount || 3);
+  const [directingSettings, setDirectingSettings] = useState<DirectingSettings>(initialSession.directingSettings || initialDirectingSettings);
+  const [publishingKit, setPublishingKit] = useState<PublishingKitData | null>(initialSession.publishingKit || null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialSession.activeTab || 'editor');
 
 
   useEffect(() => {
@@ -113,6 +129,23 @@ export default function App() {
         console.error("Failed to save characters to localStorage", e);
     }
   }, [characters]);
+
+   useEffect(() => {
+    try {
+        const sessionData = {
+            logline,
+            scenario,
+            sceneCount,
+            directingSettings,
+            storyboard,
+            publishingKit,
+            activeTab,
+        };
+        localStorage.setItem(STORY_CREATOR_SESSION_KEY, JSON.stringify(sessionData));
+    } catch(e) {
+        console.error("Failed to save story session to localStorage", e);
+    }
+  }, [logline, scenario, sceneCount, directingSettings, storyboard, publishingKit, activeTab]);
 
   useEffect(() => {
     // Load story keys
@@ -267,6 +300,11 @@ export default function App() {
       setPublishingKit(null);
       setError(null);
       setActiveTab('editor');
+      try {
+        localStorage.removeItem(STORY_CREATOR_SESSION_KEY);
+      } catch (e) {
+        console.error("Failed to clear story session from localStorage", e);
+      }
   };
   
   const handleUpdateScene = (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => {
