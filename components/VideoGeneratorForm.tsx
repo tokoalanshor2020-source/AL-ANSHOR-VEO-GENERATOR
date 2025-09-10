@@ -294,7 +294,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
       <div className="border-t border-base-300 pt-6 text-center">
         <button
           type="submit"
-          disabled={isGenerating}
+          disabled={isGenerating || !hasActiveVideoApiKey}
           className="w-full font-bold py-4 px-10 text-xl rounded-xl shadow-lg bg-brand-primary hover:bg-brand-dark disabled:bg-base-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
         >
           {(isGenerating ? t('generatingButton') : t('generateButton')) as string}

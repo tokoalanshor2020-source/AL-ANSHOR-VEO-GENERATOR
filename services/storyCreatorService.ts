@@ -867,15 +867,16 @@ export const analyzeReferences = async (failoverParams: FailoverParams, files: R
             
             const prompt = `
                 You are a master film director and scriptwriter. Analyze the following reference images and/or video clips.
-                Your task is to synthesize them into a compelling story idea and generate two types of prompts for a text-to-video AI.
+                Your task is to synthesize them into a compelling story idea and generate two types of prompts for a text-to-video AI, ensuring both prompts are derived from the same complete analysis.
 
-                **Analysis Task:**
-                1.  **Detailed Analysis:** Meticulously analyze every aspect of the provided media: scene composition, character actions, weather, mood, lighting, art style, visual atmosphere, camera angles, movement, pacing, and potential narrative or sound design. Leave no detail unexamined.
-                2.  **Prompt Generation:** Based on your complete analysis, generate two distinct prompts:
+                **Analysis & Generation Process:**
 
-                    a) **Simple Cinematic Prompt (simple_prompt):** A single, rich, descriptive paragraph. This prompt should vividly describe the synthesized scene, ready to be fed directly into a video generation AI. It should be narrative and evocative.
+                1.  **Meticulous Analysis:** First, internally perform a complete and detailed analysis of every aspect of the provided media: scene composition, character actions, weather, mood, lighting, art style, visual atmosphere, camera angles, movement, pacing, and potential narrative or sound design. Leave no detail unexamined.
 
-                    b) **Detailed JSON Prompt (json_prompt):** A comprehensive JSON object string that breaks down the scene into its core cinematic components. This is for advanced users who need granular control. The JSON string should have keys like "scene_details", "cinematography", "art_style", "sound_design", etc. The values should be detailed descriptions.
+                2.  **Prompt Generation (Based on the same analysis):**
+                    a) **Detailed JSON Prompt (json_prompt):** Structure your complete analysis into a comprehensive JSON object string. This is for advanced users who need granular control. The JSON string should have keys like "scene_details", "cinematography", "art_style", "sound_design", "character_actions", etc. The values should be extremely detailed descriptions.
+
+                    b) **Simple Cinematic Prompt (simple_prompt):** Write a single, rich, descriptive paragraph that serves as a narrative version of the JSON prompt. This prompt must contain the same level of detail and logic as the JSON version, but presented in a flowing, evocative paragraph. It should vividly describe the synthesized scene, incorporating all the elements from your analysis (cinematography, art style, etc.), making it ready to be fed directly into a video generation AI. The core information in both prompts must be identical, only the format should differ.
 
                 **Output Format:**
                 Return a single, valid JSON object that strictly adheres to the provided schema. The \`json_prompt\` value must be a string containing a valid, well-formatted JSON object.

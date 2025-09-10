@@ -278,7 +278,7 @@ const enTranslations: Translations = {
         description: "The story is ready! Now, create all the assets for uploading to YouTube with one click.",
         generateButton: "Create Everything!",
         generatingButton: "Creating...",
-        apiKeyInstruction: "Please add a Video & Thumbnail API Key to proceed."
+        apiKeyInstruction: "Please ensure both Story and Video & Thumbnail API Keys are set to proceed."
       },
     },
     characterWorkshop: {
@@ -628,7 +628,7 @@ const translations: { [key in Language]: Translations } = {
         description: "Cerita sudah siap! Sekarang, buat semua aset untuk diunggah ke YouTube dengan satu klik.",
         generateButton: "Buatkan Semuanya!",
         generatingButton: "Membuat...",
-        apiKeyInstruction: "Harap isi Kunci API Video & Thumbnail terlebih dahulu untuk melanjutkan."
+        apiKeyInstruction: "Pastikan Kunci API Cerita dan Kunci API Video & Thumbnail sudah diatur untuk melanjutkan."
       },
     },
     characterWorkshop: {
@@ -730,7 +730,7 @@ const translations: { [key in Language]: Translations } = {
 // FIX: Cast `enTranslations.tutorial` to an object type to allow spreading, as its type `Translations` could be a non-object.
   pt: { ...enTranslations, tutorial: { ...(enTranslations.tutorial as Record<string, unknown>), textTutorial: "Tutorial em Texto", videoTutorial: "Tutorial em Vídeo" }},
 // FIX: Cast `enTranslations.tutorial` to an object type to allow spreading, as its type `Translations` could be a non-object.
-  bn: { ...enTranslations, tutorial: { ...(enTranslations.tutorial as Record<string, unknown>), textTutorial: "পাঠ্য টিউটোরিয়াল", videoTutorial: "ভিডিও টিউটোরিয়াল" }},
+  bn: { ...enTranslations, tutorial: { ...(enTranslations.tutorial as Record<string, unknown>), textTutorial: "पाठ्य টিউটোরিয়াল", videoTutorial: "ভিডিও টিউটোরিয়াল" }},
 // FIX: Cast `enTranslations.tutorial` to an object type to allow spreading, as its type `Translations` could be a non-object.
   ru: { ...enTranslations, tutorial: { ...(enTranslations.tutorial as Record<string, unknown>), textTutorial: "Текстовый урок", videoTutorial: "Видеоурок" }},
 // FIX: Cast `enTranslations.tutorial` to an object type to allow spreading, as its type `Translations` could be a non-object.

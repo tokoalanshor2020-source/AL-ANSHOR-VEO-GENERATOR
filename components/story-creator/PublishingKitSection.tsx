@@ -18,8 +18,8 @@ export const PublishingKitSection: React.FC<PublishingKitSectionProps> = ({ stor
         return null;
     }
 
-    // Disable if no video key
-    const isEffectivelyDisabled = !activeVideoApiKey;
+    // Disable if no story or video key
+    const isEffectivelyDisabled = !activeApiKey || !activeVideoApiKey;
     const isDisabled = isGenerating || isEffectivelyDisabled;
 
     return (

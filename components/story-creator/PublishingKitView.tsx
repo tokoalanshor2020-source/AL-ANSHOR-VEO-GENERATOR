@@ -382,7 +382,7 @@ export const PublishingKitView: React.FC<PublishingKitViewProps> = ({ kitData, a
                                         onChange={setAspectRatio}
                                     />
                                 </div>
-                                <button disabled={isGeneratingThumb || isGenerating} onClick={handleGenerateThumbnail} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
+                                <button disabled={isGeneratingThumb || isGenerating || !activeKey} onClick={handleGenerateThumbnail} className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg disabled:opacity-50 flex-shrink-0">
                                     {isGeneratingThumb ? "Generating..." : "Generate Thumbnail"}
                                 </button>
                                 {thumbImageUrl && <a href={thumbImageUrl} download={`thumbnail.png`} className="block text-center w-full bg-brand-primary hover:bg-brand-dark text-white font-semibold py-2 rounded-lg flex-shrink-0">Download</a>}

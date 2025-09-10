@@ -25,6 +25,7 @@ interface ScriptEditorProps {
     directingSettings: DirectingSettings;
     setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
     onProceedToVideo: (prompt: string) => void;
+    activeVideoApiKey: string | null;
 }
 
 export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
@@ -52,7 +53,8 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                 <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescriptionDirect') as string}</p>
                 <button 
                     onClick={() => props.onProceedToVideo('')}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700"
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!props.activeVideoApiKey}
                 >
                     <RocketIcon />
                     {t('storyCreator.openDirectVideo') as string}
@@ -101,6 +103,7 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     onProceedToVideo={props.onProceedToVideo}
                     allApiKeys={props.allStoryApiKeys}
                     activeApiKey={props.activeApiKey}
+                    // FIX: The prop is named `onStoryKeyUpdate`, not `onKeyUpdate`.
                     onKeyUpdate={props.onStoryKeyUpdate}
                 />
             )}

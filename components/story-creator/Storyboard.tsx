@@ -136,11 +136,11 @@ const SceneCard: React.FC<SceneCardProps> = ({ scene, index, onProceedToVideo, a
             <div className="mt-4 pt-4 border-t border-gray-700/50">
                  <div className="flex justify-end items-center gap-2">
                     {/* FIX: Cast result of t() to string */}
-                    <button onClick={handleGenerateBlueprint} disabled={isGeneratingBlueprint} className="btn-sm bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-semibold py-1 px-3 rounded-lg text-xs">
+                    <button onClick={handleGenerateBlueprint} disabled={isGeneratingBlueprint || !activeKey} className="btn-sm bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-semibold py-1 px-3 rounded-lg text-xs">
                         {isGeneratingBlueprint ? '...' : t('storyCreator.generateBlueprint') as string}
                     </button>
                     {/* FIX: Cast result of t() to string */}
-                    <button onClick={handleGenerateCinematic} disabled={isGeneratingCinematic} className="btn-sm bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-white font-semibold py-1 px-3 rounded-lg text-xs">
+                    <button onClick={handleGenerateCinematic} disabled={isGeneratingCinematic || !activeKey} className="btn-sm bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-white font-semibold py-1 px-3 rounded-lg text-xs">
                          {isGeneratingCinematic ? '...' : t('storyCreator.generateCinematicPrompt') as string}
                     </button>
                  </div>

@@ -318,7 +318,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = (props) =
                         </button>
                         
                         {step === 1 && (
-                            <button onClick={handleGenerateIdeas} disabled={isGenerating} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">
+                            <button onClick={handleGenerateIdeas} disabled={isGenerating || !props.activeKey} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50">
                                 {(isGenerating ? t('smartDirector.generatingIdeasButton') : t('smartDirector.generateIdeasButton')) as string}
                             </button>
                         )}
