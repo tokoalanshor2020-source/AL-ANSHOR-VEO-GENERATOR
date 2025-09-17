@@ -1,6 +1,6 @@
 // FIX: Implemented the full VideoGeneratorForm component to resolve module not found and other related errors.
 import React, { useState, useEffect, useCallback, DragEvent } from 'react';
-import type { GeneratorOptions, ImageFile, Character } from '../types';
+import type { GeneratorOptions, ImageFile, Character, VideoGeneratorState } from '../types';
 import { useLocalization } from '../i18n';
 import { UploadIcon } from './icons/UploadIcon';
 import { XCircleIcon } from './icons/XCircleIcon';
@@ -12,7 +12,8 @@ interface VideoGeneratorFormProps {
   onSubmit: (options: GeneratorOptions) => void;
   hasActiveVideoApiKey: boolean;
   onManageKeysClick: () => void;
-  initialPrompt: string;
+  generatorState: VideoGeneratorState;
+  onStateChange: React.Dispatch<React.SetStateAction<VideoGeneratorState>>;
   characters: Character[];
   // For reference image generation failover
   allVideoApiKeys: string[];
@@ -28,28 +29,33 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
   onSubmit,
   hasActiveVideoApiKey,
   onManageKeysClick,
-  initialPrompt,
+  generatorState,
+  onStateChange,
   characters,
   allVideoApiKeys,
   activeVideoApiKey,
   onVideoKeyUpdate,
 }) => {
   const { t } = useLocalization();
-  const [prompt, setPrompt] = useState(initialPrompt || '');
-  const [imageFile, setImageFile] = useState<ImageFile | null>(null);
-  const [aspectRatio, setAspectRatio] = useState<GeneratorOptions['aspectRatio']>('16:9');
-  const [enableSound, setEnableSound] = useState(true);
-  const [resolution, setResolution] = useState<GeneratorOptions['resolution']>('720p');
-  const [isDragging, setIsDragging] = useState(false);
+  const { prompt, imageFile, aspectRatio, enableSound, resolution } = generatorState;
 
-  // Reference Image Generator State
+  const [isDragging, setIsDragging] = useState(false);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+
+  // Reference Image Generator State (remains local as it's a transient step)
   const [refImgAspectRatio, setRefImgAspectRatio] = useState<GeneratorOptions['aspectRatio']>('16:9');
   const [isGeneratingRefImg, setIsGeneratingRefImg] = useState(false);
   const [generatedRefImg, setGeneratedRefImg] = useState<ImageFile | null>(null);
 
   useEffect(() => {
-    setPrompt(initialPrompt);
-  }, [initialPrompt]);
+    if (imageFile) {
+        const dataUrl = `data:${imageFile.mimeType};base64,${imageFile.base64}`;
+        setImagePreviewUrl(dataUrl);
+    } else {
+        setImagePreviewUrl(null);
+    }
+  }, [imageFile]);
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,8 +80,6 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
         base64: imageFile.base64,
         mimeType: imageFile.mimeType,
       };
-      // When an image is present, the aspectRatio in the options will be ignored by the service,
-      // but we set it here for completeness. The service will infer from the image.
     }
 
     onSubmit(options);
@@ -99,8 +103,10 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = (e.target?.result as string).split(',')[1];
-      const previewUrl = URL.createObjectURL(file);
-      setImageFile({ base64, mimeType: file.type, previewUrl });
+      onStateChange(prev => ({
+          ...prev,
+          imageFile: { base64, mimeType: file.type }
+      }));
     };
     reader.readAsDataURL(file);
   };
@@ -133,10 +139,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
   };
   
   const handleRemoveImage = () => {
-      if (imageFile) {
-          URL.revokeObjectURL(imageFile.previewUrl);
-      }
-      setImageFile(null);
+      onStateChange(prev => ({...prev, imageFile: null}));
   };
 
   const handleGenerateReferenceImage = async () => {
@@ -149,6 +152,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
       return;
     }
     setIsGeneratingRefImg(true);
+    if(generatedRefImg) URL.revokeObjectURL(generatedRefImg.previewUrl);
     setGeneratedRefImg(null);
     try {
         const failoverParams: FailoverParams = {
@@ -169,7 +173,11 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
   
   const handleAddGeneratedImage = () => {
     if (generatedRefImg) {
-        setImageFile(generatedRefImg);
+        onStateChange(prev => ({
+            ...prev,
+            imageFile: { base64: generatedRefImg.base64, mimeType: generatedRefImg.mimeType }
+        }));
+        URL.revokeObjectURL(generatedRefImg.previewUrl);
         setGeneratedRefImg(null);
     }
   };
@@ -183,7 +191,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
           id="prompt"
           rows={12}
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => onStateChange(prev => ({ ...prev, prompt: e.target.value }))}
           placeholder={t('promptPlaceholder') as string}
           className="w-full bg-base-300 border-gray-600 rounded-lg p-3 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200 placeholder-gray-500"
         ></textarea>
@@ -221,9 +229,9 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
       <div>
         <label className="block text-lg font-semibold text-gray-200">{t('referenceImageLabel') as string}</label>
         <div className="mt-1">
-            {imageFile ? (
+            {imageFile && imagePreviewUrl ? (
                 <div className="relative group w-full max-w-sm">
-                  <img src={imageFile.previewUrl} alt="Reference preview" className="w-full h-auto rounded-lg shadow-md" />
+                  <img src={imagePreviewUrl} alt="Reference preview" className="w-full h-auto rounded-lg shadow-md" />
                   <button type="button" onClick={handleRemoveImage} className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1 text-white opacity-0 group-hover:opacity-100 transition-opacity">
                       <XCircleIcon className="h-6 w-6" />
                   </button>
@@ -251,7 +259,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
           {!imageFile && (
             <div>
               <label htmlFor="aspect-ratio" className="block text-sm font-medium text-gray-400">{t('aspectRatioLabel') as string}</label>
-              <select id="aspect-ratio" value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value as GeneratorOptions['aspectRatio'])} className="mt-1 block w-full bg-base-300 border-gray-600 rounded-lg p-2 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200">
+              <select id="aspect-ratio" value={aspectRatio} onChange={(e) => onStateChange(prev => ({...prev, aspectRatio: e.target.value as GeneratorOptions['aspectRatio']}))} className="mt-1 block w-full bg-base-300 border-gray-600 rounded-lg p-2 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200">
                 <option>16:9</option>
                 <option>9:16</option>
                 <option>1:1</option>
@@ -263,7 +271,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
 
           <div>
             <label htmlFor="resolution" className="block text-sm font-medium text-gray-400">{t('resolutionLabel') as string}</label>
-            <select id="resolution" value={resolution} onChange={(e) => setResolution(e.target.value as GeneratorOptions['resolution'])} className="mt-1 block w-full bg-base-300 border-gray-600 rounded-lg p-2 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200">
+            <select id="resolution" value={resolution} onChange={(e) => onStateChange(prev => ({...prev, resolution: e.target.value as GeneratorOptions['resolution']}))} className="mt-1 block w-full bg-base-300 border-gray-600 rounded-lg p-2 shadow-sm focus:ring-brand-primary focus:border-brand-primary text-gray-200">
               <option>720p</option>
               <option>1080p</option>
             </select>
@@ -274,7 +282,7 @@ export const VideoGeneratorForm: React.FC<VideoGeneratorFormProps> = ({
               id="enable-sound"
               type="checkbox"
               checked={enableSound}
-              onChange={(e) => setEnableSound(e.target.checked)}
+              onChange={(e) => onStateChange(prev => ({...prev, enableSound: e.target.checked}))}
               className="h-4 w-4 text-brand-primary bg-base-300 border-gray-500 rounded focus:ring-brand-secondary"
             />
             <label htmlFor="enable-sound" className="ml-2 block text-sm font-medium text-gray-300">{t('enableSound') as string}</label>

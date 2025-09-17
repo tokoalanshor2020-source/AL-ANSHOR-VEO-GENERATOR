@@ -3,7 +3,7 @@ import { Sidebar } from './Sidebar';
 import { MainContent } from './MainContent';
 import { ConfirmationModal } from '../ConfirmationModal';
 import { useLocalization } from '../../i18n';
-import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab } from '../../types';
+import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, ReferenceIdeaState } from '../../types';
 import { generateStoryboard, generatePublishingKit } from '../../services/storyCreatorService';
 import { FailoverParams } from '../../services/geminiService';
 
@@ -38,6 +38,10 @@ interface StoryCreatorProps {
     setPublishingKit: React.Dispatch<React.SetStateAction<PublishingKitData | null>>;
     activeTab: ActiveTab;
     setActiveTab: (tab: ActiveTab) => void;
+    referenceIdeaState: ReferenceIdeaState;
+    setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
+    isReferenceIdeaModalOpen: boolean;
+    setIsReferenceIdeaModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
@@ -47,7 +51,8 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
         characters, setCharacters, storyboard, setStoryboard,
         logline, setLogline, scenario, setScenario, sceneCount, setSceneCount,
         directingSettings, setDirectingSettings, onNewStory, publishingKit, setPublishingKit,
-        activeTab, setActiveTab
+        activeTab, setActiveTab, referenceIdeaState, setReferenceIdeaState,
+        isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen
     } = props;
 
     const [isGenerating, setIsGenerating] = useState(false);
@@ -188,6 +193,10 @@ export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
                 setActiveTab={setActiveTab}
                 onUpdateScene={props.onUpdateScene}
                 publishingKit={publishingKit}
+                referenceIdeaState={referenceIdeaState}
+                setReferenceIdeaState={setReferenceIdeaState}
+                isReferenceIdeaModalOpen={isReferenceIdeaModalOpen}
+                setIsReferenceIdeaModalOpen={setIsReferenceIdeaModalOpen}
             />
             {isConfirmOpen && (
                 <ConfirmationModal

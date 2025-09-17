@@ -11,6 +11,16 @@ export interface GeneratorOptions {
   resolution: '720p' | '1080p';
 }
 
+// Add VideoGeneratorState to persist form state
+export interface VideoGeneratorState {
+  prompt: string;
+  // Store only serializable data for localStorage
+  imageFile: { base64: string; mimeType: string; } | null;
+  aspectRatio: '16:9' | '9:16' | '1:1' | '4:3' | '3:4';
+  enableSound: boolean;
+  resolution: '720p' | '1080p';
+}
+
 // FIX: Add missing ImageFile interface for the video generator form.
 export interface ImageFile {
   base64: string;
@@ -25,6 +35,20 @@ export interface ReferenceFile {
   previewUrl: string;
   type: 'image' | 'video';
   file: File; // Keep the original file for size/duration checks
+}
+
+// Add StoredReferenceFile for serializable data
+export interface StoredReferenceFile {
+  id: string;
+  base64: string;
+  mimeType: string;
+  type: 'image' | 'video';
+}
+
+// Add ReferenceIdeaState to persist form state
+export interface ReferenceIdeaState {
+  referenceFiles: StoredReferenceFile[];
+  results: GeneratedPrompts | null;
 }
 
 

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useLocalization } from '../../i18n';
-import type { GeneratedPrompts, ReferenceFile } from '../../types';
+import type { GeneratedPrompts, ReferenceFile, ReferenceIdeaState, StoredReferenceFile } from '../../types';
 import { FailoverParams } from '../../services/geminiService';
 import { analyzeReferences } from '../../services/storyCreatorService';
 import { PlusIcon } from '../icons/PlusIcon';
@@ -15,6 +15,8 @@ interface ReferenceIdeaModalProps {
     allApiKeys: string[];
     activeApiKey: string | null;
     onKeyUpdate: (key: string) => void;
+    referenceIdeaState: ReferenceIdeaState;
+    setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
 }
 
 const generateUUID = () => {
@@ -50,76 +52,139 @@ const CopyButton: React.FC<{ textToCopy: string }> = ({ textToCopy }) => {
     );
 };
 
-export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, onClose, onProceedToVideo, allApiKeys, activeApiKey, onKeyUpdate }) => {
+export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, onClose, onProceedToVideo, allApiKeys, activeApiKey, onKeyUpdate, referenceIdeaState, setReferenceIdeaState }) => {
     const { t } = useLocalization();
+    
+    // Local state for UI and non-serializable data
     const [isProcessing, setIsProcessing] = useState(false);
-    const [referenceFiles, setReferenceFiles] = useState<ReferenceFile[]>([]);
+    const [localReferenceFiles, setLocalReferenceFiles] = useState<ReferenceFile[]>([]);
     const [currentFileIndex, setCurrentFileIndex] = useState(0);
-    const [results, setResults] = useState<GeneratedPrompts | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    const resetState = useCallback(() => {
-        referenceFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
-        setReferenceFiles([]);
-        setCurrentFileIndex(0);
-        setResults(null);
-        setError(null);
-        setIsProcessing(false);
-    }, [referenceFiles]);
+    // Destructure from props for easier access
+    const { referenceFiles: storedFiles, results } = referenceIdeaState;
 
     const handleClose = () => {
-        resetState();
         onClose();
     };
     
+    // Effect to synchronize props with local state that includes blob URLs
     useEffect(() => {
-        return () => {
-            referenceFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
-        }
-    }, [referenceFiles]);
-
-    const validateAndAddFiles = useCallback(async (files: FileList) => {
-        for (const file of Array.from(files)) {
-            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-                alert(`File ${file.name} is too large. Max size is ${MAX_FILE_SIZE_MB}MB.`);
-                continue;
-            }
-            const type = file.type.startsWith('video') ? 'video' : 'image';
-            if (type === 'video') {
-                try {
-                    await new Promise<void>((resolve, reject) => {
-                        const video = document.createElement('video');
-                        video.preload = 'metadata';
-                        video.onloadedmetadata = () => {
-                            window.URL.revokeObjectURL(video.src);
-                            if (video.duration > MAX_VIDEO_DURATION_S) {
-                                reject(new Error(`Video ${file.name} is too long (${video.duration.toFixed(1)}s). Max ${MAX_VIDEO_DURATION_S}s allowed.`));
-                            } else {
-                                resolve();
-                            }
-                        };
-                        video.onerror = () => reject(new Error('Could not load video metadata.'));
-                        video.src = URL.createObjectURL(file);
-                    });
-                } catch (error) {
-                    alert((error as Error).message);
-                    continue;
+        let isMounted = true;
+        
+        if (isOpen) {
+            const dataURLtoBlob = (dataurl: string) => {
+                const parts = dataurl.split(',');
+                const mime = parts[0].match(/:(.*?);/)?.[1];
+                if (!mime) return new Blob();
+                const bstr = atob(parts[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
                 }
-            }
-             const reader = new FileReader();
-             reader.onload = (e) => {
-                const base64 = (e.target?.result as string).split(',')[1];
-                const previewUrl = URL.createObjectURL(file);
-                
-                const newFile: ReferenceFile = {
-                    id: generateUUID(), base64, mimeType: file.type, previewUrl, type, file
-                };
-
-                setReferenceFiles(prev => [...prev, newFile]);
+                return new Blob([u8arr], { type: mime });
             };
-            reader.readAsDataURL(file);
+
+            const newLocalFiles = storedFiles.map(storedFile => {
+                const dataUrl = `data:${storedFile.mimeType};base64,${storedFile.base64}`;
+                const blob = dataURLtoBlob(dataUrl);
+                const file = new File([blob], `reference.${storedFile.mimeType.split('/')[1]}`, { type: storedFile.mimeType });
+                return {
+                    ...storedFile,
+                    previewUrl: URL.createObjectURL(file),
+                    file,
+                };
+            });
+
+            if (isMounted) {
+                 setLocalReferenceFiles(newLocalFiles);
+            }
         }
-    }, []);
+        
+        return () => {
+            isMounted = false;
+            // Clean up blob URLs when component unmounts or before effect re-runs
+            setLocalReferenceFiles(currentFiles => {
+                currentFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
+                return [];
+            });
+        };
+    }, [isOpen, storedFiles]);
+    
+    const updateFiles = useCallback((updatedLocalFiles: ReferenceFile[]) => {
+        setLocalReferenceFiles(updatedLocalFiles);
+        const serializableFiles: StoredReferenceFile[] = updatedLocalFiles.map(f => ({
+            id: f.id,
+            base64: f.base64,
+            mimeType: f.mimeType,
+            type: f.type,
+        }));
+        setReferenceIdeaState(prev => ({ ...prev, referenceFiles: serializableFiles }));
+    }, [setReferenceIdeaState]);
+
+    // FIX: Re-implemented file validation and processing with Promise.all to handle multiple asynchronous file reads correctly.
+    const validateAndAddFiles = useCallback(async (files: FileList) => {
+        const processFile = (file: File): Promise<ReferenceFile | null> => {
+            return new Promise(async (resolve) => {
+                // Validate Size
+                if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    alert(`File ${file.name} is too large. Max size is ${MAX_FILE_SIZE_MB}MB.`);
+                    resolve(null);
+                    return;
+                }
+
+                const type = file.type.startsWith('video') ? 'video' : 'image';
+
+                // Validate Duration for Videos
+                if (type === 'video') {
+                    try {
+                        await new Promise<void>((res, rej) => {
+                            const video = document.createElement('video');
+                            video.preload = 'metadata';
+                            video.onloadedmetadata = () => {
+                                window.URL.revokeObjectURL(video.src);
+                                if (video.duration > MAX_VIDEO_DURATION_S) {
+                                    rej(new Error(`Video ${file.name} is too long (${video.duration.toFixed(1)}s). Max ${MAX_VIDEO_DURATION_S}s allowed.`));
+                                } else {
+                                    res();
+                                }
+                            };
+                            video.onerror = () => rej(new Error('Could not load video metadata.'));
+                            video.src = URL.createObjectURL(file);
+                        });
+                    } catch (error) {
+                        alert((error as Error).message);
+                        resolve(null);
+                        return;
+                    }
+                }
+
+                // Read file
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64 = (e.target?.result as string).split(',')[1];
+                    const previewUrl = URL.createObjectURL(file);
+                    resolve({
+                        id: generateUUID(), base64, mimeType: file.type, previewUrl, type, file
+                    });
+                };
+                reader.onerror = () => {
+                    alert(`Error reading file ${file.name}`);
+                    resolve(null);
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        const filePromises = Array.from(files).map(processFile);
+        const newFiles = (await Promise.all(filePromises)).filter((f): f is ReferenceFile => f !== null);
+
+        if (newFiles.length > 0) {
+            updateFiles([...localReferenceFiles, ...newFiles]);
+        }
+    }, [localReferenceFiles, updateFiles]);
+
 
     const handleFilesChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
@@ -129,40 +194,40 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
     }, [validateAndAddFiles]);
     
     const removeFile = (id: string) => {
-        setReferenceFiles(prev => {
-            const fileToRemove = prev.find(f => f.id === id);
-            if (fileToRemove) {
-                URL.revokeObjectURL(fileToRemove.previewUrl);
+        const newFiles = localReferenceFiles.filter(f => {
+             if (f.id === id) {
+                URL.revokeObjectURL(f.previewUrl);
+                return false;
             }
-            const newFiles = prev.filter(f => f.id !== id);
-            
-            if (newFiles.length === 0) {
-                setCurrentFileIndex(0);
-            } else if (currentFileIndex >= newFiles.length) {
-                setCurrentFileIndex(newFiles.length - 1);
-            }
-            
-            return newFiles;
+            return true;
         });
+        
+        if (newFiles.length === 0) {
+            setCurrentFileIndex(0);
+        } else if (currentFileIndex >= newFiles.length) {
+            setCurrentFileIndex(newFiles.length - 1);
+        }
+        
+        updateFiles(newFiles);
     };
     
     const goToPreviousFile = () => {
-        setCurrentFileIndex(prev => (prev === 0 ? referenceFiles.length - 1 : prev - 1));
+        setCurrentFileIndex(prev => (prev === 0 ? localReferenceFiles.length - 1 : prev - 1));
     };
 
     const goToNextFile = () => {
-        setCurrentFileIndex(prev => (prev === referenceFiles.length - 1 ? 0 : prev + 1));
+        setCurrentFileIndex(prev => (prev === localReferenceFiles.length - 1 ? 0 : prev + 1));
     };
 
     const handleAnalyze = async () => {
-        if (!activeApiKey || referenceFiles.length === 0) return;
+        if (!activeApiKey || localReferenceFiles.length === 0) return;
         setIsProcessing(true);
         setError(null);
-        setResults(null);
+        setReferenceIdeaState(prev => ({ ...prev, results: null }));
         try {
             const failoverParams: FailoverParams = { allKeys: allApiKeys, activeKey: activeApiKey, onKeyUpdate };
-            const generatedPrompts = await analyzeReferences(failoverParams, referenceFiles);
-            setResults(generatedPrompts);
+            const generatedPrompts = await analyzeReferences(failoverParams, localReferenceFiles);
+            setReferenceIdeaState(prev => ({ ...prev, results: generatedPrompts }));
         } catch (e) {
             const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred';
             setError(errorMessage);
@@ -173,7 +238,7 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
     
     if (!isOpen) return null;
 
-    const currentFile = referenceFiles.length > 0 ? referenceFiles[currentFileIndex] : null;
+    const currentFile = localReferenceFiles.length > 0 ? localReferenceFiles[currentFileIndex] : null;
 
     return (
         <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-20 flex flex-col font-sans" role="dialog" aria-modal="true">
@@ -196,14 +261,14 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                         <h3 className="font-semibold text-lg text-gray-200">{t('referenceIdeaModal.uploadArea') as string}</h3>
                         <input type="file" id="refFileInput" className="hidden" multiple accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFilesChange} />
                          <div className="p-4 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[250px] flex flex-col justify-between">
-                             {referenceFiles.length === 0 ? (
+                             {localReferenceFiles.length === 0 ? (
                                 <label htmlFor="refFileInput" className="cursor-pointer flex-grow flex flex-col items-center justify-center p-2 rounded-lg text-center hover:bg-base-300/30 transition-colors">
                                      <PlusIcon className="h-8 w-8 text-gray-400"/>
                                      <span className="text-sm mt-1 text-gray-400">{t('characterWorkshop.uploadButton') as string}</span>
                                 </label>
                             ) : (
                                 <div className="relative flex-grow flex items-center justify-center">
-                                    {referenceFiles.length > 1 && (
+                                    {localReferenceFiles.length > 1 && (
                                         <button onClick={goToPreviousFile} className="absolute left-0 z-10 p-2 bg-base-200/50 rounded-full hover:bg-base-200 transition-colors" aria-label="Previous file">
                                             <ChevronLeftIcon />
                                         </button>
@@ -226,7 +291,7 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                                         )}
                                     </div>
                         
-                                    {referenceFiles.length > 1 && (
+                                    {localReferenceFiles.length > 1 && (
                                         <button onClick={goToNextFile} className="absolute right-0 z-10 p-2 bg-base-200/50 rounded-full hover:bg-base-200 transition-colors" aria-label="Next file">
                                             <ChevronRightIcon />
                                         </button>
@@ -235,14 +300,14 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                             )}
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700/50">
                                 <div className="text-xs text-gray-500">
-                                    {referenceFiles.length > 0 ? `${currentFileIndex + 1} / ${referenceFiles.length}` : t('characterWorkshop.fileTypes') as string}
+                                    {localReferenceFiles.length > 0 ? `${currentFileIndex + 1} / ${localReferenceFiles.length}` : t('characterWorkshop.fileTypes') as string}
                                 </div>
                                 <label htmlFor="refFileInput" className="cursor-pointer p-2 rounded-lg text-xs flex items-center gap-1 font-semibold text-brand-light hover:bg-brand-primary/20">
                                     <PlusIcon className="h-4 w-4"/> {t('characterWorkshop.uploadButton') as string}
                                 </label>
                             </div>
                          </div>
-                         <button onClick={handleAnalyze} disabled={isProcessing || referenceFiles.length === 0} className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50">
+                         <button onClick={handleAnalyze} disabled={isProcessing || localReferenceFiles.length === 0} className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50">
                             {(isProcessing ? t('referenceIdeaModal.analyzingButton') : t('referenceIdeaModal.analyzeButton')) as string}
                         </button>
                     </div>

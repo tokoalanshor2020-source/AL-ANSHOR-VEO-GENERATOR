@@ -3,7 +3,7 @@ import { ScriptEditor } from './ScriptEditor';
 import { Storyboard } from './Storyboard';
 import { PublishingKitView } from './PublishingKitView';
 import { useLocalization } from '../../i18n';
-import type { Character, DirectingSettings, StoryboardScene, PublishingKitData } from '../../types';
+import type { Character, DirectingSettings, StoryboardScene, PublishingKitData, ReferenceIdeaState } from '../../types';
 
 type ActiveTab = 'editor' | 'storyboard' | 'publishingKit';
 
@@ -36,6 +36,10 @@ interface MainContentProps {
     setActiveTab: (tab: ActiveTab) => void;
     onUpdateScene: (sceneIndex: number, updatedPrompts: Partial<Pick<StoryboardScene, 'blueprintPrompt' | 'cinematicPrompt'>>) => void;
     publishingKit: PublishingKitData | null;
+    referenceIdeaState: ReferenceIdeaState;
+    setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
+    isReferenceIdeaModalOpen: boolean;
+    setIsReferenceIdeaModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({ activeTab, setActiveTab, publishingKit, ...props }) => {

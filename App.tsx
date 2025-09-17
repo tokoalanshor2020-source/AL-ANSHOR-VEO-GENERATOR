@@ -5,7 +5,7 @@ import { Loader } from './components/Loader';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { StoryCreator } from './components/story-creator/StoryCreator';
-import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab } from './types';
+import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, VideoGeneratorState, ReferenceIdeaState } from './types';
 import { generateVideo } from './services/geminiService';
 import { useLocalization } from './i18n';
 import { TutorialModal } from './components/TutorialModal';
@@ -16,6 +16,9 @@ const VIDEO_API_KEYS_STORAGE_KEY = 'gemini-video-api-keys';
 const ACTIVE_VIDEO_API_KEY_STORAGE_KEY = 'gemini-active-video-api-key';
 const CHARACTERS_STORAGE_KEY = 'gemini-story-characters';
 const STORY_CREATOR_SESSION_KEY = 'gemini-story-creator-session';
+const VIDEO_GENERATOR_SESSION_KEY = 'gemini-video-generator-session';
+const APP_VIEW_STORAGE_KEY = 'gemini-app-view';
+const REFERENCE_IDEA_SESSION_KEY = 'gemini-reference-idea-session';
 
 
 type AppView = 'story-creator' | 'video-generator';
@@ -55,8 +58,55 @@ export default function App() {
   
   const { t, language, dir } = useLocalization();
 
-  const [view, setView] = useState<AppView>('story-creator');
-  const [promptForVideo, setPromptForVideo] = useState<string>('');
+  const [view, setView] = useState<AppView>(() => {
+    try {
+        const storedView = localStorage.getItem(APP_VIEW_STORAGE_KEY) as AppView;
+        if (storedView === 'video-generator' || storedView === 'story-creator') {
+            return storedView;
+        }
+    } catch (e) {
+        console.error("Failed to load app view from localStorage", e);
+        localStorage.removeItem(APP_VIEW_STORAGE_KEY);
+    }
+    return 'story-creator';
+  });
+  
+  // State for video generator form, persisted to localStorage
+  const [videoGeneratorState, setVideoGeneratorState] = useState<VideoGeneratorState>(() => {
+    try {
+        const storedSession = localStorage.getItem(VIDEO_GENERATOR_SESSION_KEY);
+        if (storedSession) {
+            return JSON.parse(storedSession);
+        }
+    } catch (e) {
+        console.error("Failed to parse video generator session from localStorage", e);
+        localStorage.removeItem(VIDEO_GENERATOR_SESSION_KEY);
+    }
+    return {
+        prompt: '',
+        imageFile: null,
+        aspectRatio: '16:9',
+        enableSound: true,
+        resolution: '720p',
+    };
+  });
+  
+    // State for reference idea modal, persisted to localStorage
+  const [referenceIdeaState, setReferenceIdeaState] = useState<ReferenceIdeaState>(() => {
+    try {
+        const storedSession = localStorage.getItem(REFERENCE_IDEA_SESSION_KEY);
+        if (storedSession) {
+            return JSON.parse(storedSession);
+        }
+    } catch (e) {
+        console.error("Failed to parse reference idea session from localStorage", e);
+        localStorage.removeItem(REFERENCE_IDEA_SESSION_KEY);
+    }
+    return {
+        referenceFiles: [],
+        results: null,
+    };
+  });
   
   // --- Lifted State from StoryCreator ---
   const [characters, setCharacters] = useState<Character[]>(() => {
@@ -90,6 +140,7 @@ export default function App() {
   const [directingSettings, setDirectingSettings] = useState<DirectingSettings>(initialSession.directingSettings || initialDirectingSettings);
   const [publishingKit, setPublishingKit] = useState<PublishingKitData | null>(initialSession.publishingKit || null);
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialSession.activeTab || 'editor');
+  const [isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen] = useState(initialSession.isReferenceIdeaModalOpen || false);
 
 
   useEffect(() => {
@@ -101,7 +152,11 @@ export default function App() {
             const storedPrompt = sessionStorage.getItem(promptId);
             if (storedPrompt !== null) {
                 setView('video-generator');
-                setPromptForVideo(storedPrompt);
+                setVideoGeneratorState(prevState => ({
+                    ...prevState,
+                    prompt: storedPrompt,
+                    imageFile: null // Reset image when coming from storyboard
+                }));
                 sessionStorage.removeItem(promptId); // Clean up
 
                 // Clean the URL to avoid re-triggering on refresh
@@ -140,12 +195,37 @@ export default function App() {
             storyboard,
             publishingKit,
             activeTab,
+            isReferenceIdeaModalOpen,
         };
         localStorage.setItem(STORY_CREATOR_SESSION_KEY, JSON.stringify(sessionData));
     } catch(e) {
         console.error("Failed to save story session to localStorage", e);
     }
-  }, [logline, scenario, sceneCount, directingSettings, storyboard, publishingKit, activeTab]);
+  }, [logline, scenario, sceneCount, directingSettings, storyboard, publishingKit, activeTab, isReferenceIdeaModalOpen]);
+  
+   useEffect(() => {
+    try {
+        localStorage.setItem(APP_VIEW_STORAGE_KEY, view);
+    } catch(e) {
+        console.error("Failed to save app view to localStorage", e);
+    }
+  }, [view]);
+
+  useEffect(() => {
+    try {
+        localStorage.setItem(VIDEO_GENERATOR_SESSION_KEY, JSON.stringify(videoGeneratorState));
+    } catch(e) {
+        console.error("Failed to save video generator session to localStorage", e);
+    }
+  }, [videoGeneratorState]);
+
+  useEffect(() => {
+    try {
+        localStorage.setItem(REFERENCE_IDEA_SESSION_KEY, JSON.stringify(referenceIdeaState));
+    } catch(e) {
+        console.error("Failed to save reference idea session to localStorage", e);
+    }
+  }, [referenceIdeaState]);
 
   useEffect(() => {
     // Load story keys
@@ -234,7 +314,6 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     setVideoUrl(null);
-    setPromptForVideo(options.prompt);
 
     try {
       const url = await generateVideo({
@@ -300,6 +379,7 @@ export default function App() {
       setPublishingKit(null);
       setError(null);
       setActiveTab('editor');
+      setIsReferenceIdeaModalOpen(false);
       try {
         localStorage.removeItem(STORY_CREATOR_SESSION_KEY);
       } catch (e) {
@@ -375,6 +455,10 @@ export default function App() {
               setPublishingKit={setPublishingKit}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              referenceIdeaState={referenceIdeaState}
+              setReferenceIdeaState={setReferenceIdeaState}
+              isReferenceIdeaModalOpen={isReferenceIdeaModalOpen}
+              setIsReferenceIdeaModalOpen={setIsReferenceIdeaModalOpen}
            />
         )}
 
@@ -393,7 +477,8 @@ export default function App() {
                 onSubmit={handleGenerateVideo}
                 hasActiveVideoApiKey={!!activeVideoApiKey}
                 onManageKeysClick={() => setKeyManagerConfig({ type: 'video' })}
-                initialPrompt={promptForVideo}
+                generatorState={videoGeneratorState}
+                onStateChange={setVideoGeneratorState}
                 characters={characters}
                 allVideoApiKeys={videoApiKeys}
                 activeVideoApiKey={activeVideoApiKey}
@@ -412,7 +497,7 @@ export default function App() {
             )}
 
             {videoUrl && !isLoading && (
-              <VideoPlayer videoUrl={videoUrl} prompt={promptForVideo} />
+              <VideoPlayer videoUrl={videoUrl} prompt={videoGeneratorState.prompt} />
             )}
           </div>
         )}

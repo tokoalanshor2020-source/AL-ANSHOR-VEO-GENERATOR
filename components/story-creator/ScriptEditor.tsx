@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocalization } from '../../i18n';
 import { MagicWandIcon } from '../icons/MagicWandIcon';
 import { RocketIcon } from '../icons/RocketIcon';
 import { DirectorBridgeModal } from './DirectorBridgeModal';
-import type { Character, DirectingSettings } from '../../types';
+import type { Character, DirectingSettings, ReferenceIdeaState } from '../../types';
 import { FilmIcon } from '../icons/FilmIcon';
 import { ReferenceIdeaModal } from './ReferenceIdeaModal';
 
@@ -26,12 +26,17 @@ interface ScriptEditorProps {
     setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
     onProceedToVideo: (prompt: string) => void;
     activeVideoApiKey: string | null;
+    referenceIdeaState: ReferenceIdeaState;
+    setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
+    isReferenceIdeaModalOpen: boolean;
+    setIsReferenceIdeaModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
     const { t } = useLocalization();
-    const [isDirectorBridgeOpen, setIsDirectorBridgeOpen] = useState(false);
-    const [isReferenceModalOpen, setIsReferenceModalOpen] = useState(false);
+    const [isDirectorBridgeOpen, setIsDirectorBridgeOpen] = React.useState(false);
+    
+    const { isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen } = props;
 
     return (
         <div className="p-6 space-y-6">
@@ -39,7 +44,7 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                 <h3 className="text-lg font-bold text-purple-400">{t('storyCreator.ideaWithReference') as string}</h3>
                 <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaWithReferenceDescription') as string}</p>
                  <button 
-                    onClick={() => setIsReferenceModalOpen(true)}
+                    onClick={() => setIsReferenceIdeaModalOpen(true)}
                     className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
                     disabled={!props.activeApiKey}
                 >
@@ -96,15 +101,17 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                 />
             )}
             
-            {isReferenceModalOpen && (
+            {isReferenceIdeaModalOpen && (
                  <ReferenceIdeaModal
-                    isOpen={isReferenceModalOpen}
-                    onClose={() => setIsReferenceModalOpen(false)}
+                    isOpen={isReferenceIdeaModalOpen}
+                    onClose={() => setIsReferenceIdeaModalOpen(false)}
                     onProceedToVideo={props.onProceedToVideo}
                     allApiKeys={props.allStoryApiKeys}
                     activeApiKey={props.activeApiKey}
                     // FIX: The prop is named `onStoryKeyUpdate`, not `onKeyUpdate`.
                     onKeyUpdate={props.onStoryKeyUpdate}
+                    referenceIdeaState={props.referenceIdeaState}
+                    setReferenceIdeaState={props.setReferenceIdeaState}
                 />
             )}
         </div>
