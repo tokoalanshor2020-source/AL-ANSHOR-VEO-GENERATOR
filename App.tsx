@@ -5,7 +5,7 @@ import { Loader } from './components/Loader';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { StoryCreator } from './components/story-creator/StoryCreator';
-import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, VideoGeneratorState, ReferenceIdeaState, AffiliateCreatorState } from './types';
+import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, VideoGeneratorState, ReferenceIdeaState, AffiliateCreatorState, GeneratedAffiliateImage } from './types';
 import { generateVideo } from './services/geminiService';
 import { useLocalization } from './i18n';
 import { TutorialModal } from './components/TutorialModal';
@@ -190,11 +190,29 @@ export default function App() {
             const storedData = sessionStorage.getItem(promptId);
             if (storedData !== null) {
                 const payload = JSON.parse(storedData);
+                let imageToSet = payload.image || null;
+
+                // FIX: Handle new payload format from Affiliate Creator to avoid storage quota errors.
+                if (payload.affiliateImageId) {
+                    const affiliateSession = localStorage.getItem(AFFILIATE_CREATOR_SESSION_KEY);
+                    if (affiliateSession) {
+                        const affiliateState: AffiliateCreatorState = JSON.parse(affiliateSession);
+                        const sourceImage = affiliateState.generatedImages.find(img => img.id === payload.affiliateImageId);
+                        if (sourceImage) {
+                            imageToSet = { base64: sourceImage.base64, mimeType: sourceImage.mimeType };
+                        } else {
+                             console.error("Affiliate image ID from payload not found in localStorage state.");
+                        }
+                    } else {
+                        console.error("Could not find affiliate session in localStorage to load image.");
+                    }
+                }
+
                 setView('video-generator');
                 setVideoGeneratorState(prevState => ({
                     ...prevState,
                     prompt: payload.prompt,
-                    imageFile: payload.image || null
+                    imageFile: imageToSet
                 }));
                 sessionStorage.removeItem(promptId);
 

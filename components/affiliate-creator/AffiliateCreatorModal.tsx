@@ -194,19 +194,69 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     const handleAction = async (id: string, action: 'regenerate' | 'upload' | 'video') => {
         const targetImage = generatedImages.find(img => img.id === id);
         if (!targetImage) return;
-
-        // FIX: In AffiliateCreatorModal.tsx, fixed a TypeScript type mismatch where the `action` parameter ('regenerate', 'replace') was incompatible with the `generatingStates` state value type ('regenerating', 'replacing'). Mapped the action to the correct state value before updating the state.
+    
         const stateValue = action === 'regenerate' ? 'regenerating' : action === 'upload' ? 'uploading' : 'video';
         setGeneratingStates(prev => ({ ...prev, [id]: stateValue }));
-
+    
         const storyFailover: FailoverParams = { allKeys: allStoryApiKeys, activeKey: activeStoryApiKey, onKeyUpdate: onStoryKeyUpdate };
         const videoFailover: FailoverParams = { allKeys: allVideoApiKeys, activeKey: activeVideoApiKey, onKeyUpdate: onVideoKeyUpdate };
-        
-        try {
-            if (action === 'video') {
+    
+        if (action === 'video') {
+            const newTab = window.open('', '_blank');
+            if (!newTab) {
+                setError("Could not open a new tab. Please disable your pop-up blocker and try again.");
+                setGeneratingStates(prev => {
+                    const newStates = { ...prev };
+                    delete newStates[id];
+                    return newStates;
+                });
+                return;
+            }
+    
+            newTab.document.write('Generating video prompt, please wait...');
+    
+            try {
                 const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage);
-                onProceedToVideo(promptJson, { base64: targetImage.base64, mimeType: targetImage.mimeType });
-            } else if (action === 'upload') {
+    
+                const promptId = `prompt-${generateUUID()}`;
+                // FIX: Pass a lightweight payload with an ID instead of the full base64 image data
+                // to avoid exceeding browser storage quotas.
+                const payload = { 
+                    prompt: promptJson, 
+                    affiliateImageId: targetImage.id
+                };
+
+                try {
+                    sessionStorage.setItem(promptId, JSON.stringify(payload));
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('init_video_prompt_id', promptId);
+                    newTab.location.href = url.toString();
+                } catch (e) {
+                    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+                         throw new Error("Browser storage is full. Could not save data for the new tab.");
+                    }
+                    throw e; // Re-throw other errors
+                }
+
+            } catch (e) {
+                const errorMessage = e instanceof Error ? e.message : 'Failed to generate video prompt';
+                setError(errorMessage);
+                if (!newTab.closed) {
+                    newTab.document.write(`Error: ${errorMessage}. You can close this tab.`);
+                }
+            } finally {
+                setGeneratingStates(prev => {
+                    const newStates = { ...prev };
+                    delete newStates[id];
+                    return newStates;
+                });
+            }
+            return;
+        }
+    
+        // Existing logic for other non-tab-opening actions
+        try {
+            if (action === 'upload') {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*';
@@ -226,11 +276,10 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                     }
                 };
                 input.click();
-
             } else { // regenerate
                 const newImageResult = await generateAffiliateImages(videoFailover, targetImage.prompt, affiliateCreatorState.aspectRatio);
                 const updatedImage: GeneratedAffiliateImage = { ...newImageResult, id: targetImage.id };
-
+    
                 setAffiliateCreatorState(prev => ({
                     ...prev,
                     generatedImages: prev.generatedImages.map(img => img.id === id ? updatedImage : img)
