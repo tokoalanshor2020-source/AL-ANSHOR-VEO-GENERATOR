@@ -62,7 +62,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     const [currentFileIndex, setCurrentFileIndex] = useState(0);
     const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'uploading' | 'video'>>({});
     
-    const { referenceFiles: storedFiles, generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio } = affiliateCreatorState;
+    const { referenceFiles: storedFiles, generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio, narratorLanguage, customNarratorLanguage } = affiliateCreatorState;
 
     // Sync local state with persisted state when modal opens
     useEffect(() => {
@@ -203,8 +203,17 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
 
         try {
             if (action === 'video') {
-                const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage);
-                (onProceedToVideo as any)(promptJson, { affiliateImageId: targetImage.id });
+                const langForPrompt = narratorLanguage === 'custom'
+                    ? customNarratorLanguage
+                    : narratorLanguage;
+
+                if (!langForPrompt.trim()) {
+                    setError("Please select or enter a narrator language.");
+                    return;
+                }
+
+                const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt);
+                onProceedToVideo(promptJson, { base64: targetImage.base64, mimeType: targetImage.mimeType });
             } else if (action === 'upload') {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -354,6 +363,30 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                     <option value="3:4">3:4 (Portrait)</option>
                                 </select>
                              </div>
+                             <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('affiliateCreator.narratorLanguage') as string}</label>
+                                <select
+                                    value={narratorLanguage}
+                                    onChange={e => setAffiliateCreatorState(p => ({ ...p, narratorLanguage: e.target.value }))}
+                                    className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200"
+                                >
+                                    <option value="en">English</option>
+                                    <option value="id">Indonesian</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="zh">Chinese</option>
+                                    <option value="ja">Japanese</option>
+                                    <option value="custom">Custom...</option>
+                                </select>
+                                {narratorLanguage === 'custom' && (
+                                    <input
+                                        type="text"
+                                        value={customNarratorLanguage}
+                                        onChange={e => setAffiliateCreatorState(p => ({ ...p, customNarratorLanguage: e.target.value }))}
+                                        placeholder={t('affiliateCreator.customNarratorLanguagePlaceholder') as string}
+                                        className="mt-2 w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm"
+                                    />
+                                )}
+                            </div>
                             <button onClick={handleGenerate} disabled={isGenerating || storedFiles.length === 0} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg disabled:opacity-50">
                                 {isGenerating ? t('affiliateCreator.generatingButton') as string : t('affiliateCreator.generateButton') as string}
                             </button>

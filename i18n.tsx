@@ -391,6 +391,8 @@ const enTranslations: Translations = {
         productDescriptionPlaceholder: "Optional: Describe your product for better consistency (e.g., 'terracotta cotton long-sleeve shirt').",
         generateDescriptionButton: "✨ Auto-generate Description",
         aspectRatio: "Aspect Ratio",
+        narratorLanguage: "Narrator Language",
+        customNarratorLanguagePlaceholder: "e.g., Sundanese",
         vibes: {
             cafe_aesthetic: "Cafe Aesthetic",
             urban_night: "Urban Style (Night)",
@@ -780,6 +782,8 @@ const idTranslations: Translations = {
         productDescriptionPlaceholder: "Opsional: Deskripsikan produk Anda untuk konsistensi yang lebih baik (cth: 'kemeja katun lengan panjang warna terakota').",
         generateDescriptionButton: "✨ Buat Deskripsi Otomatis",
         aspectRatio: "Rasio Aspek",
+        narratorLanguage: "Bahasa Narator",
+        customNarratorLanguagePlaceholder: "Contoh: Bahasa Sunda",
         vibes: {
             cafe_aesthetic: "Kafe Estetik",
             urban_night: "Gaya Urban (Malam)",

@@ -765,7 +765,8 @@ export const generateAffiliateImages = async (
 
 export const generateAffiliateVideoPrompt = async (
     failoverParams: FailoverParams,
-    image: GeneratedAffiliateImage
+    image: GeneratedAffiliateImage,
+    narratorLanguage: string
 ): Promise<string> => {
      const prompt = `
 You are a video scriptwriter specializing in short-form affiliate content (like TikTok or Reels).
@@ -777,7 +778,7 @@ Your task is to take a static image and its description, and create a detailed J
 Generate a JSON string for a video prompt. The JSON object MUST contain:
 1.  **"visual_prompt"**: A new, more dynamic prompt for the video. Describe a short action. Example: "A woman in a floral dress gracefully twirls in a sunlit minimalist studio."
 2.  **"cinematic_instructions"**: An array of strings with instructions for the camera. Example: ["slow zoom in on the dress fabric", "gentle panning shot following her movement"].
-3.  **"narration"**: A short, engaging voiceover script (1-2 sentences). It should be a call-to-action or highlight a key benefit. Example: "Feel the summer breeze in our new floral collection. Shop the look now!"
+3.  **"narration"**: A short, engaging voiceover script (1-2 sentences) written in **${narratorLanguage}**. It should be a call-to-action or highlight a key benefit. Example for English: "Feel the summer breeze in our new floral collection. Shop the look now!"
 4.  **"sound_design"**: An object with "sfx" (e.g., "gentle whoosh sound") and "music_style" (e.g., "upbeat acoustic pop").
 
 Output ONLY the valid JSON string.

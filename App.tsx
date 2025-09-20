@@ -126,6 +126,8 @@ export default function App() {
                 customVibe: '',
                 productDescription: '',
                 aspectRatio: '9:16', 
+                narratorLanguage: 'en',
+                customNarratorLanguage: '',
                 ...parsed, // Overwrite defaults with stored values if they exist
             };
         }
@@ -142,6 +144,8 @@ export default function App() {
         customVibe: '',
         productDescription: '',
         aspectRatio: '9:16',
+        narratorLanguage: 'en',
+        customNarratorLanguage: '',
     };
     });
   
