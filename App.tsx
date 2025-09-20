@@ -125,6 +125,7 @@ export default function App() {
                 vibe: 'studio_minimalis',
                 customVibe: '',
                 productDescription: '',
+                aspectRatio: '9:16', 
                 ...parsed, // Overwrite defaults with stored values if they exist
             };
         }
@@ -140,6 +141,7 @@ export default function App() {
         vibe: 'studio_minimalis',
         customVibe: '',
         productDescription: '',
+        aspectRatio: '9:16',
     };
     });
   

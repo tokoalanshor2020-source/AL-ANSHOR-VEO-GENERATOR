@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useLocalization } from '../../i18n';
 import type { AffiliateCreatorState, GeneratedAffiliateImage, StoredReferenceFile, ReferenceFile } from '../../types';
 import { FailoverParams } from '../../services/geminiService';
-import { generateAffiliateImagePrompts, generateAffiliateImages, generateAffiliateVideoPrompt } from '../../services/storyCreatorService';
+import { generateAffiliateImagePrompts, generateAffiliateImages, generateAffiliateVideoPrompt, analyzeProductForDescription } from '../../services/storyCreatorService';
 import { PlusIcon } from '../icons/PlusIcon';
 import { TrashIcon } from '../icons/TrashIcon';
 import { ChevronLeftIcon } from '../icons/ChevronLeftIcon';
@@ -56,12 +56,13 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
 }) => {
     const { t } = useLocalization();
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [localReferenceFiles, setLocalReferenceFiles] = useState<ReferenceFile[]>([]);
     const [currentFileIndex, setCurrentFileIndex] = useState(0);
-    const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'replacing' | 'video'>>({});
+    const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'uploading' | 'video'>>({});
     
-    const { referenceFiles: storedFiles, generatedImages, numberOfImages, model, vibe, customVibe, productDescription } = affiliateCreatorState;
+    const { referenceFiles: storedFiles, generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio } = affiliateCreatorState;
 
     // Sync local state with persisted state when modal opens
     useEffect(() => {
@@ -171,7 +172,8 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         
         try {
             const prompts = await generateAffiliateImagePrompts(storyFailover, affiliateCreatorState);
-            const imagePromises = prompts.map(p => generateAffiliateImages(videoFailover, p));
+            
+            const imagePromises = prompts.map(p => generateAffiliateImages(videoFailover, p, affiliateCreatorState.aspectRatio));
             
             const results = await Promise.all(imagePromises);
 
@@ -189,27 +191,40 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         }
     };
     
-    const handleAction = async (id: string, action: 'regenerate' | 'replace' | 'video') => {
+    const handleAction = async (id: string, action: 'regenerate' | 'upload' | 'video') => {
         const targetImage = generatedImages.find(img => img.id === id);
         if (!targetImage) return;
 
-        // FIX: Map the action type to the correct state type to resolve TypeScript error.
-        const stateForAction: 'regenerating' | 'replacing' | 'video' =
-            action === 'regenerate' ? 'regenerating' :
-            action === 'replace' ? 'replacing' :
-            'video';
-
-        setGeneratingStates(prev => ({ ...prev, [id]: stateForAction }));
+        setGeneratingStates(prev => ({ ...prev, [id]: action === 'regenerate' ? 'regenerating' : 'video' }));
         const videoFailover: FailoverParams = { allKeys: allVideoApiKeys, activeKey: activeVideoApiKey, onKeyUpdate: onVideoKeyUpdate };
         
         try {
             if (action === 'video') {
                 const promptJson = await generateAffiliateVideoPrompt(videoFailover, targetImage);
                 onProceedToVideo(promptJson, { base64: targetImage.base64, mimeType: targetImage.mimeType });
-            } else {
-                const newPrompt = action === 'regenerate' ? targetImage.prompt : `A different version of: ${targetImage.prompt}`;
-                const newImageResult = await generateAffiliateImages(videoFailover, newPrompt);
-                
+            } else if (action === 'upload') {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const base64 = (event.target?.result as string).split(',')[1];
+                            const updatedImage: GeneratedAffiliateImage = { ...targetImage, base64, mimeType: file.type };
+                            setAffiliateCreatorState(prev => ({
+                                ...prev,
+                                generatedImages: prev.generatedImages.map(img => img.id === id ? updatedImage : img)
+                            }));
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                input.click();
+
+            } else { // regenerate
+                const newImageResult = await generateAffiliateImages(videoFailover, targetImage.prompt, affiliateCreatorState.aspectRatio);
                 const updatedImage: GeneratedAffiliateImage = { ...newImageResult, id: targetImage.id };
 
                 setAffiliateCreatorState(prev => ({
@@ -225,6 +240,20 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                 delete newStates[id];
                 return newStates;
             });
+        }
+    };
+
+    const handleGenerateDescription = async () => {
+        if (!activeStoryApiKey || localReferenceFiles.length === 0) return;
+        setIsGeneratingDescription(true);
+        const storyFailover: FailoverParams = { allKeys: allStoryApiKeys, activeKey: activeStoryApiKey, onKeyUpdate: onStoryKeyUpdate };
+        try {
+            const description = await analyzeProductForDescription(storyFailover, localReferenceFiles.map(f => ({ base64: f.base64, mimeType: f.mimeType })));
+            setAffiliateCreatorState(p => ({ ...p, productDescription: description }));
+        } catch(e) {
+            setError(e instanceof Error ? e.message : 'Failed to generate description');
+        } finally {
+            setIsGeneratingDescription(false);
         }
     };
 
@@ -272,6 +301,9 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                 <label htmlFor="affiliateFileInput" className="cursor-pointer p-2 rounded-lg text-xs flex items-center gap-1 font-semibold text-brand-light hover:bg-brand-primary/20">
                                     <PlusIcon className="h-4 w-4"/> {t('characterWorkshop.uploadButton') as string}
                                 </label>
+                                <button onClick={handleGenerateDescription} disabled={isGeneratingDescription || localReferenceFiles.length === 0} className="text-xs font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-50">
+                                    {isGeneratingDescription ? t('affiliateCreator.generatingButton') as string : t('affiliateCreator.generateDescriptionButton') as string}
+                                </button>
                             </div>
                             <div>
                                 <label htmlFor="productDescription" className="sr-only">Product Description</label>
@@ -310,6 +342,16 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                 <label htmlFor="numImages" className="block text-sm font-semibold text-gray-300 mb-1">{t('affiliateCreator.numberOfImages') as string}</label>
                                 <input id="numImages" type="number" min="1" max="20" value={numberOfImages} onChange={e => setAffiliateCreatorState(p => ({...p, numberOfImages: parseInt(e.target.value)}))} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm" />
                             </div>
+                             <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('affiliateCreator.aspectRatio') as string}</label>
+                                <select value={aspectRatio} onChange={e => setAffiliateCreatorState(p => ({...p, aspectRatio: e.target.value as any}))} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200">
+                                    <option value="9:16">9:16 (Vertical)</option>
+                                    <option value="16:9">16:9 (Horizontal)</option>
+                                    <option value="1:1">1:1 (Square)</option>
+                                    <option value="4:3">4:3 (Standard)</option>
+                                    <option value="3:4">3:4 (Portrait)</option>
+                                </select>
+                             </div>
                             <button onClick={handleGenerate} disabled={isGenerating || storedFiles.length === 0} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg disabled:opacity-50">
                                 {isGenerating ? t('affiliateCreator.generatingButton') as string : t('affiliateCreator.generateButton') as string}
                             </button>
@@ -334,7 +376,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                         <p className="text-white text-xs leading-tight mb-2 max-h-20 overflow-hidden">{img.prompt}</p>
                                         <div className="space-y-1">
                                             <button onClick={() => handleAction(img.id, 'regenerate')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white"><RefreshIcon className="h-3 w-3" />{t('affiliateCreator.regenerate') as string}</button>
-                                            <button onClick={() => handleAction(img.id, 'replace')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-yellow-600 hover:bg-yellow-700 text-black"><ReplaceIcon className="h-3 w-3" />{t('affiliateCreator.replace') as string}</button>
+                                            <button onClick={() => handleAction(img.id, 'upload')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-yellow-600 hover:bg-yellow-700 text-black"><ReplaceIcon className="h-3 w-3" />{t('affiliateCreator.upload') as string}</button>
                                             <button onClick={() => handleAction(img.id, 'video')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white"><VideoIcon className="h-3 w-3" />{t('affiliateCreator.generateVideo') as string}</button>
                                             <a href={`data:${img.mimeType};base64,${img.base64}`} download={`affiliate_${img.id.substring(0,6)}.jpg`} className="w-full btn-xs flex items-center justify-center gap-1 bg-gray-600 hover:bg-gray-700 text-white"><DownloadIcon className="h-3 w-3" />{t('affiliateCreator.download') as string}</a>
                                         </div>

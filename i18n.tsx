@@ -379,6 +379,7 @@ const enTranslations: Translations = {
         resultsPlaceholder: "Your generated images will appear here.",
         regenerate: "Regenerate",
         replace: "Replace",
+        upload: "Upload",
         generateVideo: "Generate Video",
         download: "Download",
         modelSectionTitle: "2. Choose Model",
@@ -388,6 +389,8 @@ const enTranslations: Translations = {
         vibeSectionTitle: "3. Choose Content Vibe",
         customVibePlaceholder: "Describe your custom vibe...",
         productDescriptionPlaceholder: "Optional: Describe your product for better consistency (e.g., 'terracotta cotton long-sleeve shirt').",
+        generateDescriptionButton: "✨ Auto-generate Description",
+        aspectRatio: "Aspect Ratio",
         vibes: {
             cafe_aesthetic: "Cafe Aesthetic",
             urban_night: "Urban Style (Night)",
@@ -765,6 +768,7 @@ const idTranslations: Translations = {
         resultsPlaceholder: "Gambar yang Anda hasilkan akan muncul di sini.",
         regenerate: "Buat Ulang",
         replace: "Ganti",
+        upload: "Upload",
         generateVideo: "Hasilkan Video",
         download: "Unduh",
         modelSectionTitle: "2. Pilih Model",
@@ -774,6 +778,8 @@ const idTranslations: Translations = {
         vibeSectionTitle: "3. Pilih Vibe Konten",
         customVibePlaceholder: "Jelaskan vibe kustom Anda...",
         productDescriptionPlaceholder: "Opsional: Deskripsikan produk Anda untuk konsistensi yang lebih baik (cth: 'kemeja katun lengan panjang warna terakota').",
+        generateDescriptionButton: "✨ Buat Deskripsi Otomatis",
+        aspectRatio: "Rasio Aspek",
         vibes: {
             cafe_aesthetic: "Kafe Estetik",
             urban_night: "Gaya Urban (Malam)",

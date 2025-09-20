@@ -648,6 +648,32 @@ export const generateReferenceImage = async (
 
 // --- Affiliate Creator Service Functions ---
 
+export const analyzeProductForDescription = async (
+    failoverParams: FailoverParams,
+    files: { base64: string, mimeType: string }[]
+): Promise<string> => {
+    const prompt = `You are an expert e-commerce copywriter. Analyze the provided product image(s). Generate a concise but detailed product description focusing on visual details like material, color, style, and key features. This description will be used to ensure consistency in AI image generation. Output only the description text, without any preamble.`;
+
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = new GoogleGenAI({ apiKey });
+            const contents: any = { parts: [{ text: prompt }] };
+            files.forEach(file => {
+                contents.parts.push({
+                    inlineData: { mimeType: file.mimeType, data: file.base64 }
+                });
+            });
+
+            const response: GenerateContentResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents,
+            });
+            return response.text.trim();
+        }
+    });
+};
+
 export const generateAffiliateImagePrompts = async (
     failoverParams: FailoverParams,
     state: AffiliateCreatorState
@@ -709,7 +735,8 @@ Output ONLY the valid JSON array of prompts.
 
 export const generateAffiliateImages = async (
     failoverParams: FailoverParams,
-    prompt: string
+    prompt: string,
+    aspectRatio: AffiliateCreatorState['aspectRatio']
 ): Promise<{ base64: string, mimeType: string, prompt: string }> => {
     return executeWithFailover({
         ...failoverParams,
@@ -722,13 +749,10 @@ export const generateAffiliateImages = async (
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
-                    aspectRatio: '9:16' // Default for social media
+                    aspectRatio: aspectRatio
                 }
             });
             const image = response.generatedImages[0];
-            // FIX: Check response directly for revisedPrompt as it might not be on the image object.
-            // Also, the `revisedPrompt` property may not exist on the GeneratedImage type, causing type errors.
-            // Use the original prompt as a fallback.
             const revisedPrompt = (response as any).revisedPrompt || prompt;
 
             if (!image?.image?.imageBytes) {
