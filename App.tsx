@@ -412,7 +412,7 @@ export default function App() {
     }
   }, [activeVideoApiKey, videoApiKeys, handleSetActiveVideoApiKey, t]);
   
-  const handleProceedToVideoGenerator = (prompt: string, image?: { base64: string, mimeType: string }) => {
+  const handleProceedToVideoGenerator = (prompt: string, data?: { base64: string, mimeType: string } | { affiliateImageId: string }) => {
     const generateUUID = () => {
         if (window.crypto && window.crypto.randomUUID) {
             return window.crypto.randomUUID();
@@ -426,7 +426,10 @@ export default function App() {
 
     const promptId = `prompt-${generateUUID()}`;
     try {
-        const payload = { prompt, image };
+        const payload = data && 'affiliateImageId' in data
+            ? { prompt, affiliateImageId: data.affiliateImageId }
+            : { prompt, image: data as { base64: string, mimeType: string } | undefined };
+
         sessionStorage.setItem(promptId, JSON.stringify(payload));
         const url = new URL(window.location.href);
         url.searchParams.set('init_video_prompt_id', promptId);
