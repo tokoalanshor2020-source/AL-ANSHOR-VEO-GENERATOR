@@ -195,12 +195,16 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         const targetImage = generatedImages.find(img => img.id === id);
         if (!targetImage) return;
 
-        setGeneratingStates(prev => ({ ...prev, [id]: action === 'regenerate' ? 'regenerating' : 'video' }));
+        // FIX: In AffiliateCreatorModal.tsx, fixed a TypeScript type mismatch where the `action` parameter ('regenerate', 'replace') was incompatible with the `generatingStates` state value type ('regenerating', 'replacing'). Mapped the action to the correct state value before updating the state.
+        const stateValue = action === 'regenerate' ? 'regenerating' : action === 'upload' ? 'uploading' : 'video';
+        setGeneratingStates(prev => ({ ...prev, [id]: stateValue }));
+
+        const storyFailover: FailoverParams = { allKeys: allStoryApiKeys, activeKey: activeStoryApiKey, onKeyUpdate: onStoryKeyUpdate };
         const videoFailover: FailoverParams = { allKeys: allVideoApiKeys, activeKey: activeVideoApiKey, onKeyUpdate: onVideoKeyUpdate };
         
         try {
             if (action === 'video') {
-                const promptJson = await generateAffiliateVideoPrompt(videoFailover, targetImage);
+                const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage);
                 onProceedToVideo(promptJson, { base64: targetImage.base64, mimeType: targetImage.mimeType });
             } else if (action === 'upload') {
                 const input = document.createElement('input');
