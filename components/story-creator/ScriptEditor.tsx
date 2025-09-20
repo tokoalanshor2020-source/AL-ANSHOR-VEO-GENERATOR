@@ -39,44 +39,46 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
     const { isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen } = props;
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-purple-500">
-                <h3 className="text-lg font-bold text-purple-400">{t('storyCreator.ideaWithReference') as string}</h3>
-                <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaWithReferenceDescription') as string}</p>
-                 <button 
-                    onClick={() => setIsReferenceIdeaModalOpen(true)}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
-                    disabled={!props.activeApiKey}
-                >
-                    <FilmIcon />
-                    {t('storyCreator.openReferenceIdea') as string}
-                </button>
-            </div>
+        <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-amber-500">
+                    <h3 className="text-lg font-bold text-amber-400">{t('storyCreator.needIdea') as string}</h3>
+                    <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescription') as string}</p>
+                    <button 
+                        onClick={() => setIsDirectorBridgeOpen(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
+                        disabled={!props.activeApiKey}
+                    >
+                        <MagicWandIcon />
+                        {t('storyCreator.openSmartDirector') as string}
+                    </button>
+                </div>
 
-             <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-base-300">
-                <h3 className="text-lg font-bold text-cyan-400">{t('storyCreator.haveIdea') as string}</h3>
-                <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescriptionDirect') as string}</p>
-                <button 
-                    onClick={() => props.onProceedToVideo('')}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!props.activeVideoApiKey}
-                >
-                    <RocketIcon />
-                    {t('storyCreator.openDirectVideo') as string}
-                </button>
-            </div>
+                <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-purple-500">
+                    <h3 className="text-lg font-bold text-purple-400">{t('storyCreator.ideaWithReference') as string}</h3>
+                    <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaWithReferenceDescription') as string}</p>
+                    <button 
+                        onClick={() => setIsReferenceIdeaModalOpen(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
+                        disabled={!props.activeApiKey}
+                    >
+                        <FilmIcon />
+                        {t('storyCreator.openReferenceIdea') as string}
+                    </button>
+                </div>
 
-            <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-base-300">
-                <h3 className="text-lg font-bold text-amber-400">{t('storyCreator.needIdea') as string}</h3>
-                <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescription') as string}</p>
-                <button 
-                    onClick={() => setIsDirectorBridgeOpen(true)}
-                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 disabled:opacity-50"
-                    disabled={!props.activeApiKey}
-                >
-                    <MagicWandIcon />
-                    {t('storyCreator.openSmartDirector') as string}
-                </button>
+                <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-cyan-500 lg:col-span-2">
+                    <h3 className="text-lg font-bold text-cyan-400">{t('storyCreator.haveIdea') as string}</h3>
+                    <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescriptionDirect') as string}</p>
+                    <button 
+                        onClick={() => props.onProceedToVideo('')}
+                        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!props.activeVideoApiKey}
+                    >
+                        <RocketIcon />
+                        {t('storyCreator.openDirectVideo') as string}
+                    </button>
+                </div>
             </div>
             
             {isDirectorBridgeOpen && (

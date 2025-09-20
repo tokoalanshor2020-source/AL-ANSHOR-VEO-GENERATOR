@@ -426,7 +426,7 @@ export default function App() {
           </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-8">
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-24">
         {view === 'story-creator' && (
            <StoryCreator
               allStoryApiKeys={storyApiKeys}
@@ -503,7 +503,7 @@ export default function App() {
         )}
       </main>
         
-      <footer className="w-full mt-12 pb-8 text-center text-gray-500 text-sm">
+      <footer className="sticky bottom-0 z-20 w-full border-t border-base-300 bg-base-100/90 backdrop-blur-sm py-4 text-center text-gray-500 text-sm">
         <p>Powered by MOH RIYAN ADI SAPUTRA</p>
       </footer>
     </div>
