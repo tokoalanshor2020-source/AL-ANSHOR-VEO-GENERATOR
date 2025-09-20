@@ -393,6 +393,9 @@ const enTranslations: Translations = {
         aspectRatio: "Aspect Ratio",
         narratorLanguage: "Narrator Language",
         customNarratorLanguagePlaceholder: "e.g., Sundanese",
+        generateVideoPrompt: "Generate Video Prompt",
+        copyPromptTooltip: "Copy Video Prompt",
+        copiedTooltip: "Copied!",
         vibes: {
             cafe_aesthetic: "Cafe Aesthetic",
             urban_night: "Urban Style (Night)",
@@ -784,6 +787,9 @@ const idTranslations: Translations = {
         aspectRatio: "Rasio Aspek",
         narratorLanguage: "Bahasa Narator",
         customNarratorLanguagePlaceholder: "Contoh: Bahasa Sunda",
+        generateVideoPrompt: "Buat Prompt Video",
+        copyPromptTooltip: "Salin Prompt Video",
+        copiedTooltip: "Tersalin!",
         vibes: {
             cafe_aesthetic: "Kafe Estetik",
             urban_night: "Gaya Urban (Malam)",

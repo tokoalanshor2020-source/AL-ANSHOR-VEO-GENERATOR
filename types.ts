@@ -57,6 +57,7 @@ export interface GeneratedAffiliateImage {
     base64: string;
     mimeType: string;
     prompt: string;
+    videoPrompt?: string;
 }
 
 export interface AffiliateCreatorState {

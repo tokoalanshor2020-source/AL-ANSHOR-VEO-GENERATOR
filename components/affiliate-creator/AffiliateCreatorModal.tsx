@@ -13,11 +13,15 @@ import { RefreshIcon } from '../icons/RefreshIcon';
 import { ReplaceIcon } from '../icons/ReplaceIcon';
 import { DownloadIcon } from '../icons/DownloadIcon';
 import { VideoIcon } from '../icons/VideoIcon';
+import { DocumentTextIcon } from '../icons/DocumentTextIcon';
+import { ClipboardIcon } from '../icons/ClipboardIcon';
+import { CheckIcon } from '../icons/CheckIcon';
 
 interface AffiliateCreatorModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onProceedToVideo: (prompt: string, image: { base64: string, mimeType: string }) => void;
+    // FIX: Update the `onProceedToVideo` prop to accept the `affiliateImageId` payload.
+    onProceedToVideo: (prompt: string, data?: { base64: string; mimeType: string } | { affiliateImageId: string }) => void;
     allStoryApiKeys: string[];
     activeStoryApiKey: string | null;
     onStoryKeyUpdate: (key: string) => void;
@@ -41,6 +45,29 @@ const generateUUID = () => {
 
 const MAX_FILE_SIZE_MB = 25;
 
+const CopyPromptButton: React.FC<{ prompt: string }> = ({ prompt }) => {
+    const { t } = useLocalization();
+    const [copied, setCopied] = useState(false);
+    const handleCopy = (e: React.MouseEvent) => {
+        e.stopPropagation(); // prevent opening overlay
+        navigator.clipboard.writeText(prompt);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+    return (
+        <button 
+            onClick={handleCopy} 
+            className="p-1.5 bg-black/50 text-white rounded-full hover:bg-brand-primary"
+            title={copied ? t('affiliateCreator.copiedTooltip') as string : t('affiliateCreator.copyPromptTooltip') as string}
+        >
+            {copied ? 
+                <CheckIcon className="h-4 w-4" /> :
+                <ClipboardIcon className="h-4 w-4" />
+            }
+        </button>
+    );
+};
+
 export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     isOpen,
     onClose,
@@ -60,7 +87,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [localReferenceFiles, setLocalReferenceFiles] = useState<ReferenceFile[]>([]);
     const [currentFileIndex, setCurrentFileIndex] = useState(0);
-    const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'uploading' | 'video'>>({});
+    const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'uploading' | 'video' | 'prompting'>>({});
     
     const { referenceFiles: storedFiles, generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio, narratorLanguage, customNarratorLanguage } = affiliateCreatorState;
 
@@ -191,6 +218,45 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         }
     };
     
+    const handleGenerateVideoPrompt = async (id: string) => {
+        const targetImage = affiliateCreatorState.generatedImages.find(img => img.id === id);
+        if (!targetImage || !activeStoryApiKey) return;
+
+        setGeneratingStates(prev => ({ ...prev, [id]: 'prompting' }));
+        setError(null);
+
+        const storyFailover: FailoverParams = { allKeys: allStoryApiKeys, activeKey: activeStoryApiKey, onKeyUpdate: onStoryKeyUpdate };
+        
+        try {
+            const langForPrompt = narratorLanguage === 'custom'
+                ? customNarratorLanguage
+                : narratorLanguage;
+
+            if (!langForPrompt.trim()) {
+                setError("Please select or enter a narrator language.");
+                return;
+            }
+
+            const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt, aspectRatio);
+            
+            const updatedImage: GeneratedAffiliateImage = { ...targetImage, videoPrompt: promptJson };
+
+            setAffiliateCreatorState(prev => ({
+                ...prev,
+                generatedImages: prev.generatedImages.map(img => img.id === id ? updatedImage : img)
+            }));
+            
+        } catch (e) {
+            setError(e instanceof Error ? e.message : `Failed to generate video prompt`);
+        } finally {
+            setGeneratingStates(prev => {
+                const newStates = { ...prev };
+                delete newStates[id];
+                return newStates;
+            });
+        }
+    };
+
     const handleAction = async (id: string, action: 'regenerate' | 'upload' | 'video') => {
         const targetImage = generatedImages.find(img => img.id === id);
         if (!targetImage) return;
@@ -212,8 +278,8 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                     return;
                 }
 
-                const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt);
-                onProceedToVideo(promptJson, { base64: targetImage.base64, mimeType: targetImage.mimeType });
+                const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt, aspectRatio);
+                onProceedToVideo(promptJson, { affiliateImageId: targetImage.id });
             } else if (action === 'upload') {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -283,9 +349,24 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                             <p className="text-sm text-gray-400">{t('affiliateCreator.description') as string}</p>
                         </div>
                     </div>
-                     <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
-                        {t('closeButton') as string}
-                    </button>
+                     <div className="flex items-center gap-4">
+                        <div className="relative group">
+                            <button
+                                onClick={() => onProceedToVideo('')}
+                                disabled={!activeVideoApiKey}
+                                className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-describedby="manual-video-tooltip"
+                            >
+                                {t('affiliateCreator.generateVideo') as string}
+                            </button>
+                             <span id="manual-video-tooltip" role="tooltip" className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 px-3 py-2 bg-base-300 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none text-center">
+                                Buat manual video dengan metode download gambar kemudian generate di jendela generating video jika tombol generate pada gambar bermasalah
+                            </span>
+                        </div>
+                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
+                            {t('closeButton') as string}
+                        </button>
+                    </div>
                 </div>
             </header>
             <main className="flex-grow overflow-y-auto">
@@ -406,10 +487,16 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             {generatedImages.map(img => (
                                 <div key={img.id} className="relative group aspect-[9/16] bg-base-300 rounded-lg overflow-hidden">
+                                    {img.videoPrompt && (
+                                        <div className="absolute top-2 right-2 z-10">
+                                            <CopyPromptButton prompt={img.videoPrompt} />
+                                        </div>
+                                    )}
                                     <img src={`data:${img.mimeType};base64,${img.base64}`} alt={img.prompt} className="w-full h-full object-cover"/>
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
                                         <p className="text-white text-xs leading-tight mb-2 max-h-20 overflow-hidden">{img.prompt}</p>
                                         <div className="space-y-1">
+                                            <button onClick={() => handleGenerateVideoPrompt(img.id)} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white"><DocumentTextIcon className="h-3 w-3" />{t('affiliateCreator.generateVideoPrompt') as string}</button>
                                             <button onClick={() => handleAction(img.id, 'regenerate')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white"><RefreshIcon className="h-3 w-3" />{t('affiliateCreator.regenerate') as string}</button>
                                             <button onClick={() => handleAction(img.id, 'upload')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-yellow-600 hover:bg-yellow-700 text-black"><ReplaceIcon className="h-3 w-3" />{t('affiliateCreator.upload') as string}</button>
                                             <button onClick={() => handleAction(img.id, 'video')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white"><VideoIcon className="h-3 w-3" />{t('affiliateCreator.generateVideo') as string}</button>
