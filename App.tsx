@@ -124,6 +124,7 @@ export default function App() {
                 model: 'woman',
                 vibe: 'studio_minimalis',
                 customVibe: '',
+                productDescription: '',
                 ...parsed, // Overwrite defaults with stored values if they exist
             };
         }
@@ -138,6 +139,7 @@ export default function App() {
         model: 'woman',
         vibe: 'studio_minimalis',
         customVibe: '',
+        productDescription: '',
     };
     });
   

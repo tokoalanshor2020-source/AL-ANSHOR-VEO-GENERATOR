@@ -66,6 +66,7 @@ export interface AffiliateCreatorState {
     model: 'woman' | 'man' | 'none';
     vibe: string;
     customVibe: string;
+    productDescription: string;
 }
 
 

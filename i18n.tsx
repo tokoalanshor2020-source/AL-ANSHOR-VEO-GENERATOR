@@ -387,6 +387,7 @@ const enTranslations: Translations = {
         modelNone: "Without Model",
         vibeSectionTitle: "3. Choose Content Vibe",
         customVibePlaceholder: "Describe your custom vibe...",
+        productDescriptionPlaceholder: "Optional: Describe your product for better consistency (e.g., 'terracotta cotton long-sleeve shirt').",
         vibes: {
             cafe_aesthetic: "Cafe Aesthetic",
             urban_night: "Urban Style (Night)",
@@ -772,6 +773,7 @@ const idTranslations: Translations = {
         modelNone: "Tanpa Model",
         vibeSectionTitle: "3. Pilih Vibe Konten",
         customVibePlaceholder: "Jelaskan vibe kustom Anda...",
+        productDescriptionPlaceholder: "Opsional: Deskripsikan produk Anda untuk konsistensi yang lebih baik (cth: 'kemeja katun lengan panjang warna terakota').",
         vibes: {
             cafe_aesthetic: "Kafe Estetik",
             urban_night: "Gaya Urban (Malam)",

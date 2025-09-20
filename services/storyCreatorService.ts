@@ -656,13 +656,16 @@ export const generateAffiliateImagePrompts = async (
     const modelInfo = state.model === 'none' 
         ? 'The images should focus exclusively on the product, with no human models present.'
         : `The images should feature a ${state.model} model interacting with or showcasing the product.`;
+    const productDescriptionInfo = state.productDescription 
+        ? `\n- **Product Description:** ${state.productDescription}` 
+        : '';
 
     const prompt = `
 You are a creative director for viral e-commerce and affiliate marketing content.
 Your task is to generate a series of distinct, high-quality image prompts based on a product reference.
 
 **Creative Brief:**
-- **Product:** Analyze the provided reference image(s).
+- **Product:** Analyze the provided reference image(s).${productDescriptionInfo}
 - **Number of Images:** ${state.numberOfImages}
 - **Content Vibe:** ${vibe}
 - **Model:** ${modelInfo}
