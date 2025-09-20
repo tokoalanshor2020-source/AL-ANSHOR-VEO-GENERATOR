@@ -3,7 +3,7 @@ import { ScriptEditor } from './ScriptEditor';
 import { Storyboard } from './Storyboard';
 import { PublishingKitView } from './PublishingKitView';
 import { useLocalization } from '../../i18n';
-import type { Character, DirectingSettings, StoryboardScene, PublishingKitData, ReferenceIdeaState } from '../../types';
+import type { Character, DirectingSettings, StoryboardScene, PublishingKitData, ReferenceIdeaState, AffiliateCreatorState } from '../../types';
 
 type ActiveTab = 'editor' | 'storyboard' | 'publishingKit';
 
@@ -27,7 +27,7 @@ interface MainContentProps {
     onGenerateStoryboard: () => Promise<void>;
     storyboard: StoryboardScene[];
     error: string | null;
-    onProceedToVideo: (prompt: string) => void;
+    onProceedToVideo: (prompt: string, image?: { base64: string, mimeType: string }) => void;
     activeApiKey: string | null;
     characters: Character[];
     directingSettings: DirectingSettings;
@@ -40,6 +40,8 @@ interface MainContentProps {
     setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
     isReferenceIdeaModalOpen: boolean;
     setIsReferenceIdeaModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isAffiliateCreatorModalOpen: boolean;
+    setIsAffiliateCreatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({ activeTab, setActiveTab, publishingKit, ...props }) => {

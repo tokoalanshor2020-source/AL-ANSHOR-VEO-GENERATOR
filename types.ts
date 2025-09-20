@@ -51,6 +51,23 @@ export interface ReferenceIdeaState {
   results: GeneratedPrompts | null;
 }
 
+// --- Affiliate Creator Types ---
+export interface GeneratedAffiliateImage {
+    id: string;
+    base64: string;
+    mimeType: string;
+    prompt: string;
+}
+
+export interface AffiliateCreatorState {
+    referenceFiles: StoredReferenceFile[];
+    generatedImages: GeneratedAffiliateImage[];
+    numberOfImages: number;
+    model: 'woman' | 'man' | 'none';
+    vibe: string;
+    customVibe: string;
+}
+
 
 // --- Story Creator Types ---
 

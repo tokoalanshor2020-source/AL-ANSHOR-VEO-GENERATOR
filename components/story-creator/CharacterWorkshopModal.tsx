@@ -55,6 +55,15 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
     const [physicalDetails, setPhysicalDetails] = useState('');
     const [scaleAndSize, setScaleAndSize] = useState('');
 
+    useEffect(() => {
+        if (isOpen) {
+            document.body.classList.add('modal-open');
+        }
+        return () => {
+            document.body.classList.remove('modal-open');
+        };
+    }, [isOpen]);
+
     const resetForm = useCallback(() => {
         referenceFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
         setReferenceFiles([]);
@@ -198,7 +207,7 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
             setMaterial(devData.material);
             setDesignLanguage(devData.design_language);
             setKeyFeatures(devData.key_features);
-            setCharacterPersonality(devData.character_personality);
+setCharacterPersonality(devData.character_personality);
             setPhysicalDetails(devData.physical_details);
             setScaleAndSize(devData.scale_and_size);
 
@@ -240,9 +249,18 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
     const currentFile = referenceFiles.length > 0 ? referenceFiles[currentFileIndex] : null;
 
     return (
-        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-20 flex flex-col font-sans" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 bg-base-100 z-50 flex flex-col font-sans" role="dialog" aria-modal="true">
+            <header className="flex-shrink-0 bg-base-200/80 backdrop-blur-sm border-b border-base-300 w-full z-10">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex items-center h-20">
+                    <div>
+                        <h2 className="text-xl font-bold text-indigo-400">{t('characterWorkshop.title') as string}</h2>
+                        <p className="text-sm text-gray-400">{t('characterWorkshop.subtitle') as string}</p>
+                    </div>
+                </div>
+            </header>
+            
             <main className="flex-grow overflow-y-auto bg-base-100">
-                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-8 pb-28">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         <div className="lg:sticky lg:top-8">
                              <div className="bg-base-200 p-6 rounded-lg border border-base-300">
@@ -313,7 +331,7 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
                             </div>
                         </div>
 
-                        <div className="bg-base-200 p-6 rounded-lg border border-base-300 space-y-4 mb-24">
+                        <div className="bg-base-200 p-6 rounded-lg border border-base-300 space-y-4">
                             <h3 className="font-semibold text-lg text-gray-200">{t('characterWorkshop.modelDetailsSection') as string}</h3>
                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
@@ -376,10 +394,10 @@ export const CharacterWorkshopModal: React.FC<CharacterWorkshopModalProps> = ({ 
                     </div>
                 </div>
             </main>
-            <footer className="flex-shrink-0 bg-base-200/80 backdrop-blur-sm border-t border-base-300 w-full sticky bottom-0 z-10">
+            <footer className="flex-shrink-0 bg-base-200/80 backdrop-blur-sm border-t border-base-300 w-full z-10">
                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex items-center justify-end h-20">
                      <div className="flex items-center gap-4">
-                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700 transition-colors">
+                        <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
                             {t('closeButton') as string}
                         </button>
                         <button onClick={handleSave} className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">

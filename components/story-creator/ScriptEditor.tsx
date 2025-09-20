@@ -3,9 +3,10 @@ import { useLocalization } from '../../i18n';
 import { MagicWandIcon } from '../icons/MagicWandIcon';
 import { RocketIcon } from '../icons/RocketIcon';
 import { DirectorBridgeModal } from './DirectorBridgeModal';
-import type { Character, DirectingSettings, ReferenceIdeaState } from '../../types';
+import type { Character, DirectingSettings, ReferenceIdeaState, AffiliateCreatorState } from '../../types';
 import { FilmIcon } from '../icons/FilmIcon';
 import { ReferenceIdeaModal } from './ReferenceIdeaModal';
+import { ShoppingCartIcon } from '../icons/ShoppingCartIcon';
 
 
 interface ScriptEditorProps {
@@ -24,19 +25,21 @@ interface ScriptEditorProps {
     activeApiKey: string | null;
     directingSettings: DirectingSettings;
     setDirectingSettings: React.Dispatch<React.SetStateAction<DirectingSettings>>;
-    onProceedToVideo: (prompt: string) => void;
+    onProceedToVideo: (prompt: string, image?: { base64: string, mimeType: string }) => void;
     activeVideoApiKey: string | null;
     referenceIdeaState: ReferenceIdeaState;
     setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
     isReferenceIdeaModalOpen: boolean;
     setIsReferenceIdeaModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isAffiliateCreatorModalOpen: boolean;
+    setIsAffiliateCreatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
     const { t } = useLocalization();
     const [isDirectorBridgeOpen, setIsDirectorBridgeOpen] = React.useState(false);
     
-    const { isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen } = props;
+    const { isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen, setIsAffiliateCreatorModalOpen } = props;
 
     return (
         <div className="p-6">
@@ -67,7 +70,20 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     </button>
                 </div>
 
-                <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-cyan-500 lg:col-span-2">
+                <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-green-500">
+                    <h3 className="text-lg font-bold text-green-400">{t('storyCreator.createAffiliateVideo') as string}</h3>
+                    <p className="text-gray-400 text-sm mb-4">{t('affiliateCreator.description') as string}</p>
+                    <button
+                        onClick={() => setIsAffiliateCreatorModalOpen(true)}
+                        className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                        disabled={!props.activeApiKey || !props.activeVideoApiKey}
+                    >
+                        <ShoppingCartIcon />
+                        {t('storyCreator.createAffiliateVideo') as string}
+                    </button>
+                </div>
+
+                <div className="text-center p-4 bg-base-300/50 rounded-lg border-2 border-dashed border-cyan-500">
                     <h3 className="text-lg font-bold text-cyan-400">{t('storyCreator.haveIdea') as string}</h3>
                     <p className="text-gray-400 text-sm mb-4">{t('storyCreator.ideaDescriptionDirect') as string}</p>
                     <button 
@@ -110,7 +126,7 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     onProceedToVideo={props.onProceedToVideo}
                     allApiKeys={props.allStoryApiKeys}
                     activeApiKey={props.activeApiKey}
-                    // FIX: The prop is named `onStoryKeyUpdate`, not `onKeyUpdate`.
+                    // FIX: The prop is named `onKeyUpdate`, which matches the modal's prop definition.
                     onKeyUpdate={props.onStoryKeyUpdate}
                     referenceIdeaState={props.referenceIdeaState}
                     setReferenceIdeaState={props.setReferenceIdeaState}

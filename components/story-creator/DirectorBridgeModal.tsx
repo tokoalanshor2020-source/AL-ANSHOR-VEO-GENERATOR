@@ -156,9 +156,9 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = (props) =
     const contentFormatOptions = t('smartDirector.contentFormats') as { [key: string]: string };
 
     return (
-        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-20 flex flex-col font-sans" role="dialog" aria-modal="true">
-            <main className="flex-grow overflow-y-auto">
-                <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+        <div className="fixed inset-0 bg-base-100 z-50 flex flex-col font-sans" role="dialog" aria-modal="true">
+            <main className="flex-grow overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 pb-24">
+                <div className="mx-auto max-w-5xl">
                 {step === 1 && (
                     <div className="space-y-4 max-w-2xl mx-auto">
                         <div className="text-center">
@@ -235,7 +235,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = (props) =
                 )}
                 
                 {step === 2 && (
-                    <div className="space-y-3 max-w-2xl mx-auto mb-24">
+                    <div className="space-y-3 max-w-2xl mx-auto">
                         <div className="text-center">
                             <h2 className="text-2xl font-bold text-amber-400">{t('smartDirector.step2Title') as string}</h2>
                         </div>
@@ -253,7 +253,7 @@ export const DirectorBridgeModal: React.FC<DirectorBridgeModalProps> = (props) =
                 )}
 
                 {step === 3 && (
-                     <div className="space-y-6 max-w-3xl mx-auto mb-24">
+                     <div className="space-y-6 max-w-3xl mx-auto">
                          <div className="text-center">
                             <h2 className="text-2xl font-bold text-amber-400">{t('smartDirector.step3Title') as string}</h2>
                         </div>

@@ -1,7 +1,7 @@
 // services/storyCreatorService.ts
 
 import { GoogleGenAI, Type, type GenerateContentResponse, type GenerateImagesResponse } from "@google/genai";
-import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions as RealStoryIdeaOptions, GeneratedPrompts, ReferenceFile } from '../../types';
+import type { Character, DirectingSettings, StoryboardScene, StoryIdea, PublishingKitData, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions as RealStoryIdeaOptions, GeneratedPrompts, ReferenceFile, AffiliateCreatorState } from '../../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
 
@@ -32,10 +32,6 @@ export interface DevelopedCharacterData {
     physical_details: string;
     scale_and_size: string;
 }
-
-// FIX: This interface was incorrectly duplicated in types.ts. Using the correct one.
-// type StoryIdeaOptions = RealStoryIdeaOptions;
-
 
 export interface PublishingKitOptions {
     storyboard: StoryboardScene[];
@@ -193,7 +189,7 @@ export const generateStoryboard = async (failoverParams: FailoverParams, options
             }));
 
             // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
-            const result = safeJsonParse((response as GenerateContentResponse).text);
+            const result = safeJsonParse(response.text);
             return result.storyboard;
         }
     });
@@ -261,13 +257,13 @@ export const generateBlueprintPrompt = async (failoverParams: FailoverParams, sc
                 ${narrationScript ? `\n//** 7. NARRATION SCRIPT **//\n${narrationScript}` : ''}
             `;
             
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             }));
             
             // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
-            return (response as GenerateContentResponse).text.trim();
+            return response.text.trim();
         }
     });
 };
@@ -311,12 +307,12 @@ export const generateCinematicPrompt = async (failoverParams: FailoverParams, sc
                 If the original narration script is empty, you MUST omit the "NARRATION SCRIPT" section entirely.
             `;
 
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             }));
             // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
-            return (response as GenerateContentResponse).text.trim();
+            return response.text.trim();
         }
     });
 };
@@ -424,7 +420,7 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
                 - Create affiliate link templates. Use "[LINK]" as a placeholder.
             `;
             
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -434,7 +430,7 @@ export const generatePublishingKit = async (failoverParams: FailoverParams, opti
             }));
 
             // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
-            return safeJsonParse((response as GenerateContentResponse).text);
+            return safeJsonParse(response.text);
         }
     });
 };
@@ -530,7 +526,16 @@ export const developCharacter = async (failoverParams: FailoverParams, options: 
             }));
             
             // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
-            return safeJsonParse((response as GenerateContentResponse).text);
+            const result = safeJsonParse(response.text)
+            // FIX: Map snake_case from the API to camelCase for the Character type.
+            return {
+                ...result,
+                brandName: result.brand_name,
+                modelName: result.model_name,
+                designLanguage: result.design_language,
+                keyFeatures: result.key_features,
+                actionDNA: [], // This will be generated in a separate step
+            };
         }
     });
 };
@@ -561,7 +566,7 @@ export const generateActionDna = async (failoverParams: FailoverParams, characte
 
                 Generate a JSON object with a single key "actions" containing an array of strings.
             `;
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -570,7 +575,7 @@ export const generateActionDna = async (failoverParams: FailoverParams, characte
                 }
             }));
             // FIX: The type of 'response' is not being correctly inferred. Cast to GenerateContentResponse to access the 'text' property.
-            const result = safeJsonParse((response as GenerateContentResponse).text);
+            const result = safeJsonParse(response.text);
             return result.actions;
         }
     });
@@ -730,7 +735,7 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
                     - **concept_caption**: A new, high-energy, viral, clickbait-style multi-line thumbnail caption in ${language}. **MUST use ALL CAPS.** Use '\\n' for line breaks. Example (ID): "NEKAT MASUK SINI!\\nAPA YANG TERJADI?!". Example (ES): "¡SALTO ÉPICO!\\n¿LO LOGRARÁ?".
                     - **advanced_prompt_json**: A new STRING containing a valid JSON object. This JSON is a design blueprint. CRITICAL INSTRUCTION: The values for \`visual_prompt\` and \`composition_strategy\` inside this JSON string MUST be written **in English**. The values for \`comment\` and the \`text\` within the \`overlay_elements\` array MUST be localized into ${language}. The overall structure must be preserved.
             `;
-            const response = await makeGenerativeApiCall(() => ai.models.generateContent({
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
@@ -739,7 +744,7 @@ export const generateLocalizedPublishingAssets = async (failoverParams: Failover
                 }
             }));
 
-            return safeJsonParse((response as GenerateContentResponse).text);
+            return safeJsonParse(response.text);
         }
     });
 };
@@ -899,6 +904,109 @@ export const analyzeReferences = async (failoverParams: FailoverParams, files: R
             }));
             
             return safeJsonParse(response.text);
+        }
+    });
+};
+
+const affiliatePromptsSchema = {
+    type: Type.OBJECT,
+    properties: {
+        prompts: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING, description: "A detailed, cinematic prompt for an AI image generator." }
+        }
+    },
+    required: ["prompts"]
+};
+
+export const generateAffiliateImagePrompts = async (failoverParams: FailoverParams, options: { referenceFiles: { base64: string, mimeType: string }[], numberOfImages: number, idea?: string, model: AffiliateCreatorState['model'], vibe: string, customVibe?: string }): Promise<string[]> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            const { referenceFiles, numberOfImages, idea, model, vibe, customVibe } = options;
+
+            const finalVibe = vibe === 'custom' && customVibe ? customVibe : vibe.replace(/_/g, ' ');
+            
+            const modelInstruction = model === 'none'
+                ? 'The product MUST be the sole focus. Do NOT include any human models (man or woman).'
+                : `A ${model} model should be featured interacting with or presenting the product.`;
+
+            const prompt = `
+                You are a creative director for viral social media content, specializing in affiliate marketing for e-commerce products.
+                Analyze the provided reference product images/videos and the user's core idea.
+
+                User's Core Idea: "${idea || 'Showcase the product in various appealing settings.'}"
+                Model to Feature: ${modelInstruction}
+                Content Vibe/Style: ${finalVibe}
+                Number of shots requested: ${numberOfImages}
+
+                Your task is to generate a sequence of ${numberOfImages} distinct, engaging, and visually consistent shot ideas for a short video ad (like a TikTok or Instagram Reel).
+                For each shot, provide a detailed and cinematic prompt suitable for a high-end AI image generator like Imagen 4.0.
+
+                CRITICAL REQUIREMENTS:
+                1.  **Consistency:** All prompts must describe scenes that are visually connected. Maintain product consistency above all. If a human model is implied, maintain their consistency as well.
+                2.  **Variety:** Each prompt should represent a different camera angle, shot type, or context (e.g., product hero shot, lifestyle shot, detail shot, unboxing shot, product in use) that fits the requested vibe.
+                3.  **Viral Quality:** The shots should be eye-catching, high-energy, and follow modern social media trends.
+                4.  **Clarity:** Prompts must be descriptive and unambiguous.
+
+                Output a single, valid JSON object that strictly adheres to the schema. The object must contain one key, "prompts", which is an array of exactly ${numberOfImages} string prompts.
+            `;
+            
+            const contents = {
+                parts: [
+                    { text: prompt },
+                    ...referenceFiles.map(file => ({
+                        inlineData: { data: file.base64, mimeType: file.mimeType }
+                    }))
+                ]
+            };
+
+            const response: GenerateContentResponse = await makeGenerativeApiCall(() => ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: contents,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: affiliatePromptsSchema,
+                }
+            }));
+            
+            const result = safeJsonParse(response.text);
+            if (!result.prompts || !Array.isArray(result.prompts) || result.prompts.length === 0) {
+                throw new Error("AI failed to return a valid list of prompts.");
+            }
+            return result.prompts;
+        }
+    });
+};
+
+export const generateAffiliateImages = async (failoverParams: FailoverParams, prompt: string, aspectRatio: string = '9:16'): Promise<ThumbnailData> => {
+    return executeWithFailover({
+        ...failoverParams,
+        apiExecutor: async (apiKey) => {
+            const ai = getAiInstance(apiKey);
+            
+            const response: GenerateImagesResponse = await makeGenerativeApiCall(() => ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: `ultra high quality, professional product photography for social media, cinematic, ${prompt}`,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/png',
+                    aspectRatio: aspectRatio as "1:1" | "16:9" | "9:16" | "4:3" | "3:4",
+                },
+            }));
+
+            if (!response.generatedImages || response.generatedImages.length === 0) {
+                // FIX: Property 'revisedPrompt' may not be on the GeneratedImage type and is inaccessible if the generatedImages array is empty.
+                // The revised prompt can often be found on the top-level response object.
+                const revisedPrompt = (response as any).revisedPrompt;
+                throw new Error(`AI did not return an image for the affiliate content. Revised prompt: ${revisedPrompt || 'N/A'}`);
+            }
+            const image = response.generatedImages[0];
+            return {
+                base64: image.image.imageBytes,
+                mimeType: 'image/png',
+            };
         }
     });
 };

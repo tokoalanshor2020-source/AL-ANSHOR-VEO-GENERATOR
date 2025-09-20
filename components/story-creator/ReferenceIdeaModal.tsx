@@ -55,20 +55,17 @@ const CopyButton: React.FC<{ textToCopy: string }> = ({ textToCopy }) => {
 export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, onClose, onProceedToVideo, allApiKeys, activeApiKey, onKeyUpdate, referenceIdeaState, setReferenceIdeaState }) => {
     const { t } = useLocalization();
     
-    // Local state for UI and non-serializable data
     const [isProcessing, setIsProcessing] = useState(false);
     const [localReferenceFiles, setLocalReferenceFiles] = useState<ReferenceFile[]>([]);
     const [currentFileIndex, setCurrentFileIndex] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
-    // Destructure from props for easier access
     const { referenceFiles: storedFiles, results } = referenceIdeaState;
 
     const handleClose = () => {
         onClose();
     };
     
-    // Effect to synchronize props with local state that includes blob URLs
     useEffect(() => {
         let isMounted = true;
         
@@ -104,7 +101,6 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
         
         return () => {
             isMounted = false;
-            // Clean up blob URLs when component unmounts or before effect re-runs
             setLocalReferenceFiles(currentFiles => {
                 currentFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
                 return [];
@@ -123,11 +119,9 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
         setReferenceIdeaState(prev => ({ ...prev, referenceFiles: serializableFiles }));
     }, [setReferenceIdeaState]);
 
-    // FIX: Re-implemented file validation and processing with Promise.all to handle multiple asynchronous file reads correctly.
     const validateAndAddFiles = useCallback(async (files: FileList) => {
         const processFile = (file: File): Promise<ReferenceFile | null> => {
             return new Promise(async (resolve) => {
-                // Validate Size
                 if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
                     alert(`File ${file.name} is too large. Max size is ${MAX_FILE_SIZE_MB}MB.`);
                     resolve(null);
@@ -136,7 +130,6 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
 
                 const type = file.type.startsWith('video') ? 'video' : 'image';
 
-                // Validate Duration for Videos
                 if (type === 'video') {
                     try {
                         await new Promise<void>((res, rej) => {
@@ -160,7 +153,6 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                     }
                 }
 
-                // Read file
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const base64 = (e.target?.result as string).split(',')[1];
@@ -241,7 +233,7 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
     const currentFile = localReferenceFiles.length > 0 ? localReferenceFiles[currentFileIndex] : null;
 
     return (
-        <div className="fixed top-16 inset-x-0 bottom-0 bg-base-100 z-20 flex flex-col font-sans" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 bg-base-100 z-50 flex flex-col font-sans" role="dialog" aria-modal="true">
             <header className="flex-shrink-0 bg-base-200/80 backdrop-blur-sm border-b border-base-300 w-full sticky top-0 z-10">
                  <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-20">
                     <div>
@@ -256,12 +248,14 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                 </div>
             </header>
             <main className="flex-grow overflow-y-auto">
-                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                 <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                     <div className="lg:sticky lg:top-28 bg-base-200 p-6 rounded-lg border border-base-300 space-y-4">
                         <h3 className="font-semibold text-lg text-gray-200">{t('referenceIdeaModal.uploadArea') as string}</h3>
+                        
                         <input type="file" id="refFileInput" className="hidden" multiple accept="image/*,video/mp4,video/quicktime,video/webm" onChange={handleFilesChange} />
-                         <div className="p-4 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[250px] flex flex-col justify-between">
-                             {localReferenceFiles.length === 0 ? (
+                        
+                        <div className="p-4 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[180px] flex flex-col justify-between">
+                            {localReferenceFiles.length === 0 ? (
                                 <label htmlFor="refFileInput" className="cursor-pointer flex-grow flex flex-col items-center justify-center p-2 rounded-lg text-center hover:bg-base-300/30 transition-colors">
                                      <PlusIcon className="h-8 w-8 text-gray-400"/>
                                      <span className="text-sm mt-1 text-gray-400">{t('characterWorkshop.uploadButton') as string}</span>
@@ -298,6 +292,7 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                                     )}
                                 </div>
                             )}
+
                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700/50">
                                 <div className="text-xs text-gray-500">
                                     {localReferenceFiles.length > 0 ? `${currentFileIndex + 1} / ${localReferenceFiles.length}` : t('characterWorkshop.fileTypes') as string}
@@ -306,43 +301,66 @@ export const ReferenceIdeaModal: React.FC<ReferenceIdeaModalProps> = ({ isOpen, 
                                     <PlusIcon className="h-4 w-4"/> {t('characterWorkshop.uploadButton') as string}
                                 </label>
                             </div>
-                         </div>
-                         <button onClick={handleAnalyze} disabled={isProcessing || localReferenceFiles.length === 0} className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50">
-                            {(isProcessing ? t('referenceIdeaModal.analyzingButton') : t('referenceIdeaModal.analyzeButton')) as string}
-                        </button>
+                        </div>
+                         <div className="mt-4">
+                            <button onClick={handleAnalyze} disabled={isProcessing || !activeApiKey || localReferenceFiles.length === 0} className="w-full inline-flex justify-center items-center gap-2 px-6 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:text-gray-400 disabled:cursor-not-allowed disabled:opacity-70 transition-colors">
+                                {(isProcessing ? t('referenceIdeaModal.analyzingButton') : t('referenceIdeaModal.analyzeButton')) as string}
+                            </button>
+                            {!activeApiKey && (
+                                <p className="text-xs text-yellow-400/80 text-center mt-2">
+                                    {t('alertSetStoryApiKey') as string}
+                                </p>
+                            )}
+                        </div>
                     </div>
+
                     <div className="bg-base-200 p-6 rounded-lg border border-base-300 space-y-4">
-                         <h3 className="font-semibold text-lg text-gray-200">{t('referenceIdeaModal.resultsTitle') as string}</h3>
-                         {error && <p className="text-red-400 text-sm bg-red-900/30 p-2 rounded-md">{error}</p>}
-                         {!results && !isProcessing && (
-                            <div className="text-center text-gray-500 py-10">
-                                <p>{t('referenceIdeaModal.placeholder') as string}</p>
-                            </div>
-                         )}
-                         {results && (
-                            <div className="space-y-4">
+                        <h3 className="font-semibold text-lg text-gray-200">{t('referenceIdeaModal.resultsTitle') as string}</h3>
+                        {error && <p className="text-red-400 text-center">{error}</p>}
+                        {!results && !isProcessing && (
+                            <div className="text-center text-gray-500 py-10">{t('referenceIdeaModal.placeholder') as string}</div>
+                        )}
+                        {isProcessing && <div className="text-center text-gray-400 py-10">{t('referenceIdeaModal.analyzingButton') as string}</div>}
+                        {results && (
+                            <div className="space-y-6">
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-300 mb-1">{t('referenceIdeaModal.simplePromptLabel') as string}</label>
                                     <div className="relative">
-                                        <textarea readOnly value={results.simple_prompt} className="w-full h-40 bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200" />
+                                        <pre className="p-3 bg-base-300 rounded-md text-sm text-gray-300 whitespace-pre-wrap font-mono min-h-[150px] overflow-auto">
+                                            {results.simple_prompt}
+                                        </pre>
                                         <CopyButton textToCopy={results.simple_prompt} />
                                     </div>
-                                    <button onClick={() => onProceedToVideo(results.simple_prompt)} className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg">
+                                    <button 
+                                        onClick={() => onProceedToVideo(results.simple_prompt)}
+                                        className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg text-sm"
+                                    >
                                         {t('referenceIdeaModal.useSimplePromptButton') as string}
                                     </button>
                                 </div>
-                                 <div>
+                                <div>
                                     <label className="block text-sm font-semibold text-gray-300 mb-1">{t('referenceIdeaModal.jsonPromptLabel') as string}</label>
-                                    <div className="relative">
-                                        <textarea readOnly value={results.json_prompt} className="w-full h-64 bg-base-300 border border-gray-600 rounded-lg p-2.5 text-xs font-mono text-gray-200" />
-                                         <CopyButton textToCopy={results.json_prompt} />
+                                     <div className="relative">
+                                        <pre className="p-3 bg-base-300 rounded-md text-sm text-gray-300 whitespace-pre-wrap font-mono min-h-[150px] overflow-auto">
+                                            {(() => {
+                                                try {
+                                                    return JSON.stringify(JSON.parse(results.json_prompt), null, 2);
+                                                } catch {
+                                                    return results.json_prompt;
+                                                }
+                                            })()}
+                                        </pre>
+                                        <CopyButton textToCopy={results.json_prompt} />
                                     </div>
-                                     <button onClick={() => onProceedToVideo(results.json_prompt)} className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg">
-                                        {t('referenceIdeaModal.useJsonPromptButton') as string}
+                                    <button 
+                                        onClick={() => onProceedToVideo(results.json_prompt)}
+                                        className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg text-sm"
+                                    >
+                                         {t('referenceIdeaModal.useJsonPromptButton') as string}
                                     </button>
                                 </div>
                             </div>
-                         )}
+                        )}
                     </div>
                 </div>
             </main>

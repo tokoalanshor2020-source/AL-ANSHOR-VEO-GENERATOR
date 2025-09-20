@@ -5,10 +5,11 @@ import { Loader } from './components/Loader';
 import { VideoPlayer } from './components/VideoPlayer';
 import { ApiKeyManager } from './components/ApiKeyManager';
 import { StoryCreator } from './components/story-creator/StoryCreator';
-import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, VideoGeneratorState, ReferenceIdeaState } from './types';
+import type { GeneratorOptions, Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, VideoGeneratorState, ReferenceIdeaState, AffiliateCreatorState } from './types';
 import { generateVideo } from './services/geminiService';
 import { useLocalization } from './i18n';
 import { TutorialModal } from './components/TutorialModal';
+import { AffiliateCreatorModal } from './components/affiliate-creator/AffiliateCreatorModal';
 
 const STORY_API_KEYS_STORAGE_KEY = 'gemini-story-api-keys';
 const ACTIVE_STORY_API_KEY_STORAGE_KEY = 'gemini-active-story-api-key';
@@ -19,6 +20,7 @@ const STORY_CREATOR_SESSION_KEY = 'gemini-story-creator-session';
 const VIDEO_GENERATOR_SESSION_KEY = 'gemini-video-generator-session';
 const APP_VIEW_STORAGE_KEY = 'gemini-app-view';
 const REFERENCE_IDEA_SESSION_KEY = 'gemini-reference-idea-session';
+const AFFILIATE_CREATOR_SESSION_KEY = 'gemini-affiliate-creator-session';
 
 
 type AppView = 'story-creator' | 'video-generator';
@@ -107,6 +109,37 @@ export default function App() {
         results: null,
     };
   });
+
+  // State for Affiliate Creator modal, persisted to localStorage
+  const [affiliateCreatorState, setAffiliateCreatorState] = useState<AffiliateCreatorState>(() => {
+    try {
+        const storedSession = localStorage.getItem(AFFILIATE_CREATOR_SESSION_KEY);
+        if (storedSession) {
+            const parsed = JSON.parse(storedSession);
+            // Ensure old sessions have new defaults
+            return {
+                referenceFiles: [],
+                generatedImages: [],
+                numberOfImages: 10,
+                model: 'woman',
+                vibe: 'studio_minimalis',
+                customVibe: '',
+                ...parsed, // Overwrite defaults with stored values if they exist
+            };
+        }
+    } catch (e) {
+        console.error("Failed to parse affiliate creator session from localStorage", e);
+        localStorage.removeItem(AFFILIATE_CREATOR_SESSION_KEY);
+    }
+    return {
+        referenceFiles: [],
+        generatedImages: [],
+        numberOfImages: 10,
+        model: 'woman',
+        vibe: 'studio_minimalis',
+        customVibe: '',
+    };
+    });
   
   // --- Lifted State from StoryCreator ---
   const [characters, setCharacters] = useState<Character[]>(() => {
@@ -141,6 +174,7 @@ export default function App() {
   const [publishingKit, setPublishingKit] = useState<PublishingKitData | null>(initialSession.publishingKit || null);
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialSession.activeTab || 'editor');
   const [isReferenceIdeaModalOpen, setIsReferenceIdeaModalOpen] = useState(initialSession.isReferenceIdeaModalOpen || false);
+  const [isAffiliateCreatorModalOpen, setIsAffiliateCreatorModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -149,17 +183,17 @@ export default function App() {
 
     if (promptId) {
         try {
-            const storedPrompt = sessionStorage.getItem(promptId);
-            if (storedPrompt !== null) {
+            const storedData = sessionStorage.getItem(promptId);
+            if (storedData !== null) {
+                const payload = JSON.parse(storedData);
                 setView('video-generator');
                 setVideoGeneratorState(prevState => ({
                     ...prevState,
-                    prompt: storedPrompt,
-                    imageFile: null // Reset image when coming from storyboard
+                    prompt: payload.prompt,
+                    imageFile: payload.image || null
                 }));
-                sessionStorage.removeItem(promptId); // Clean up
+                sessionStorage.removeItem(promptId);
 
-                // Clean the URL to avoid re-triggering on refresh
                 urlParams.delete('init_video_prompt_id');
                 const newRelativeUrl = `${window.location.pathname}?${urlParams.toString()}`.replace(/\?$/, '');
                 window.history.replaceState({}, document.title, newRelativeUrl);
@@ -228,6 +262,14 @@ export default function App() {
   }, [referenceIdeaState]);
 
   useEffect(() => {
+    try {
+        localStorage.setItem(AFFILIATE_CREATOR_SESSION_KEY, JSON.stringify(affiliateCreatorState));
+    } catch(e) {
+        console.error("Failed to save affiliate creator session to localStorage", e);
+    }
+    }, [affiliateCreatorState]);
+
+  useEffect(() => {
     // Load story keys
     try {
       const storedKeys = localStorage.getItem(STORY_API_KEYS_STORAGE_KEY);
@@ -273,6 +315,20 @@ export default function App() {
     }
   }, []);
   
+    useEffect(() => {
+        const styleId = 'modal-styling-rules';
+        if (!document.getElementById(styleId)) {
+            const style = document.createElement('style');
+            style.id = styleId;
+            style.innerHTML = `
+                body.modal-open .main-app-footer {
+                    display: none;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }, []);
+
   const handleSetStoryApiKeys = (keys: string[]) => {
     setStoryApiKeys(keys);
     localStorage.setItem(STORY_API_KEYS_STORAGE_KEY, JSON.stringify(keys));
@@ -328,18 +384,17 @@ export default function App() {
       const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
 // FIX: Cast result of t() to string
       const displayError = errorMessage === 'errorRateLimit' ? t('errorRateLimit') as string : errorMessage;
-      setError(displayError as string);
+      setError(displayError);
     } finally {
       setIsLoading(false);
     }
   }, [activeVideoApiKey, videoApiKeys, handleSetActiveVideoApiKey, t]);
   
-  const handleProceedToVideoGenerator = (prompt: string) => {
+  const handleProceedToVideoGenerator = (prompt: string, image?: { base64: string, mimeType: string }) => {
     const generateUUID = () => {
         if (window.crypto && window.crypto.randomUUID) {
             return window.crypto.randomUUID();
         }
-        // Fallback for older browsers
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             const r = (Math.random() * 16) | 0;
             const v = c === 'x' ? r : (r & 0x3) | 0x8;
@@ -349,7 +404,8 @@ export default function App() {
 
     const promptId = `prompt-${generateUUID()}`;
     try {
-        sessionStorage.setItem(promptId, prompt);
+        const payload = { prompt, image };
+        sessionStorage.setItem(promptId, JSON.stringify(payload));
         const url = new URL(window.location.href);
         url.searchParams.set('init_video_prompt_id', promptId);
         window.open(url.toString(), '_blank');
@@ -400,7 +456,7 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-base-100 font-sans text-gray-200">
+    <div className="min-h-screen bg-base-100 font-sans text-gray-200 flex flex-col">
       {keyManagerConfig && (
         <ApiKeyManager
           keyType={keyManagerConfig.type}
@@ -416,6 +472,22 @@ export default function App() {
         <TutorialModal onClose={() => setIsTutorialOpen(false)} />
       )}
       
+      {isAffiliateCreatorModalOpen && (
+          <AffiliateCreatorModal
+            isOpen={isAffiliateCreatorModalOpen}
+            onClose={() => setIsAffiliateCreatorModalOpen(false)}
+            onProceedToVideo={handleProceedToVideoGenerator}
+            allStoryApiKeys={storyApiKeys}
+            activeStoryApiKey={activeStoryApiKey}
+            onStoryKeyUpdate={handleSetActiveStoryApiKey}
+            allVideoApiKeys={videoApiKeys}
+            activeVideoApiKey={activeVideoApiKey}
+            onVideoKeyUpdate={handleSetActiveVideoApiKey}
+            affiliateCreatorState={affiliateCreatorState}
+            setAffiliateCreatorState={setAffiliateCreatorState}
+          />
+      )}
+
       <header className="sticky top-0 z-30 w-full border-b border-base-300 bg-base-100/90 backdrop-blur-sm">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Header 
@@ -426,7 +498,7 @@ export default function App() {
           </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-24">
+      <main className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 mt-8 pb-24 flex-grow">
         {view === 'story-creator' && (
            <StoryCreator
               allStoryApiKeys={storyApiKeys}
@@ -459,6 +531,8 @@ export default function App() {
               setReferenceIdeaState={setReferenceIdeaState}
               isReferenceIdeaModalOpen={isReferenceIdeaModalOpen}
               setIsReferenceIdeaModalOpen={setIsReferenceIdeaModalOpen}
+              isAffiliateCreatorModalOpen={isAffiliateCreatorModalOpen}
+              setIsAffiliateCreatorModalOpen={setIsAffiliateCreatorModalOpen}
            />
         )}
 
@@ -503,7 +577,7 @@ export default function App() {
         )}
       </main>
         
-      <footer className="sticky bottom-0 z-20 w-full border-t border-base-300 bg-base-100/90 backdrop-blur-sm py-4 text-center text-gray-500 text-sm">
+      <footer className="main-app-footer sticky bottom-0 z-20 w-full border-t border-base-300 bg-base-100/90 backdrop-blur-sm py-4 text-center text-gray-500 text-sm">
         <p>Powered by MOH RIYAN ADI SAPUTRA</p>
       </footer>
     </div>

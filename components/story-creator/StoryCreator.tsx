@@ -3,7 +3,7 @@ import { Sidebar } from './Sidebar';
 import { MainContent } from './MainContent';
 import { ConfirmationModal } from '../ConfirmationModal';
 import { useLocalization } from '../../i18n';
-import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, ReferenceIdeaState } from '../../types';
+import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, ActiveTab, ReferenceIdeaState, AffiliateCreatorState } from '../../types';
 import { generateStoryboard, generatePublishingKit } from '../../services/storyCreatorService';
 import { FailoverParams } from '../../services/geminiService';
 
@@ -17,7 +17,7 @@ interface StoryCreatorProps {
     onVideoKeyUpdate: (key: string) => void;
 
     onManageKeysClick: () => void;
-    onProceedToVideo: (prompt: string) => void;
+    onProceedToVideo: (prompt: string, image?: { base64: string, mimeType: string }) => void;
     
     // State lifted to App.tsx
     characters: Character[];
@@ -42,6 +42,8 @@ interface StoryCreatorProps {
     setReferenceIdeaState: React.Dispatch<React.SetStateAction<ReferenceIdeaState>>;
     isReferenceIdeaModalOpen: boolean;
     setIsReferenceIdeaModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    isAffiliateCreatorModalOpen: boolean;
+    setIsAffiliateCreatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const StoryCreator: React.FC<StoryCreatorProps> = (props) => {
