@@ -394,6 +394,9 @@ const enTranslations: Translations = {
         narratorLanguage: "Narrator Language",
         customNarratorLanguagePlaceholder: "e.g., Sundanese",
         generateVideoPrompt: "Generate Video Prompt",
+        promptHook: "Hook Prompt",
+        promptContinuation: "Continuation Prompt",
+        promptClosing: "Closing Prompt",
         copyPromptTooltip: "Copy Video Prompt",
         copiedTooltip: "Copied!",
         vibes: {
@@ -788,6 +791,9 @@ const idTranslations: Translations = {
         narratorLanguage: "Bahasa Narator",
         customNarratorLanguagePlaceholder: "Contoh: Bahasa Sunda",
         generateVideoPrompt: "Buat Prompt Video",
+        promptHook: "Prompt Hook",
+        promptContinuation: "Prompt Lanjutan",
+        promptClosing: "Prompt Closing",
         copyPromptTooltip: "Salin Prompt Video",
         copiedTooltip: "Tersalin!",
         vibes: {

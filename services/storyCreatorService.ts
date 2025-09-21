@@ -1,6 +1,6 @@
 // services/storyCreatorService.ts
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, StoryIdea, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions, GeneratedPrompts, ReferenceFile, GeneratedAffiliateImage, AffiliateCreatorState } from '../types';
+import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, StoryIdea, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions, GeneratedPrompts, ReferenceFile, GeneratedAffiliateImage, AffiliateCreatorState, VideoPromptType } from '../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 
 
@@ -763,28 +763,74 @@ export const generateAffiliateImages = async (
     });
 };
 
+const affiliateVideoPromptSchema = (narrationDescription: string) => ({
+    type: Type.OBJECT,
+    properties: {
+        visual_prompt: { 
+            type: Type.STRING,
+            description: "A new, more dynamic prompt for the video, describing a short action."
+        },
+        cinematic_instructions: { 
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+            description: "An array of strings with instructions for the camera."
+        },
+        narration: { 
+            type: Type.STRING,
+            description: narrationDescription
+        },
+        sound_design: {
+            type: Type.OBJECT,
+            properties: {
+                sfx: { 
+                    type: Type.STRING,
+                    description: "A brief description of a relevant sound effect."
+                },
+                music_style: { 
+                    type: Type.STRING,
+                    description: "The style of background music."
+                }
+            },
+            required: ['sfx', 'music_style']
+        }
+    },
+    required: ['visual_prompt', 'cinematic_instructions', 'narration', 'sound_design']
+});
+
 export const generateAffiliateVideoPrompt = async (
     failoverParams: FailoverParams,
     image: GeneratedAffiliateImage,
     narratorLanguage: string,
-    aspectRatio: string
+    aspectRatio: string,
+    promptType: VideoPromptType,
+    previousNarration?: string
 ): Promise<string> => {
-     const prompt = `
-You are a video scriptwriter specializing in short-form affiliate content (like TikTok or Reels).
-Your task is to take a static image and its description, and create a detailed JSON prompt to turn it into a short, dynamic video clip.
+    let narrationDescription = "A very short, engaging voiceover script (1-2 sentences) for an 8-second clip.";
+    let promptTask = `Analyze the image and generate a concept for a short video ad.`;
 
-**Input Image Description:** ${image.prompt}
-**Target Aspect Ratio:** ${aspectRatio}
-
-**Task:**
-Generate a JSON string for a video prompt. The JSON object MUST contain:
-1.  **"visual_prompt"**: A new, more dynamic prompt for the video. Describe a short action. Example: "A woman in a floral dress gracefully twirls in a sunlit minimalist studio."
-2.  **"cinematic_instructions"**: An array of strings with instructions for the camera. Example: ["slow zoom in on the dress fabric", "gentle panning shot following her movement"].
-3.  **"narration"**: A very short, engaging voiceover script (1-2 sentences, suitable for a maximum 8-second video clip) written in **${narratorLanguage}**. It should be a call-to-action or highlight a key benefit. Example for English: "Feel the summer breeze in our new floral collection. Shop the look now!"
-4.  **"sound_design"**: An object with "sfx" (e.g., "gentle whoosh sound") and "music_style" (e.g., "upbeat acoustic pop").
-
-Output ONLY the valid JSON string.
+    switch (promptType) {
+        case 'hook':
+            narrationDescription = `CRITICAL: The narration MUST be a compelling HOOK that grabs the viewer's attention immediately. It must be for an 8-second clip and be in ${narratorLanguage}.`;
+            promptTask = `Analyze the image and generate a concept for the BEGINNING (hook) of a short video ad.`;
+            break;
+        case 'continuation':
+            narrationDescription = `CRITICAL: The narration MUST be a direct continuation of the previous scene's narration, which was: "${previousNarration || '...start the story.'}". It must be for an 8-second clip and be in ${narratorLanguage}.`;
+            promptTask = `Analyze the image and generate a concept for the MIDDLE (continuation) of a short video ad, following a previous scene.`;
+            break;
+        case 'closing':
+            narrationDescription = `CRITICAL: The narration MUST be a powerful CLOSING that includes a clear Call-To-Action (CTA) like 'buy now' or 'click the link'. It must be for an 8-second clip and be in ${narratorLanguage}.`;
+            promptTask = `Analyze the image and generate a concept for the END (closing) of a short video ad, including a call to action.`;
+            break;
+    }
+    
+    const prompt = `
+Task: ${promptTask}
+The target video aspect ratio is ${aspectRatio}.
+The output must be a JSON object that strictly follows the provided schema.
 `;
+
+    const schema = affiliateVideoPromptSchema(narrationDescription);
+
      const resultText = await executeWithFailover({
         ...failoverParams,
         apiExecutor: async (apiKey) => {
@@ -798,17 +844,22 @@ Output ONLY the valid JSON string.
             const response: GenerateContentResponse = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents,
-                config: { responseMimeType: 'application/json' }
+                config: { 
+                    responseMimeType: 'application/json',
+                    responseSchema: schema
+                }
             });
+            if (!response.text || response.text.trim() === '') {
+                throw new Error("The AI returned an empty response. This might be due to a content filter or an issue with the prompt.");
+            }
             return response.text;
         }
     });
     try {
-        // Return the raw string, to be parsed by the component
         JSON.parse(resultText); // Validate it's JSON
         return resultText;
     } catch (e) {
         console.error("Failed to parse affiliate video prompt JSON:", resultText);
-        throw new Error("The AI returned an invalid video prompt format.");
+        throw new Error("The AI returned an invalid video prompt format. Raw response: " + resultText);
     }
 };

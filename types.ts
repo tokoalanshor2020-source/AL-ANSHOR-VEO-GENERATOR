@@ -52,6 +52,8 @@ export interface ReferenceIdeaState {
 }
 
 // --- Affiliate Creator Types ---
+export type VideoPromptType = 'hook' | 'continuation' | 'closing';
+
 export interface GeneratedAffiliateImage {
     id: string;
     base64: string;
