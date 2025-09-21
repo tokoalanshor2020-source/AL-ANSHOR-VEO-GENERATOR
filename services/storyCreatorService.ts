@@ -803,29 +803,40 @@ export const generateAffiliateVideoPrompt = async (
     narratorLanguage: string,
     aspectRatio: string,
     promptType: VideoPromptType,
+    isSingleImage: boolean,
     previousNarration?: string
 ): Promise<string> => {
-    let narrationDescription = "A very short, engaging voiceover script (1-2 sentences) for an 8-second clip.";
-    let promptTask = `Analyze the image and generate a concept for a short video ad.`;
+    let narrationDescription: string;
+    let promptTask: string;
+    let previousNarrationContext = "";
 
-    switch (promptType) {
-        case 'hook':
-            narrationDescription = `CRITICAL: The narration MUST be a compelling HOOK that grabs the viewer's attention immediately. It must be for an 8-second clip and be in ${narratorLanguage}.`;
-            promptTask = `Analyze the image and generate a concept for the BEGINNING (hook) of a short video ad.`;
-            break;
-        case 'continuation':
-            narrationDescription = `CRITICAL: The narration MUST be a direct continuation of the previous scene's narration, which was: "${previousNarration || '...start the story.'}". It must be for an 8-second clip and be in ${narratorLanguage}.`;
-            promptTask = `Analyze the image and generate a concept for the MIDDLE (continuation) of a short video ad, following a previous scene.`;
-            break;
-        case 'closing':
-            narrationDescription = `CRITICAL: The narration MUST be a powerful CLOSING that includes a clear Call-To-Action (CTA) like 'buy now' or 'click the link'. It must be for an 8-second clip and be in ${narratorLanguage}.`;
-            promptTask = `Analyze the image and generate a concept for the END (closing) of a short video ad, including a call to action.`;
-            break;
+    if (promptType === 'hook' && isSingleImage) {
+        narrationDescription = `CRITICAL: The narration must be a complete, self-contained script for a single 8-second video. It must start with a compelling HOOK and end with a clear Call-To-Action (CTA). Language: ${narratorLanguage}.`;
+        promptTask = `Analyze the image and generate a concept for a SINGLE, complete 8-second video ad. The narration must have both a hook and a closing CTA. The narration should be characteristic of the image.`;
+    } else {
+        switch (promptType) {
+            case 'hook':
+                narrationDescription = `CRITICAL: The narration MUST be a compelling HOOK in ${narratorLanguage} that grabs the viewer's attention immediately. It must be for an 8-second clip.`;
+                promptTask = `This is the FIRST scene of a video ad. Generate a concept for a captivating opening. The narration should be characteristic of the image.`;
+                break;
+            case 'continuation':
+                previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
+                narrationDescription = `CRITICAL: The narration MUST be a direct continuation in ${narratorLanguage} of the previous narration. It must be for an 8-second clip and create a seamless story.`;
+                promptTask = `This is a MIDDLE scene of a video ad. Generate a concept that connects logically to the previous one. The narration should be characteristic of the image.`;
+                break;
+            case 'closing':
+                previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
+                narrationDescription = `CRITICAL: The narration MUST be a powerful CLOSING in ${narratorLanguage} that includes a clear Call-To-Action (CTA) like 'buy now' or 'click the link'. It must be for an 8-second clip and follow the previous narration.`;
+                promptTask = `This is the FINAL scene of a video ad. Generate a concept that provides a strong conclusion and call to action. The narration should be characteristic of the image.`;
+                break;
+        }
     }
     
     const prompt = `
+You are a creative director for short, punchy video advertisements.
 Task: ${promptTask}
-The target video aspect ratio is ${aspectRatio}.
+${previousNarrationContext}
+The final video will be a sequence of these scenes. The target video aspect ratio is ${aspectRatio}.
 The output must be a JSON object that strictly follows the provided schema.
 `;
 

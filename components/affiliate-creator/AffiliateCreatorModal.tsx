@@ -239,7 +239,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
             }
 
             let previousNarration: string | undefined = undefined;
-            if (promptType === 'continuation') {
+            if (promptType === 'continuation' || promptType === 'closing') {
                 if (index > 0) {
                     const prevImage = affiliateCreatorState.generatedImages[index - 1];
                     if (prevImage.videoPrompt) {
@@ -252,15 +252,19 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                     }
                     if (!previousNarration) {
                         setError(`Please generate a prompt for the previous image (image ${index}) first.`);
+                        setGeneratingStates(prev => { const n = {...prev}; delete n[id]; return n; });
                         return;
                     }
-                } else {
-                    setError("Cannot generate a continuation prompt for the first image.");
-                    return;
+                } else if (promptType === 'continuation') {
+                     setError("Cannot generate a continuation prompt for the first image.");
+                     setGeneratingStates(prev => { const n = {...prev}; delete n[id]; return n; });
+                     return;
                 }
             }
+            
+            const isSingleImage = affiliateCreatorState.generatedImages.length === 1;
 
-            const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt, aspectRatio, promptType, previousNarration);
+            const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt, aspectRatio, promptType, isSingleImage, previousNarration);
             
             const updatedImage: GeneratedAffiliateImage = { ...targetImage, videoPrompt: promptJson };
 
@@ -495,7 +499,11 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                         {isGenerating && <div className="text-center text-gray-400 py-20">{t('affiliateCreator.generatingButton') as string}</div>}
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                            {generatedImages.map((img, index) => (
+                            {generatedImages.map((img, index) => {
+                                const isFirst = index === 0;
+                                const isLast = index === generatedImages.length - 1;
+
+                                return (
                                 <div key={img.id} className="relative group aspect-[9/16] bg-base-300 rounded-lg overflow-hidden">
                                     {img.videoPrompt && (
                                         <div className="absolute top-2 right-2 z-10">
@@ -506,15 +514,22 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
                                         <p className="text-white text-xs leading-tight mb-2 max-h-20 overflow-hidden">{img.prompt}</p>
                                         <div className="space-y-1">
-                                            <button onClick={() => handleGenerateVideoPrompt(img.id, 'hook', index)} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white">
-                                                 {generatingStates[img.id] === 'prompting' ? '...' : t('affiliateCreator.promptHook') as string}
-                                            </button>
-                                            <button onClick={() => handleGenerateVideoPrompt(img.id, 'continuation', index)} disabled={!!generatingStates[img.id] || index === 0} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white disabled:opacity-50">
-                                                {generatingStates[img.id] === 'prompting' ? '...' : t('affiliateCreator.promptContinuation') as string}
-                                            </button>
-                                            <button onClick={() => handleGenerateVideoPrompt(img.id, 'closing', index)} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white">
-                                                {generatingStates[img.id] === 'prompting' ? '...' : t('affiliateCreator.promptClosing') as string}
-                                            </button>
+                                            {isFirst && (
+                                                <button onClick={() => handleGenerateVideoPrompt(img.id, 'hook', index)} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white">
+                                                    {generatingStates[img.id] === 'prompting' ? '...' : t('affiliateCreator.promptHook') as string}
+                                                </button>
+                                            )}
+                                            {!isFirst && !isLast && (
+                                                <button onClick={() => handleGenerateVideoPrompt(img.id, 'continuation', index)} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white disabled:opacity-50">
+                                                    {generatingStates[img.id] === 'prompting' ? '...' : t('affiliateCreator.promptContinuation') as string}
+                                                </button>
+                                            )}
+                                            {isLast && !isFirst && (
+                                                <button onClick={() => handleGenerateVideoPrompt(img.id, 'closing', index)} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-cyan-600 hover:bg-cyan-700 text-white">
+                                                    {generatingStates[img.id] === 'prompting' ? '...' : t('affiliateCreator.promptClosing') as string}
+                                                </button>
+                                            )}
+
                                             <button onClick={() => handleAction(img.id, 'regenerate')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white"><RefreshIcon className="h-3 w-3" />{t('affiliateCreator.regenerate') as string}</button>
                                             <button onClick={() => handleAction(img.id, 'upload')} disabled={!!generatingStates[img.id]} className="w-full btn-xs flex items-center justify-center gap-1 bg-yellow-600 hover:bg-yellow-700 text-black"><ReplaceIcon className="h-3 w-3" />{t('affiliateCreator.upload') as string}</button>
                                             <a href={`data:${img.mimeType};base64,${img.base64}`} download={`affiliate_${img.id.substring(0,6)}.jpg`} className="w-full btn-xs flex items-center justify-center gap-1 bg-gray-600 hover:bg-gray-700 text-white"><DownloadIcon className="h-3 w-3" />{t('affiliateCreator.download') as string}</a>
@@ -526,7 +541,8 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                         </div>
                                     )}
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                  </div>
