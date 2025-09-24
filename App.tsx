@@ -44,6 +44,20 @@ const initialDirectingSettings: DirectingSettings = {
     pacing: 'normal',
 };
 
+const initialAffiliateCreatorState: AffiliateCreatorState = {
+    productReferenceFiles: [],
+    actorReferenceFiles: [],
+    generatedImages: [],
+    numberOfImages: 10,
+    model: 'woman',
+    vibe: 'studio_minimalis',
+    customVibe: '',
+    productDescription: '',
+    aspectRatio: '9:16',
+    narratorLanguage: 'en',
+    customNarratorLanguage: '',
+};
+
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -116,38 +130,25 @@ export default function App() {
         const storedSession = localStorage.getItem(AFFILIATE_CREATOR_SESSION_KEY);
         if (storedSession) {
             const parsed = JSON.parse(storedSession);
-            // Ensure old sessions have new defaults
-            return {
-                referenceFiles: [],
-                generatedImages: [],
-                numberOfImages: 10,
-                model: 'woman',
-                vibe: 'studio_minimalis',
-                customVibe: '',
-                productDescription: '',
-                aspectRatio: '9:16', 
-                narratorLanguage: 'en',
-                customNarratorLanguage: '',
-                ...parsed, // Overwrite defaults with stored values if they exist
-            };
+            // Check if parsed data is a valid object to prevent crashes on null/invalid stored data.
+            // This prevents the state from being wiped if localStorage contains "null" or corrupted data.
+            if (typeof parsed === 'object' && parsed !== null) {
+                // Merge stored data with initial state to ensure all keys are present
+                // and handle backward compatibility for `referenceFiles`.
+                return {
+                    ...initialAffiliateCreatorState,
+                    ...parsed,
+                    productReferenceFiles: parsed.productReferenceFiles || parsed.referenceFiles || [],
+                };
+            }
         }
     } catch (e) {
         console.error("Failed to parse affiliate creator session from localStorage", e);
         localStorage.removeItem(AFFILIATE_CREATOR_SESSION_KEY);
     }
-    return {
-        referenceFiles: [],
-        generatedImages: [],
-        numberOfImages: 10,
-        model: 'woman',
-        vibe: 'studio_minimalis',
-        customVibe: '',
-        productDescription: '',
-        aspectRatio: '9:16',
-        narratorLanguage: 'en',
-        customNarratorLanguage: '',
-    };
-    });
+    // Return a clean default state if nothing is stored or if parsing failed
+    return initialAffiliateCreatorState;
+  });
   
   // --- Lifted State from StoryCreator ---
   const [characters, setCharacters] = useState<Character[]>(() => {

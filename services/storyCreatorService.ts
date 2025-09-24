@@ -2,6 +2,7 @@
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, StoryIdea, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions, GeneratedPrompts, ReferenceFile, GeneratedAffiliateImage, AffiliateCreatorState, VideoPromptType } from '../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
+import { languageMap } from '../i18n';
 
 
 // --- Storyboard Generation ---
@@ -648,22 +649,40 @@ export const generateReferenceImage = async (
 
 // --- Affiliate Creator Service Functions ---
 
-export const analyzeProductForDescription = async (
+export const generateAffiliateDescription = async (
     failoverParams: FailoverParams,
-    files: { base64: string, mimeType: string }[]
+    files: { productFiles: { base64: string, mimeType: string }[], actorFiles: { base64: string, mimeType: string }[] }
 ): Promise<string> => {
-    const prompt = `You are an expert e-commerce copywriter. Analyze the provided product image(s). Generate a concise but detailed product description focusing on visual details like material, color, style, and key features. This description will be used to ensure consistency in AI image generation. Output only the description text, without any preamble.`;
+    const prompt = `You are an expert e-commerce copywriter. Analyze the provided product and actor/model reference media (images and/or videos).
+Generate a concise but detailed description with two parts:
+1.  **Actor Details:** Describe the actor's characteristics (appearance, clothing, style).
+2.  **Promotion Scenario:** Explain that this actor is showcasing or promoting the product shown in the product reference media.
+
+This combined description will be used to ensure consistency in AI image generation. Output only the description text, without any preamble or markdown formatting like headers.`;
 
     return executeWithFailover({
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = new GoogleGenAI({ apiKey });
             const contents: any = { parts: [{ text: prompt }] };
-            files.forEach(file => {
-                contents.parts.push({
-                    inlineData: { mimeType: file.mimeType, data: file.base64 }
+            
+            if (files.productFiles.length > 0) {
+                contents.parts.push({ text: "--- PRODUCT REFERENCE MEDIA ---" });
+                files.productFiles.forEach(file => {
+                    contents.parts.push({
+                        inlineData: { mimeType: file.mimeType, data: file.base64 }
+                    });
                 });
-            });
+            }
+
+            if (files.actorFiles.length > 0) {
+                contents.parts.push({ text: "--- ACTOR REFERENCE MEDIA ---" });
+                files.actorFiles.forEach(file => {
+                    contents.parts.push({
+                        inlineData: { mimeType: file.mimeType, data: file.base64 }
+                    });
+                });
+            }
 
             const response: GenerateContentResponse = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
@@ -679,30 +698,33 @@ export const generateAffiliateImagePrompts = async (
     state: AffiliateCreatorState
 ): Promise<string[]> => {
     const vibe = state.vibe === 'custom' ? state.customVibe : state.vibe.replace(/_/g, ' ');
-    const modelInfo = state.model === 'none' 
-        ? 'The images should focus exclusively on the product, with no human models present.'
-        : `The images should feature a ${state.model} model interacting with or showcasing the product.`;
+    const modelInfo = state.actorReferenceFiles.length > 0
+        ? 'The images must feature the specific actor/model from the provided reference media (images/videos).'
+        : (state.model === 'none' 
+            ? 'The images should focus exclusively on the product, with no human models present.'
+            : `The images should feature a generic ${state.model} model interacting with or showcasing the product.`);
+            
     const productDescriptionInfo = state.productDescription 
         ? `\n- **Product Description:** ${state.productDescription}` 
         : '';
 
     const prompt = `
 You are a creative director for viral e-commerce and affiliate marketing content.
-Your task is to generate a series of distinct, high-quality image prompts based on a product reference.
+Your task is to generate a series of distinct, high-quality image prompts based on a product and an actor.
 
 **Creative Brief:**
-- **Product:** Analyze the provided reference image(s).${productDescriptionInfo}
+- **Product:** Analyze the provided product reference media (image(s) and/or video(s)).${productDescriptionInfo}
+- **Actor/Model:** ${modelInfo}
 - **Number of Images:** ${state.numberOfImages}
 - **Content Vibe:** ${vibe}
-- **Model:** ${modelInfo}
 
 **Task:**
-Generate a JSON array of exactly ${state.numberOfImages} unique string prompts. Each prompt must describe a different scene, angle, or interaction that fits the vibe. The prompts should be detailed enough for an image generation AI to create visually appealing and diverse results that are still thematically consistent.
+Generate a JSON array of exactly ${state.numberOfImages} unique string prompts. Each prompt must describe a different scene, angle, or interaction featuring the actor and the product that fits the vibe. The prompts should be detailed enough for an image generation AI to create visually appealing and diverse results that are still thematically consistent.
 
-Example Prompts for a floral dress:
-- "A full-body shot of a woman wearing the floral dress, walking through a minimalist studio with soft, natural light."
-- "A close-up shot focusing on the texture and floral pattern of the dress, with the model's hand gently touching the fabric."
-- "A lifestyle shot of the woman laughing while sitting at an aesthetic cafe, the dress draped elegantly."
+Example Prompts for a floral dress with a specific actor:
+- "A full-body shot of the specified actor wearing the floral dress, walking through a minimalist studio with soft, natural light."
+- "A close-up shot focusing on the texture and floral pattern of the dress, with the actor's hand gently touching the fabric."
+- "A lifestyle shot of the specified actor laughing while sitting at an aesthetic cafe, the dress draped elegantly."
 
 Output ONLY the valid JSON array of prompts.
 `;
@@ -711,11 +733,24 @@ Output ONLY the valid JSON array of prompts.
         apiExecutor: async (apiKey) => {
             const ai = new GoogleGenAI({ apiKey });
             const contents: any = { parts: [{ text: prompt }] };
-            state.referenceFiles.forEach(file => {
-                contents.parts.push({
-                    inlineData: { mimeType: file.mimeType, data: file.base64 }
+            
+            if (state.productReferenceFiles.length > 0) {
+                contents.parts.push({ text: "--- PRODUCT REFERENCE MEDIA ---" });
+                state.productReferenceFiles.forEach(file => {
+                    contents.parts.push({
+                        inlineData: { mimeType: file.mimeType, data: file.base64 }
+                    });
                 });
-            });
+            }
+
+            if (state.actorReferenceFiles.length > 0) {
+                contents.parts.push({ text: "--- ACTOR REFERENCE MEDIA ---" });
+                state.actorReferenceFiles.forEach(file => {
+                    contents.parts.push({
+                        inlineData: { mimeType: file.mimeType, data: file.base64 }
+                    });
+                });
+            }
 
             const response: GenerateContentResponse = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
@@ -763,84 +798,139 @@ export const generateAffiliateImages = async (
     });
 };
 
-const affiliateVideoPromptSchema = (narrationDescription: string) => ({
+const generateAffiliateVideoPromptSchema = () => ({
     type: Type.OBJECT,
     properties: {
-        visual_prompt: { 
-            type: Type.STRING,
-            description: "A new, more dynamic prompt for the video, describing a short action."
-        },
-        cinematic_instructions: { 
-            type: Type.ARRAY,
-            items: { type: Type.STRING },
-            description: "An array of strings with instructions for the camera."
-        },
-        narration: { 
-            type: Type.STRING,
-            description: narrationDescription
-        },
-        sound_design: {
+        "STYLE": { type: Type.STRING, description: "Professional product photography, hyper-realistic, macro, high detail, cinematic lighting" },
+        "SUBJECT": {
             type: Type.OBJECT,
             properties: {
-                sfx: { 
-                    type: Type.STRING,
-                    description: "A brief description of a relevant sound effect."
-                },
-                music_style: { 
-                    type: Type.STRING,
-                    description: "The style of background music."
+                "Character ID": { type: Type.STRING, description: "A unique identifier for the character/subject in the scene." },
+                "Consistency Key": { type: Type.STRING, description: "A token for maintaining visual consistency." },
+                "Description": { type: Type.STRING, description: "A detailed description of the subject." },
+                "Physical Evidence": {
+                    type: Type.OBJECT,
+                    properties: {
+                        "Micro-dust": { type: Type.STRING },
+                        "Subtle Scratches": { type: Type.STRING },
+                        "Authentic Dirt/Wear": { type: Type.STRING }
+                    },
+                    required: ["Micro-dust", "Subtle Scratches", "Authentic Dirt/Wear"]
                 }
             },
-            required: ['sfx', 'music_style']
+            required: ["Character ID", "Consistency Key", "Description", "Physical Evidence"]
+        },
+        "ENVIRONMENT": { type: Type.STRING, description: "A detailed description of the environment and background." },
+        "COMPOSITION": { type: Type.STRING, description: "A detailed description of the composition and camera perspective." },
+        "LIGHTING": {
+            type: Type.OBJECT,
+            properties: {
+                "Key Light": { type: Type.STRING },
+                "Fill Light": { type: Type.STRING },
+                "Rim Light/Backlight": { type: Type.STRING },
+                "Qualities": { type: Type.STRING },
+                "Atmosphere": { type: Type.STRING }
+            },
+            required: ["Key Light", "Fill Light", "Rim Light/Backlight", "Qualities", "Atmosphere"]
+        },
+        "NEGATIVE_PROMPT": { type: Type.STRING, description: "A comma-separated list of negative keywords." },
+        "NARRATION_SCRIPT": {
+            type: Type.OBJECT,
+            properties: {
+                "INSTRUCTION": { type: Type.STRING, description: "Instructions for the voice-over artist." },
+                "NARRATION": { type: Type.STRING, description: "The narration script itself." }
+            },
+            required: ["INSTRUCTION", "NARRATION"]
+        },
+        "AUDIO_MIXING_GUIDE": {
+            type: Type.OBJECT,
+            properties: {
+                "MIXING": { type: Type.STRING, description: "Instructions for audio mixing." }
+            },
+            required: ["MIXING"]
         }
     },
-    required: ['visual_prompt', 'cinematic_instructions', 'narration', 'sound_design']
+    required: ["STYLE", "SUBJECT", "ENVIRONMENT", "COMPOSITION", "LIGHTING", "NEGATIVE_PROMPT", "NARRATION_SCRIPT", "AUDIO_MIXING_GUIDE"]
 });
+
 
 export const generateAffiliateVideoPrompt = async (
     failoverParams: FailoverParams,
     image: GeneratedAffiliateImage,
-    narratorLanguage: string,
-    aspectRatio: string,
+    settings: {
+        narratorLanguage: string;
+        customNarratorLanguage: string;
+        aspectRatio: string;
+        vibe: string;
+        customVibe: string;
+    },
     promptType: VideoPromptType,
     isSingleImage: boolean,
     previousNarration?: string
 ): Promise<string> => {
-    let narrationDescription: string;
+    let narrationInstruction: string;
     let promptTask: string;
     let previousNarrationContext = "";
+    
+    const finalVibe = settings.vibe === 'custom' ? settings.customVibe : settings.vibe.replace(/_/g, ' ');
+    
+    // Determine the full language name for clarity in the prompt.
+    let langName: string;
+    const langCode = settings.narratorLanguage;
+    if (langCode === 'custom') {
+        langName = settings.customNarratorLanguage;
+    } else {
+        langName = languageMap[langCode as keyof typeof languageMap] || langCode;
+    }
+    const finalLang = langName;
 
     if (promptType === 'hook' && isSingleImage) {
-        narrationDescription = `CRITICAL: The narration must be a complete, self-contained script for a single 8-second video. It must start with a compelling HOOK and end with a clear Call-To-Action (CTA). Language: ${narratorLanguage}.`;
-        promptTask = `Analyze the image and generate a concept for a SINGLE, complete 8-second video ad. The narration must have both a hook and a closing CTA. The narration should be characteristic of the image.`;
+        narrationInstruction = `The script must be written in **${finalLang}**. It should be a complete, self-contained script for a single 8-second video, starting with a compelling HOOK and ending with a clear Call-To-Action (CTA). The voice-over style should be very cheerful and enthusiastic.`;
+        promptTask = `Analyze the image and generate a concept for a SINGLE, complete 8-second video ad.`;
     } else {
         switch (promptType) {
             case 'hook':
-                narrationDescription = `CRITICAL: The narration MUST be a compelling HOOK in ${narratorLanguage} that grabs the viewer's attention immediately. It must be for an 8-second clip.`;
-                promptTask = `This is the FIRST scene of a video ad. Generate a concept for a captivating opening. The narration should be characteristic of the image.`;
+                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a compelling HOOK that grabs the viewer's attention immediately for an 8-second clip. The voice-over style should be very cheerful and enthusiastic.`;
+                promptTask = `This is the FIRST scene of a video ad. Generate a concept for a captivating opening.`;
                 break;
             case 'continuation':
                 previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
-                narrationDescription = `CRITICAL: The narration MUST be a direct continuation in ${narratorLanguage} of the previous narration. It must be for an 8-second clip and create a seamless story.`;
-                promptTask = `This is a MIDDLE scene of a video ad. Generate a concept that connects logically to the previous one. The narration should be characteristic of the image.`;
+                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a direct continuation of the previous narration, creating a seamless story for an 8-second clip. The voice-over style should be very cheerful and enthusiastic.`;
+                promptTask = `This is a MIDDLE scene of a video ad. Generate a concept that connects logically to the previous one.`;
                 break;
             case 'closing':
                 previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
-                narrationDescription = `CRITICAL: The narration MUST be a powerful CLOSING in ${narratorLanguage} that includes a clear Call-To-Action (CTA) like 'buy now' or 'click the link'. It must be for an 8-second clip and follow the previous narration.`;
-                promptTask = `This is the FINAL scene of a video ad. Generate a concept that provides a strong conclusion and call to action. The narration should be characteristic of the image.`;
+                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a powerful CLOSING that includes a clear Call-To-Action (CTA) like 'buy now'. It must follow the previous narration and be for an 8-second clip. The voice-over style should be very cheerful and enthusiastic.`;
+                promptTask = `This is the FINAL scene of a video ad. Generate a concept that provides a strong conclusion and call to action.`;
                 break;
         }
     }
     
     const prompt = `
-You are a creative director for short, punchy video advertisements.
-Task: ${promptTask}
-${previousNarrationContext}
-The final video will be a sequence of these scenes. The target video aspect ratio is ${aspectRatio}.
-The output must be a JSON object that strictly follows the provided schema.
+You are a master creative director and prompt engineer for hyper-realistic, short-form video ads. Your task is to analyze an image and generate a comprehensive, structured JSON prompt for a text-to-video AI.
+
+**CRITICAL INSTRUCTION ON LANGUAGE:**
+All keys and string values in the JSON output MUST be in **English**, with ONE EXCEPTION:
+The value for the \`NARRATION_SCRIPT.NARRATION\` field MUST be written in the target language: **${finalLang}**.
+
+**CREATIVE BRIEF:**
+- **Task:** ${promptTask}
+- **Scene Type:** ${promptType}
+- **Content Vibe:** ${finalVibe}
+- **Video Aspect Ratio:** ${settings.aspectRatio}
+- **Context:** ${previousNarrationContext || "This is the first scene."}
+
+**JSON FIELD INSTRUCTIONS:**
+- **STYLE, SUBJECT, ENVIRONMENT, COMPOSITION, LIGHTING, NEGATIVE_PROMPT, AUDIO_MIXING_GUIDE:** Fill these fields with creative and professional descriptions in **English**.
+- **SUBJECT:** Analyze the image to describe the subject. Invent a creative "Character ID" and a "Consistency Key".
+- **NARRATION SCRIPT:** This object contains two fields.
+    - \`INSTRUCTION\`: Write this in **English**. It should give instructions to a voice-over artist.
+    - \`NARRATION\`: This is the script to be spoken. You MUST follow this specific instruction: "${narrationInstruction}"
+
+Output ONLY the raw JSON object, with no markdown, comments, or explanations.
 `;
 
-    const schema = affiliateVideoPromptSchema(narrationDescription);
+    const schema = generateAffiliateVideoPromptSchema();
 
      const resultText = await executeWithFailover({
         ...failoverParams,

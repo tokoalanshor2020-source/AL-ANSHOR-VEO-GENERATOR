@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocalization } from '../../i18n';
 import type { AffiliateCreatorState, GeneratedAffiliateImage, StoredReferenceFile, ReferenceFile, VideoPromptType } from '../../types';
 import { FailoverParams } from '../../services/geminiService';
-import { generateAffiliateImagePrompts, generateAffiliateImages, generateAffiliateVideoPrompt, analyzeProductForDescription } from '../../services/storyCreatorService';
+import { generateAffiliateImagePrompts, generateAffiliateImages, generateAffiliateVideoPrompt, generateAffiliateDescription } from '../../services/storyCreatorService';
 import { PlusIcon } from '../icons/PlusIcon';
 import { TrashIcon } from '../icons/TrashIcon';
 import { ChevronLeftIcon } from '../icons/ChevronLeftIcon';
@@ -44,6 +44,7 @@ const generateUUID = () => {
 };
 
 const MAX_FILE_SIZE_MB = 25;
+const MAX_VIDEO_DURATION_S = 10;
 
 const CopyPromptButton: React.FC<{ prompt: string }> = ({ prompt }) => {
     const { t } = useLocalization();
@@ -85,11 +86,15 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     const [isGenerating, setIsGenerating] = useState(false);
     const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [localReferenceFiles, setLocalReferenceFiles] = useState<ReferenceFile[]>([]);
-    const [currentFileIndex, setCurrentFileIndex] = useState(0);
+    
+    const [localProductReferenceFiles, setLocalProductReferenceFiles] = useState<ReferenceFile[]>([]);
+    const [currentProductFileIndex, setCurrentProductFileIndex] = useState(0);
+    const [localActorReferenceFiles, setLocalActorReferenceFiles] = useState<ReferenceFile[]>([]);
+    const [currentActorFileIndex, setCurrentActorFileIndex] = useState(0);
+
     const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'uploading' | 'prompting'>>({});
     
-    const { referenceFiles: storedFiles, generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio, narratorLanguage, customNarratorLanguage } = affiliateCreatorState;
+    const { generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio, narratorLanguage, customNarratorLanguage } = affiliateCreatorState;
     
 
     // Sync local state with persisted state when modal opens
@@ -108,74 +113,126 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                 return new Blob([u8arr], { type: mime });
             };
 
-            const newLocalFiles = storedFiles.map(storedFile => {
-                const dataUrl = `data:${storedFile.mimeType};base64,${storedFile.base64}`;
-                const blob = dataURLtoBlob(dataUrl);
-                const file = new File([blob], `reference.${storedFile.mimeType.split('/')[1]}`, { type: storedFile.mimeType });
-                return {
-                    ...storedFile,
-                    previewUrl: URL.createObjectURL(file),
-                    file,
-                };
-            });
-            setLocalReferenceFiles(newLocalFiles);
+            const mapStoredToLocal = (storedFiles: StoredReferenceFile[]) => {
+                return storedFiles.map(storedFile => {
+                    const dataUrl = `data:${storedFile.mimeType};base64,${storedFile.base64}`;
+                    const blob = dataURLtoBlob(dataUrl);
+                    const file = new File([blob], `reference.${storedFile.mimeType.split('/')[1]}`, { type: storedFile.mimeType });
+                    return {
+                        ...storedFile,
+                        previewUrl: URL.createObjectURL(file),
+                        file,
+                    };
+                });
+            }
+
+            const newLocalProductFiles = mapStoredToLocal(affiliateCreatorState.productReferenceFiles);
+            const newLocalActorFiles = mapStoredToLocal(affiliateCreatorState.actorReferenceFiles);
+
+            setLocalProductReferenceFiles(newLocalProductFiles);
+            setLocalActorReferenceFiles(newLocalActorFiles);
             setError(null);
             setGeneratingStates({});
         } else {
             // Cleanup on close
-             localReferenceFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
-             setLocalReferenceFiles([]);
+             localProductReferenceFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
+             localActorReferenceFiles.forEach(file => URL.revokeObjectURL(file.previewUrl));
+             setLocalProductReferenceFiles([]);
+             setLocalActorReferenceFiles([]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, storedFiles]);
+    }, [isOpen, affiliateCreatorState.productReferenceFiles, affiliateCreatorState.actorReferenceFiles]);
 
 
-    const updateFiles = useCallback((updatedLocalFiles: ReferenceFile[]) => {
-        setLocalReferenceFiles(updatedLocalFiles);
+    const updateFiles = useCallback((updatedLocalFiles: ReferenceFile[], type: 'product' | 'actor') => {
         const serializableFiles: StoredReferenceFile[] = updatedLocalFiles.map(f => ({
             id: f.id,
             base64: f.base64,
             mimeType: f.mimeType,
             type: f.type,
         }));
-        setAffiliateCreatorState(prev => ({ ...prev, referenceFiles: serializableFiles }));
+        if (type === 'product') {
+            setLocalProductReferenceFiles(updatedLocalFiles);
+            setAffiliateCreatorState(prev => ({ ...prev, productReferenceFiles: serializableFiles }));
+        } else {
+            setLocalActorReferenceFiles(updatedLocalFiles);
+            setAffiliateCreatorState(prev => ({ ...prev, actorReferenceFiles: serializableFiles }));
+        }
     }, [setAffiliateCreatorState]);
-
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files) return;
-
+    
+    const validateAndAddFiles = useCallback(async (files: FileList, type: 'product' | 'actor') => {
         const processFile = (file: File): Promise<ReferenceFile | null> => {
-            return new Promise(resolve => {
+            return new Promise(async (resolve) => {
                 if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
                     alert(`File ${file.name} exceeds max size of ${MAX_FILE_SIZE_MB}MB.`);
                     resolve(null);
                     return;
                 }
+
+                const fileType = file.type.startsWith('video') ? 'video' : 'image';
+
+                if (fileType === 'video') {
+                    try {
+                        await new Promise<void>((res, rej) => {
+                            const video = document.createElement('video');
+                            video.preload = 'metadata';
+                            video.onloadedmetadata = () => {
+                                window.URL.revokeObjectURL(video.src);
+                                if (video.duration > MAX_VIDEO_DURATION_S) {
+                                    rej(new Error(`Video ${file.name} is too long (${video.duration.toFixed(1)}s). Max ${MAX_VIDEO_DURATION_S}s allowed.`));
+                                } else {
+                                    res();
+                                }
+                            };
+                            video.onerror = () => rej(new Error('Could not load video metadata.'));
+                            video.src = URL.createObjectURL(file);
+                        });
+                    } catch (error) {
+                        alert((error as Error).message);
+                        resolve(null);
+                        return;
+                    }
+                }
+
                 const reader = new FileReader();
-                reader.onload = e => {
+                reader.onload = (e) => {
                     const base64 = (e.target?.result as string).split(',')[1];
                     const previewUrl = URL.createObjectURL(file);
                     resolve({
                         id: generateUUID(), base64, mimeType: file.type,
-                        previewUrl, type: 'image', file
+                        previewUrl, type: fileType, file
                     });
+                };
+                reader.onerror = () => {
+                    alert(`Error reading file ${file.name}`);
+                    resolve(null);
                 };
                 reader.readAsDataURL(file);
             });
         };
 
-        Promise.all(Array.from(files).map(processFile)).then(results => {
-            const newFiles = results.filter((f): f is ReferenceFile => f !== null);
-            if (newFiles.length > 0) {
-                updateFiles([...localReferenceFiles, ...newFiles]);
-            }
-        });
+        const currentFiles = type === 'product' ? localProductReferenceFiles : localActorReferenceFiles;
+
+        const filePromises = Array.from(files).map(processFile);
+        const newFiles = (await Promise.all(filePromises)).filter((f): f is ReferenceFile => f !== null);
+
+        if (newFiles.length > 0) {
+            updateFiles([...currentFiles, ...newFiles], type);
+        }
+    }, [localProductReferenceFiles, localActorReferenceFiles, updateFiles]);
+
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'product' | 'actor') => {
+        const files = event.target.files;
+        if (files) {
+            validateAndAddFiles(files, type);
+            event.target.value = ''; // Allow re-uploading
+        }
     };
 
-    const removeFile = (id: string) => {
-        const newFiles = localReferenceFiles.filter(f => {
+    const removeFile = (id: string, type: 'product' | 'actor') => {
+        const currentFiles = type === 'product' ? localProductReferenceFiles : localActorReferenceFiles;
+        const newFiles = currentFiles.filter(f => {
              if (f.id === id) {
                 URL.revokeObjectURL(f.previewUrl);
                 return false;
@@ -183,14 +240,20 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
             return true;
         });
         
-        if (newFiles.length === 0) setCurrentFileIndex(0);
-        else if (currentFileIndex >= newFiles.length) setCurrentFileIndex(newFiles.length - 1);
+        const setCurrentIndex = type === 'product' ? setCurrentProductFileIndex : setCurrentActorFileIndex;
+        if (newFiles.length === 0) setCurrentIndex(0);
+        else if (currentProductFileIndex >= newFiles.length) setCurrentIndex(newFiles.length - 1);
         
-        updateFiles(newFiles);
+        updateFiles(newFiles, type);
     };
+    
+    const goToPreviousProductFile = () => setCurrentProductFileIndex(prev => (prev === 0 ? localProductReferenceFiles.length - 1 : prev - 1));
+    const goToNextProductFile = () => setCurrentProductFileIndex(prev => (prev === localProductReferenceFiles.length - 1 ? 0 : prev + 1));
+    const goToPreviousActorFile = () => setCurrentActorFileIndex(prev => (prev === 0 ? localActorReferenceFiles.length - 1 : prev - 1));
+    const goToNextActorFile = () => setCurrentActorFileIndex(prev => (prev === localActorReferenceFiles.length - 1 ? 0 : prev + 1));
 
     const handleGenerate = async () => {
-        if (!activeStoryApiKey || !activeVideoApiKey || storedFiles.length === 0) return;
+        if (!activeStoryApiKey || !activeVideoApiKey || affiliateCreatorState.productReferenceFiles.length === 0) return;
         setIsGenerating(true);
         setError(null);
         setAffiliateCreatorState(prev => ({ ...prev, generatedImages: [] }));
@@ -222,22 +285,23 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     const handleGenerateVideoPrompt = async (id: string, promptType: VideoPromptType, index: number) => {
         const targetImage = affiliateCreatorState.generatedImages.find(img => img.id === id);
         if (!targetImage || !activeStoryApiKey) return;
-
+    
         setGeneratingStates(prev => ({ ...prev, [id]: 'prompting' }));
         setError(null);
-
+    
         const storyFailover: FailoverParams = { allKeys: allStoryApiKeys, activeKey: activeStoryApiKey, onKeyUpdate: onStoryKeyUpdate };
         
         try {
             const langForPrompt = narratorLanguage === 'custom'
                 ? customNarratorLanguage
                 : narratorLanguage;
-
+    
             if (!langForPrompt.trim()) {
                 setError("Please select or enter a narrator language.");
+                setGeneratingStates(prev => { const n = {...prev}; delete n[id]; return n; });
                 return;
             }
-
+    
             let previousNarration: string | undefined = undefined;
             if (promptType === 'continuation' || promptType === 'closing') {
                 if (index > 0) {
@@ -245,7 +309,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                     if (prevImage.videoPrompt) {
                         try {
                             const parsedPrompt = JSON.parse(prevImage.videoPrompt);
-                            previousNarration = parsedPrompt.narration;
+                            previousNarration = parsedPrompt.NARRATION_SCRIPT?.NARRATION;
                         } catch (e) {
                             console.error("Could not parse previous video prompt to get narration.");
                         }
@@ -263,11 +327,19 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
             }
             
             const isSingleImage = affiliateCreatorState.generatedImages.length === 1;
-
-            const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, langForPrompt, aspectRatio, promptType, isSingleImage, previousNarration);
+    
+            const settings = {
+                narratorLanguage: affiliateCreatorState.narratorLanguage,
+                customNarratorLanguage: affiliateCreatorState.customNarratorLanguage,
+                aspectRatio: affiliateCreatorState.aspectRatio,
+                vibe: affiliateCreatorState.vibe,
+                customVibe: affiliateCreatorState.customVibe
+            };
+    
+            const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, settings, promptType, isSingleImage, previousNarration);
             
             const updatedImage: GeneratedAffiliateImage = { ...targetImage, videoPrompt: promptJson };
-
+    
             setAffiliateCreatorState(prev => ({
                 ...prev,
                 generatedImages: prev.generatedImages.map(img => img.id === id ? updatedImage : img)
@@ -335,11 +407,14 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
     };
 
     const handleGenerateDescription = async () => {
-        if (!activeStoryApiKey || localReferenceFiles.length === 0) return;
+        if (!activeStoryApiKey || (localProductReferenceFiles.length === 0 && localActorReferenceFiles.length === 0)) return;
         setIsGeneratingDescription(true);
         const storyFailover: FailoverParams = { allKeys: allStoryApiKeys, activeKey: activeStoryApiKey, onKeyUpdate: onStoryKeyUpdate };
         try {
-            const description = await analyzeProductForDescription(storyFailover, localReferenceFiles.map(f => ({ base64: f.base64, mimeType: f.mimeType })));
+            const description = await generateAffiliateDescription(storyFailover, { 
+                productFiles: localProductReferenceFiles.map(f => ({ base64: f.base64, mimeType: f.mimeType })),
+                actorFiles: localActorReferenceFiles.map(f => ({ base64: f.base64, mimeType: f.mimeType }))
+            });
             setAffiliateCreatorState(p => ({ ...p, productDescription: description }));
         } catch(e) {
             setError(e instanceof Error ? e.message : 'Failed to generate description');
@@ -348,9 +423,25 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         }
     };
 
-    if (!isOpen) return null;
+    const handleGenerateAllVideos = () => {
+        const imagesWithPrompts = affiliateCreatorState.generatedImages.filter(img => img.videoPrompt);
+        if (imagesWithPrompts.length === 0) {
+            // This case should be prevented by the disabled button, but it's good practice to check.
+            return;
+        }
 
-    const currentFile = localReferenceFiles.length > 0 ? localReferenceFiles[currentFileIndex] : null;
+        imagesWithPrompts.forEach(img => {
+            if (img.videoPrompt) {
+                // Use the payload with affiliateImageId to avoid sessionStorage quota errors
+                onProceedToVideo(img.videoPrompt, { affiliateImageId: img.id });
+            }
+        });
+    };
+
+    if (!isOpen) return null;
+    
+    const currentProductFile = localProductReferenceFiles.length > 0 ? localProductReferenceFiles[currentProductFileIndex] : null;
+    const currentActorFile = localActorReferenceFiles.length > 0 ? localActorReferenceFiles[currentActorFileIndex] : null;
 
     return (
         <div className="fixed inset-0 bg-base-100 z-50 flex flex-col font-sans" role="dialog" aria-modal="true">
@@ -364,19 +455,13 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                         </div>
                     </div>
                      <div className="flex items-center gap-4">
-                        <div className="relative group">
-                            <button
-                                onClick={() => onProceedToVideo('')}
-                                disabled={!activeVideoApiKey}
-                                className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                aria-describedby="manual-video-tooltip"
-                            >
-                                {t('affiliateCreator.generateVideo') as string}
-                            </button>
-                             <span id="manual-video-tooltip" role="tooltip" className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 px-3 py-2 bg-base-300 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none text-center">
-                                Buat manual video dengan metode download gambar kemudian generate di jendela generating video jika tombol generate pada gambar bermasalah
-                            </span>
-                        </div>
+                        <button
+                            onClick={handleGenerateAllVideos}
+                            disabled={affiliateCreatorState.generatedImages.filter(img => img.videoPrompt).length === 0}
+                            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:opacity-50 transition-colors"
+                        >
+                            {t('affiliateCreator.generateVideo') as string}
+                        </button>
                         <button onClick={onClose} className="px-6 py-2 border border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-200 bg-base-300 hover:bg-gray-700">
                             {t('closeButton') as string}
                         </button>
@@ -386,28 +471,96 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
             <main className="flex-grow overflow-y-auto">
                  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     <div className="lg:col-span-1 lg:sticky lg:top-28 space-y-6">
-                        {/* --- Upload Section --- */}
+                        {/* --- Product Upload Section --- */}
                         <div className="bg-base-200 p-4 rounded-lg border border-base-300 space-y-3">
                             <h3 className="font-semibold text-lg text-gray-200">{t('affiliateCreator.uploadSectionTitle') as string}</h3>
-                            <input type="file" id="affiliateFileInput" className="hidden" multiple accept="image/*" onChange={handleFileChange} />
-                            <div className="p-2 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[150px] flex flex-col justify-center">
-                                {localReferenceFiles.length === 0 ? (
-                                    <label htmlFor="affiliateFileInput" className="cursor-pointer flex-grow flex flex-col items-center justify-center p-2 rounded-lg text-center hover:bg-base-300/30 transition-colors">
+                            <input type="file" id="affiliateProductFileInput" className="hidden" multiple accept="image/*,video/mp4,video/quicktime,video/webm" onChange={(e) => handleFileChange(e, 'product')} />
+                            <div className="p-2 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[150px] flex flex-col justify-between">
+                                {localProductReferenceFiles.length === 0 ? (
+                                    <label htmlFor="affiliateProductFileInput" className="cursor-pointer flex-grow flex flex-col items-center justify-center p-2 rounded-lg text-center hover:bg-base-300/30 transition-colors">
                                         <PlusIcon className="h-8 w-8 text-gray-400"/>
                                         <span className="text-sm mt-1 text-gray-400">{t('characterWorkshop.uploadButton') as string}</span>
                                     </label>
                                 ) : (
                                     <div className="relative flex-grow flex items-center justify-center">
-                                        {currentFile && <img src={currentFile.previewUrl} alt="Reference" className="max-w-full max-h-full object-contain rounded-md"/>}
-                                        <button onClick={() => removeFile(currentFile!.id)} className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white hover:bg-red-500"><TrashIcon className="h-4 w-4" /></button>
+                                         {localProductReferenceFiles.length > 1 && (
+                                            <button onClick={goToPreviousProductFile} className="absolute left-0 z-10 p-2 bg-base-200/50 rounded-full hover:bg-base-200 transition-colors" aria-label="Previous file"><ChevronLeftIcon /></button>
+                                        )}
+                                        <div className="w-full h-full max-h-48 aspect-[9/16] relative group flex items-center justify-center">
+                                            {currentProductFile && (
+                                                <>
+                                                    {currentProductFile.type === 'image' ? (
+                                                        <img src={currentProductFile.previewUrl} alt="Product Reference" className="max-w-full max-h-full object-contain rounded-md"/>
+                                                    ) : (
+                                                        <video controls src={currentProductFile.previewUrl} className="max-w-full max-h-full object-contain rounded-md" />
+                                                    )}
+                                                    <button onClick={() => removeFile(currentProductFile.id, 'product')} className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white hover:bg-red-500"><TrashIcon className="h-4 w-4" /></button>
+                                                </>
+                                            )}
+                                        </div>
+                                         {localProductReferenceFiles.length > 1 && (
+                                            <button onClick={goToNextProductFile} className="absolute right-0 z-10 p-2 bg-base-200/50 rounded-full hover:bg-base-200 transition-colors" aria-label="Next file"><ChevronRightIcon /></button>
+                                        )}
                                     </div>
                                 )}
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700/50">
+                                    <div className="text-xs text-gray-500">
+                                        {localProductReferenceFiles.length > 0 ? `${currentProductFileIndex + 1} / ${localProductReferenceFiles.length}` : 'Images & Videos (10s max)'}
+                                    </div>
+                                    <label htmlFor="affiliateProductFileInput" className="cursor-pointer p-2 rounded-lg text-xs flex items-center gap-1 font-semibold text-brand-light hover:bg-brand-primary/20">
+                                        <PlusIcon className="h-4 w-4"/> {t('characterWorkshop.uploadButton') as string}
+                                    </label>
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <label htmlFor="affiliateFileInput" className="cursor-pointer p-2 rounded-lg text-xs flex items-center gap-1 font-semibold text-brand-light hover:bg-brand-primary/20">
-                                    <PlusIcon className="h-4 w-4"/> {t('characterWorkshop.uploadButton') as string}
-                                </label>
-                                <button onClick={handleGenerateDescription} disabled={isGeneratingDescription || localReferenceFiles.length === 0} className="text-xs font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-50">
+                        </div>
+                        {/* --- Actor Upload Section --- */}
+                        <div className="bg-base-200 p-4 rounded-lg border border-base-300 space-y-3">
+                            <h3 className="font-semibold text-lg text-gray-200">{t('affiliateCreator.uploadActorSectionTitle') as string}</h3>
+                            <input type="file" id="affiliateActorFileInput" className="hidden" multiple accept="image/*,video/mp4,video/quicktime,video/webm" onChange={(e) => handleFileChange(e, 'actor')} />
+                            <div className="p-2 rounded-lg bg-base-300/50 border-2 border-dashed border-gray-600 min-h-[150px] flex flex-col justify-between">
+                                {localActorReferenceFiles.length === 0 ? (
+                                    <label htmlFor="affiliateActorFileInput" className="cursor-pointer flex-grow flex flex-col items-center justify-center p-2 rounded-lg text-center hover:bg-base-300/30 transition-colors">
+                                        <PlusIcon className="h-8 w-8 text-gray-400"/>
+                                        <span className="text-sm mt-1 text-gray-400">{t('characterWorkshop.uploadButton') as string}</span>
+                                    </label>
+                                ) : (
+                                    <div className="relative flex-grow flex items-center justify-center">
+                                         {localActorReferenceFiles.length > 1 && (
+                                            <button onClick={goToPreviousActorFile} className="absolute left-0 z-10 p-2 bg-base-200/50 rounded-full hover:bg-base-200 transition-colors" aria-label="Previous file"><ChevronLeftIcon /></button>
+                                        )}
+                                        <div className="w-full h-full max-h-48 aspect-[9/16] relative group flex items-center justify-center">
+                                            {currentActorFile && (
+                                                <>
+                                                    {currentActorFile.type === 'image' ? (
+                                                        <img src={currentActorFile.previewUrl} alt="Actor Reference" className="max-w-full max-h-full object-contain rounded-md"/>
+                                                    ) : (
+                                                        <video controls src={currentActorFile.previewUrl} className="max-w-full max-h-full object-contain rounded-md" />
+                                                    )}
+                                                    <button onClick={() => removeFile(currentActorFile.id, 'actor')} className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full text-white hover:bg-red-500"><TrashIcon className="h-4 w-4" /></button>
+                                                </>
+                                            )}
+                                        </div>
+                                         {localActorReferenceFiles.length > 1 && (
+                                            <button onClick={goToNextActorFile} className="absolute right-0 z-10 p-2 bg-base-200/50 rounded-full hover:bg-base-200 transition-colors" aria-label="Next file"><ChevronRightIcon /></button>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-700/50">
+                                    <div className="text-xs text-gray-500">
+                                        {localActorReferenceFiles.length > 0 ? `${currentActorFileIndex + 1} / ${localActorReferenceFiles.length}` : 'Images & Videos (10s max)'}
+                                    </div>
+                                    <label htmlFor="affiliateActorFileInput" className="cursor-pointer p-2 rounded-lg text-xs flex items-center gap-1 font-semibold text-brand-light hover:bg-brand-primary/20">
+                                        <PlusIcon className="h-4 w-4"/> {t('characterWorkshop.uploadButton') as string}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* --- Description and Settings Section --- */}
+                        <div className="bg-base-200 p-4 rounded-lg border border-base-300 space-y-4">
+                             <h3 className="font-semibold text-lg text-gray-200">{t('affiliateCreator.settingsSectionTitle') as string}</h3>
+                            <div className="flex items-center justify-end">
+                                <button onClick={handleGenerateDescription} disabled={isGeneratingDescription || (localProductReferenceFiles.length === 0 && localActorReferenceFiles.length === 0) } className="text-xs font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-50">
                                     {isGeneratingDescription ? t('affiliateCreator.generatingButton') as string : t('affiliateCreator.generateDescriptionButton') as string}
                                 </button>
                             </div>
@@ -422,11 +575,6 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                     rows={4}
                                 />
                             </div>
-                        </div>
-
-                        {/* --- Settings Section --- */}
-                        <div className="bg-base-200 p-4 rounded-lg border border-base-300 space-y-4">
-                             <h3 className="font-semibold text-lg text-gray-200">{t('affiliateCreator.settingsSectionTitle') as string}</h3>
                              <div>
                                 <label className="block text-sm font-semibold text-gray-300 mb-1">{t('affiliateCreator.modelSectionTitle') as string}</label>
                                 <select value={model} onChange={e => setAffiliateCreatorState(p => ({...p, model: e.target.value as any}))} className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200">
@@ -482,7 +630,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                     />
                                 )}
                             </div>
-                            <button onClick={handleGenerate} disabled={isGenerating || storedFiles.length === 0} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg disabled:opacity-50">
+                            <button onClick={handleGenerate} disabled={isGenerating || affiliateCreatorState.productReferenceFiles.length === 0} className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg disabled:opacity-50">
                                 {isGenerating ? t('affiliateCreator.generatingButton') as string : t('affiliateCreator.generateButton') as string}
                             </button>
                         </div>

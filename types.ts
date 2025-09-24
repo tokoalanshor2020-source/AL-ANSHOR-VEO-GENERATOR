@@ -63,7 +63,8 @@ export interface GeneratedAffiliateImage {
 }
 
 export interface AffiliateCreatorState {
-    referenceFiles: StoredReferenceFile[];
+    productReferenceFiles: StoredReferenceFile[];
+    actorReferenceFiles: StoredReferenceFile[];
     generatedImages: GeneratedAffiliateImage[];
     numberOfImages: number;
     model: 'woman' | 'man' | 'none';
