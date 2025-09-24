@@ -52,7 +52,7 @@ For each scene, you MUST provide ALL of the following details in the specified J
 3.  **scene_summary**: A one-sentence summary of what happens in this scene.
 4.  **character_actions**: An array of actions for each character present in the scene. For each character, specify their 'character_name', their 'consistency_key' (critical for visual generation), and a detailed 'action_description'.
 5.  **cinematography**: Details including 'shot_type' (e.g., "Wide Shot", "Close-up"), 'camera_angle' (e.g., "Low Angle", "Eye-Level"), and 'camera_movement' (e.g., "Static", "Slow Pan Right").
-6.  **sound_design**: Details including 'sfx' (an array of specific sound effects), 'ambience' (background sound), 'narration_script' (a short narration for this scene), and 'audio_mixing_guide' (instructions on how audio elements should be balanced).
+6.  **sound_design**: Details including 'sfx' (an array of specific sound effects), 'ambience' (background sound), 'narration_script' (a short, concise narration script for this scene. CRITICAL: The narration must be easily spoken in under 8 seconds to fit the video clip duration.), and 'audio_mixing_guide' (instructions on how audio elements should be balanced).
 
 Ensure the final output is ONLY a valid JSON array of scenes, with no extra text or explanations.
 `;
@@ -146,24 +146,79 @@ export const generateBlueprintPrompt = async (
     characters: Character[],
     settings: DirectingSettings
 ): Promise<string> => {
-     const prompt = `
-You are a prompt engineer for a text-to-video AI model. Your task is to create a "blueprint" prompt.
-This prompt is a concise, comma-separated list of key visual elements for a single scene. It should NOT be a descriptive sentence.
+    const characterProfiles = scene.character_actions
+    .map(action => {
+        const character = characters.find(c => c.consistency_key === action.consistency_key);
+        if (!character) return null;
+        // This creates a detailed block for each character in the scene.
+        return `
+//** 2. SUBJECT & DETAILS: ${character.name} **//
+SUBJECT:
+**Character ID:** ${character.name} (${character.brandName} ${character.modelName})
+**Consistency Key:** ${character.consistency_key}
+**Description:** A meticulously crafted toy figure of a ${character.material}. Its design language is '${character.designLanguage}'. ${character.physical_details || ''} Its personality is ${character.character_personality || 'not specified'}.
+**Scale & Size:** ${character.scale_and_size || 'Not specified.'}
+**Key Visual Features:**
+${character.keyFeatures.map(f => `*   ${f}`).join('\n')}
+**Action in Scene:** ${action.action_description}
+`;
+    })
+    .filter(Boolean)
+    .join('\n');
 
-**Scene Details:**
-- **Title:** ${scene.scene_title}
-- **Summary:** ${scene.scene_summary}
-- **Character Actions:** ${scene.character_actions.map(a => `${a.character_name} (${a.consistency_key}) ${a.action_description}`).join(', ')}
-- **Cinematography:** ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, ${scene.cinematography.camera_movement}
-- **Art Style:** ${settings.artStyle.replace(/_/g, ' ')}
-- **Location:** ${settings.locationSet === 'custom_location' ? settings.customLocation : settings.locationSet.replace(/_/g, ' ')}
-- **Atmosphere:** ${settings.weatherSet === 'custom_weather' ? settings.customWeather : settings.weatherSet.replace(/_/g, ' ')}
+    const prompt = `
+You are a master prompt engineer for an advanced text-to-video AI. Your task is to generate a highly detailed, structured video prompt based on a scene from a storyboard. The output must follow the provided 8-part format precisely.
 
-**Task:**
-Generate a blueprint prompt. This should be a list of keywords and short phrases separated by commas, capturing the most important visual elements. Include character consistency keys.
-Example: "hyper-realistic, diecast toy car, Rino the Red Racer (RCRR_01), drifting smoothly, on a giant kitchen diorama, low angle shot, slow pan right, sunny day"
+**Directing Notes (Meja Bermain Settings):**
+- Scene Style: ${settings.sceneStyleSet === 'custom_scene' ? settings.customSceneStyle : settings.sceneStyleSet.replace(/_/g, ' ')}
+- Location: ${settings.locationSet === 'custom_location' ? settings.customLocation : settings.locationSet.replace(/_/g, ' ')}
+- Atmosphere: ${settings.weatherSet === 'custom_weather' ? settings.customWeather : settings.weatherSet.replace(/_/g, ' ')}
+- Time of Day: ${settings.timeOfDay.replace(/_/g, ' ')}
+- Camera Style: ${settings.cameraStyleSet === 'custom_camera' ? settings.customCameraStyle : settings.cameraStyleSet.replace(/_/g, ' ')}
+- Specific Cinematography: ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, ${scene.cinematography.camera_movement}
+- Art Style: ${settings.artStyle.replace(/_/g, ' ')}
+- Soundtrack Mood: ${settings.soundtrackMood.replace(/_/g, ' ')}
+- Pacing: ${settings.pacing.replace(/_/g, ' ')}
 
-Output ONLY the blueprint prompt string.
+**Scene Information:**
+- Title: ${scene.scene_title}
+- Summary: ${scene.scene_summary}
+- Sound Effects: ${scene.sound_design.sfx.join(', ')}
+- Ambience: ${scene.sound_design.ambience}
+- Narration Script: "${scene.sound_design.narration_script}"
+- Audio Mix Guide: ${scene.sound_design.audio_mixing_guide}
+
+**CRITICAL TASK:**
+Generate a complete video prompt using the following 8-part structure. Fill each section with rich, creative details inspired by all the information provided above. Use the character profiles I provide to construct the 'SUBJECT & DETAILS' section.
+
+**OUTPUT FORMAT:**
+
+//** 1. VISUAL STYLE & QUALITY **//
+STYLE: [Based on the Art Style setting, describe the visual style in detail. e.g., "Hyper-realistic, professional product photography, macro, high detail, cinematic lighting"]
+
+${characterProfiles.length > 0 ? characterProfiles : `//** 2. SUBJECT & DETAILS **//\nSUBJECT:\n[Describe the main subject of the scene based on the summary, as no specific character was assigned.]`}
+
+//** 3. ENVIRONMENT & BACKGROUND **//
+ENVIRONMENT: [Describe the location and environment in great detail, based on the location and atmosphere settings.]
+
+//** 4. COMPOSITION & PERSPECTIVE **//
+COMPOSITION: [Describe the camera work, combining the Camera Style settings with the specific cinematography notes for the scene.]
+
+//** 5. LIGHTING & ATMOSPHERE **//
+LIGHTING: [Describe the lighting based on Time of Day and Atmosphere settings. Be specific about key, fill, and rim lights.]
+
+//** 6. NEGATIVE PROMPT **//
+NEGATIVE_PROMPT: animation, 3d render, cgi, cartoon, illustration, painting, drawing, art, video game, unreal engine, octane render, blender render, digital art, perfect, clean, smooth, glossy, inconsistent character, changing model
+
+//** 7. NARRATION SCRIPT (VOICE OVER) **//
+INSTRUCTION: [Describe the narrator's tone, e.g., "The narration must be delivered in a very cheerful, enthusiastic, and childlike style."]
+NARRATION (${settings.narratorLanguageSet === 'custom_language' ? settings.customNarratorLanguage : languageMap[settings.narratorLanguageSet as keyof typeof languageMap] || settings.narratorLanguageSet}): ${scene.sound_design.narration_script || "No narration for this scene."}
+
+//** 8. AUDIO MIXING GUIDE (SPECIAL INSTRUCTION) **//
+MIXING: ${scene.sound_design.audio_mixing_guide}
+
+---
+Output ONLY the structured text in the format above. Do not include any other text or explanations.
 `;
     return executeWithFailover({
         ...failoverParams,
@@ -184,23 +239,46 @@ export const generateCinematicPrompt = async (
     characters: Character[],
     settings: DirectingSettings
 ): Promise<string> => {
+     const characterProfiles = scene.character_actions
+    .map(action => {
+        const character = characters.find(c => c.consistency_key === action.consistency_key);
+        if (!character) return `The character ${action.character_name} (${action.consistency_key}) is performing the action: ${action.action_description}.`;
+        
+        return `
+Character: ${character.name} (${character.consistency_key})
+Full Description: A toy figure of a ${character.material}. Key visual features include ${character.keyFeatures.join(', ')}. ${character.physical_details || ''}. Its personality is ${character.character_personality || 'not specified'}.
+Action in Scene: ${action.action_description}
+`;
+    })
+    .join('\n');
+
     const prompt = `
-You are a master prompt engineer for the advanced VEO text-to-video model. Create a highly detailed, cinematic prompt for the following scene.
+You are a master prompt engineer for the advanced VEO text-to-video model. Your task is to create a "Cinematic Prompt".
 
-**Scene Details:**
-- **Title:** ${scene.scene_title}
-- **Summary:** ${scene.scene_summary}
-- **Character Actions:** ${scene.character_actions.map(a => `${a.character_name} with consistency token ${a.consistency_key} ${a.action_description}`).join('; ')}
-- **Cinematography:** Shot: ${scene.cinematography.shot_type}, Angle: ${scene.cinematography.camera_angle}, Movement: ${scene.cinematography.camera_movement}.
-- **Overall Style:** ${settings.artStyle.replace(/_/g, ' ')}, ${settings.timeOfDay.replace(/_/g, ' ')} lighting.
-- **Location:** ${settings.locationSet === 'custom_location' ? settings.customLocation : settings.locationSet.replace(/_/g, ' ')}.
-- **Atmosphere:** ${settings.weatherSet === 'custom_weather' ? settings.customWeather : settings.weatherSet.replace(/_/g, ' ')}.
+**Creative Input:**
+- **Scene Summary:** ${scene.scene_summary}
+- **Character Details & Actions:** 
+${characterProfiles}
+- **Cinematography:** ${scene.cinematography.shot_type}, ${scene.cinematography.camera_angle}, ${scene.cinematography.camera_movement}
+- **Directing Notes:** 
+    - Art Style: ${settings.artStyle.replace(/_/g, ' ')}
+    - Location: ${settings.locationSet === 'custom_location' ? settings.customLocation : settings.locationSet.replace(/_/g, ' ')}
+    - Atmosphere & Time: ${settings.weatherSet === 'custom_weather' ? settings.customWeather : settings.weatherSet.replace(/_/g, ' ')}, during ${settings.timeOfDay.replace(/_/g, ' ')}
+- **Narration Script to Include:** "${scene.sound_design.narration_script}"
 
-**Task:**
-Write a single, descriptive paragraph. This prompt should be rich with sensory details, specific actions, and cinematic language. Emphasize the visual mood and camera work. Crucially, embed the character consistency tokens directly and naturally within the description.
-Example: "A hyper-realistic, cinematic wide shot of Rino the Red Racer, a diecast toy car with token RCRR_01, executing a perfect power drift on the glossy floor of a giant kitchen diorama. The camera, positioned at a dramatic low angle, slowly pans right, capturing the morning sunlight glinting off Rino's metallic finish."
+**CRITICAL TASK:**
+Generate a response in two parts, exactly as follows:
+1.  **Cinematic Paragraph:** Write a single, descriptive paragraph. This prompt should be rich with sensory details and cinematic language. Weave in the character's detailed description and consistency key naturally. Emphasize the visual mood and camera work from the directing notes.
+2.  **Narration Block:** After the paragraph, add two newlines, then the heading "NARRATION SCRIPT", then a newline, and finally the exact narration script provided above. If there is no narration script, omit this entire block.
 
-Output ONLY the final cinematic prompt string.
+**Example Output Format:**
+[CINEMATIC PARAGRAPH HERE]
+
+NARRATION SCRIPT
+[NARRATION SCRIPT HERE]
+
+---
+Output ONLY the formatted text. Do not include any other explanations or headings.
 `;
     return executeWithFailover({
         ...failoverParams,
@@ -885,22 +963,22 @@ export const generateAffiliateVideoPrompt = async (
     const finalLang = langName;
 
     if (promptType === 'hook' && isSingleImage) {
-        narrationInstruction = `The script must be written in **${finalLang}**. It should be a complete, self-contained script for a single 8-second video, starting with a compelling HOOK and ending with a clear Call-To-Action (CTA). The voice-over style should be very cheerful and enthusiastic.`;
+        narrationInstruction = `The script must be written in **${finalLang}**. It should be a complete, self-contained script for a single 8-second video, starting with a compelling HOOK and ending with a clear Call-To-Action (CTA). The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
         promptTask = `Analyze the image and generate a concept for a SINGLE, complete 8-second video ad.`;
     } else {
         switch (promptType) {
             case 'hook':
-                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a compelling HOOK that grabs the viewer's attention immediately for an 8-second clip. The voice-over style should be very cheerful and enthusiastic.`;
+                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a compelling HOOK that grabs the viewer's attention. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
                 promptTask = `This is the FIRST scene of a video ad. Generate a concept for a captivating opening.`;
                 break;
             case 'continuation':
                 previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
-                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a direct continuation of the previous narration, creating a seamless story for an 8-second clip. The voice-over style should be very cheerful and enthusiastic.`;
+                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a direct continuation of the previous narration, creating a seamless story. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
                 promptTask = `This is a MIDDLE scene of a video ad. Generate a concept that connects logically to the previous one.`;
                 break;
             case 'closing':
                 previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
-                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a powerful CLOSING that includes a clear Call-To-Action (CTA) like 'buy now'. It must follow the previous narration and be for an 8-second clip. The voice-over style should be very cheerful and enthusiastic.`;
+                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a powerful CLOSING that includes a clear Call-To-Action (CTA) like 'buy now'. It must follow the previous narration. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
                 promptTask = `This is the FINAL scene of a video ad. Generate a concept that provides a strong conclusion and call to action.`;
                 break;
         }
