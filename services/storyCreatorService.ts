@@ -1,6 +1,6 @@
 // services/storyCreatorService.ts
-import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
-import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, StoryIdea, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions, GeneratedPrompts, ReferenceFile, GeneratedAffiliateImage, AffiliateCreatorState, VideoPromptType } from '../types';
+import { GoogleGenAI, Type, GenerateContentResponse, Modality } from "@google/genai";
+import type { Character, StoryboardScene, DirectingSettings, PublishingKitData, StoryIdea, ThemeSuggestion, ThemeIdeaOptions, StoryIdeaOptions, GeneratedPrompts, ReferenceFile, GeneratedAffiliateImage, AffiliateCreatorState, VideoPromptType, StoredReferenceFile } from '../types';
 import { executeWithFailover, FailoverParams } from './geminiService';
 import { languageMap } from '../i18n';
 
@@ -849,29 +849,55 @@ Output ONLY the valid JSON array of prompts.
 export const generateAffiliateImages = async (
     failoverParams: FailoverParams,
     prompt: string,
-    aspectRatio: AffiliateCreatorState['aspectRatio']
+    aspectRatio: AffiliateCreatorState['aspectRatio'],
+    referenceFiles: StoredReferenceFile[]
 ): Promise<{ base64: string, mimeType: string, prompt: string }> => {
     return executeWithFailover({
         ...failoverParams,
         apiExecutor: async (apiKey) => {
             const ai = new GoogleGenAI({ apiKey });
-            const augmentedPrompt = `commercial product photography, affiliate marketing style, vibrant, high detail, cinematic lighting, ${prompt}`;
-            const response = await ai.models.generateImages({
-                model: 'imagen-4.0-generate-001',
-                prompt: augmentedPrompt,
-                config: {
-                    numberOfImages: 1,
-                    outputMimeType: 'image/jpeg',
-                    aspectRatio: aspectRatio
-                }
-            });
-            const image = response.generatedImages[0];
-            const revisedPrompt = (response as any).revisedPrompt || prompt;
 
-            if (!image?.image?.imageBytes) {
-                throw new Error("Affiliate image generation failed.");
+            const augmentedPrompt = `Using the provided reference images of a product and a model, generate a new image based on the following scene description. Maintain the appearance of the product and model from the references. The desired aspect ratio for the new image is ${aspectRatio}. Scene: commercial product photography, affiliate marketing style, vibrant, high detail, cinematic lighting, ${prompt}`;
+
+            const parts: any[] = [{ text: augmentedPrompt }];
+            referenceFiles.forEach(file => {
+                parts.push({
+                    inlineData: {
+                        data: file.base64,
+                        mimeType: file.mimeType,
+                    }
+                });
+            });
+
+            const response: GenerateContentResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash-image',
+                contents: {
+                    parts: parts,
+                },
+                config: {
+                    responseModalities: [Modality.IMAGE, Modality.TEXT],
+                },
+            });
+
+            let base64ImageBytes: string | undefined;
+            let mimeType: string = 'image/jpeg';
+
+            const imagePart = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+
+            if (imagePart && imagePart.inlineData) {
+                base64ImageBytes = imagePart.inlineData.data;
+                mimeType = imagePart.inlineData.mimeType;
             }
-            return { base64: image.image.imageBytes, mimeType: 'image/jpeg', prompt: revisedPrompt };
+
+            if (!base64ImageBytes) {
+                const textResponse = response.text?.trim();
+                if (textResponse) {
+                     throw new Error(`Affiliate image generation failed. The model returned text instead of an image: ${textResponse}`);
+                }
+                throw new Error("Affiliate image generation failed. The model did not return an image.");
+            }
+            
+            return { base64: base64ImageBytes, mimeType, prompt: prompt };
         }
     });
 };
@@ -952,7 +978,6 @@ export const generateAffiliateVideoPrompt = async (
     
     const finalVibe = settings.vibe === 'custom' ? settings.customVibe : settings.vibe.replace(/_/g, ' ');
     
-    // Determine the full language name for clarity in the prompt.
     let langName: string;
     const langCode = settings.narratorLanguage;
     if (langCode === 'custom') {
@@ -961,25 +986,27 @@ export const generateAffiliateVideoPrompt = async (
         langName = languageMap[langCode as keyof typeof languageMap] || langCode;
     }
     const finalLang = langName;
+    
+    const baseNarrationInstruction = `The script must focus on describing the product from the reference image in detail. It should be written in **${finalLang}**. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
 
     if (promptType === 'hook' && isSingleImage) {
-        narrationInstruction = `The script must be written in **${finalLang}**. It should be a complete, self-contained script for a single 8-second video, starting with a compelling HOOK and ending with a clear Call-To-Action (CTA). The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
-        promptTask = `Analyze the image and generate a concept for a SINGLE, complete 8-second video ad.`;
+        narrationInstruction = `${baseNarrationInstruction} It should be a complete, self-contained script for a single 8-second video, starting with a compelling HOOK that introduces the product, and ending with a clear Call-To-Action (CTA).`;
+        promptTask = `Analyze the image and generate a concept for a SINGLE, complete 8-second video ad that details the product.`;
     } else {
         switch (promptType) {
             case 'hook':
-                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a compelling HOOK that grabs the viewer's attention. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
-                promptTask = `This is the FIRST scene of a video ad. Generate a concept for a captivating opening.`;
+                narrationInstruction = `${baseNarrationInstruction} It MUST be a compelling HOOK that grabs the viewer's attention by introducing a key feature or benefit of the product.`;
+                promptTask = `This is the FIRST scene of a video ad. Generate a concept for a captivating opening that highlights the product.`;
                 break;
             case 'continuation':
                 previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
-                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a direct continuation of the previous narration, creating a seamless story. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
-                promptTask = `This is a MIDDLE scene of a video ad. Generate a concept that connects logically to the previous one.`;
+                narrationInstruction = `${baseNarrationInstruction} It MUST be a direct continuation of the previous narration, elaborating on another feature or benefit of the product to create a seamless story.`;
+                promptTask = `This is a MIDDLE scene of a video ad. Generate a concept that connects logically to the previous one by detailing another aspect of the product.`;
                 break;
             case 'closing':
                 previousNarrationContext = `The previous scene's narration was: "${previousNarration}".`;
-                narrationInstruction = `The script must be written in **${finalLang}**. It MUST be a powerful CLOSING that includes a clear Call-To-Action (CTA) like 'buy now'. It must follow the previous narration. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
-                promptTask = `This is the FINAL scene of a video ad. Generate a concept that provides a strong conclusion and call to action.`;
+                narrationInstruction = `${baseNarrationInstruction} It MUST be a powerful CLOSING that summarizes the product's value and includes a clear Call-To-Action (CTA) like 'buy now' or 'click the link in the bio'. It must follow the previous narration.`;
+                promptTask = `This is the FINAL scene of a video ad. Generate a concept that provides a strong conclusion about the product and a call to action.`;
                 break;
         }
     }
@@ -992,6 +1019,7 @@ All keys and string values in the JSON output MUST be in **English**, with ONE E
 The value for the \`NARRATION_SCRIPT.NARRATION\` field MUST be written in the target language: **${finalLang}**.
 
 **CREATIVE BRIEF:**
+- **Primary Goal:** The primary objective is to create a compelling narration that describes the product shown in the reference image in detail. The script should highlight its features, benefits, or unique selling points in a way that is engaging and persuasive.
 - **Task:** ${promptTask}
 - **Scene Type:** ${promptType}
 - **Content Vibe:** ${finalVibe}

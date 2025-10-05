@@ -1,4 +1,4 @@
-import { GoogleGenAI, type Operation } from "@google/genai";
+import { GoogleGenAI, Operation } from "@google/genai";
 import type { GeneratorOptions } from '../types';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

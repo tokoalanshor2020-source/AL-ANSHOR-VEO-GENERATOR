@@ -264,7 +264,8 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         try {
             const prompts = await generateAffiliateImagePrompts(storyFailover, affiliateCreatorState);
             
-            const imagePromises = prompts.map(p => generateAffiliateImages(videoFailover, p, affiliateCreatorState.aspectRatio));
+            const referenceFiles = [...affiliateCreatorState.productReferenceFiles, ...affiliateCreatorState.actorReferenceFiles];
+            const imagePromises = prompts.map(p => generateAffiliateImages(videoFailover, p, affiliateCreatorState.aspectRatio, referenceFiles));
             
             const results = await Promise.all(imagePromises);
 
@@ -364,7 +365,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
         setGeneratingStates(prev => ({ ...prev, [id]: stateValue }));
 
         const videoFailover: FailoverParams = { allKeys: allVideoApiKeys, activeKey: activeVideoApiKey, onKeyUpdate: onVideoKeyUpdate };
-
+        const referenceFiles = [...affiliateCreatorState.productReferenceFiles, ...affiliateCreatorState.actorReferenceFiles];
         try {
             if (action === 'upload') {
                 const input = document.createElement('input');
@@ -387,7 +388,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                 };
                 input.click();
             } else { // regenerate
-                const newImageResult = await generateAffiliateImages(videoFailover, targetImage.prompt, affiliateCreatorState.aspectRatio);
+                const newImageResult = await generateAffiliateImages(videoFailover, targetImage.prompt, affiliateCreatorState.aspectRatio, referenceFiles);
                 const updatedImage: GeneratedAffiliateImage = { ...newImageResult, id: targetImage.id, videoPrompt: targetImage.videoPrompt }; // Keep existing video prompt
 
                 setAffiliateCreatorState(prev => ({
