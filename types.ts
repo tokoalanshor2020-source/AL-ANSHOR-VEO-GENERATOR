@@ -74,6 +74,8 @@ export interface AffiliateCreatorState {
     aspectRatio: '9:16' | '16:9' | '1:1' | '4:3' | '3:4';
     narratorLanguage: string;
     customNarratorLanguage: string;
+    speechStyle: string;
+    customSpeechStyle: string;
 }
 
 

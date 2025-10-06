@@ -786,6 +786,8 @@ export const generateAffiliateImagePrompts = async (
         ? `\n- **Product Description:** ${state.productDescription}` 
         : '';
 
+    const speechStyle = state.speechStyle === 'custom' ? state.customSpeechStyle : state.speechStyle.replace(/_/g, ' ');
+
     const prompt = `
 You are a creative director for viral e-commerce and affiliate marketing content.
 Your task is to generate a series of distinct, high-quality image prompts based on a product and an actor.
@@ -795,9 +797,10 @@ Your task is to generate a series of distinct, high-quality image prompts based 
 - **Actor/Model:** ${modelInfo}
 - **Number of Images:** ${state.numberOfImages}
 - **Content Vibe:** ${vibe}
+- **Actor's Expression & Style:** The actor should have a **${speechStyle}** expression and demeanor. This should be reflected in their pose, facial expression, and interaction with the product.
 
 **Task:**
-Generate a JSON array of exactly ${state.numberOfImages} unique string prompts. Each prompt must describe a different scene, angle, or interaction featuring the actor and the product that fits the vibe. The prompts should be detailed enough for an image generation AI to create visually appealing and diverse results that are still thematically consistent.
+Generate a JSON array of exactly ${state.numberOfImages} unique string prompts. Each prompt must describe a different scene, angle, or interaction featuring the actor and the product that fits the vibe. The prompts should be detailed enough for an image generation AI to create visually appealing and diverse results that are still thematically consistent. The actor's expression MUST match the requested style: **${speechStyle}**.
 
 Example Prompts for a floral dress with a specific actor:
 - "A full-body shot of the specified actor wearing the floral dress, walking through a minimalist studio with soft, natural light."
@@ -967,6 +970,8 @@ export const generateAffiliateVideoPrompt = async (
         aspectRatio: string;
         vibe: string;
         customVibe: string;
+        speechStyle: string;
+        customSpeechStyle: string;
     },
     promptType: VideoPromptType,
     isSingleImage: boolean,
@@ -986,8 +991,11 @@ export const generateAffiliateVideoPrompt = async (
         langName = languageMap[langCode as keyof typeof languageMap] || langCode;
     }
     const finalLang = langName;
+    const finalSpeechStyle = settings.speechStyle === 'custom'
+        ? settings.customSpeechStyle
+        : settings.speechStyle.replace(/_/g, ' ');
     
-    const baseNarrationInstruction = `The script must focus on describing the product from the reference image in detail. It should be written in **${finalLang}**. The voice-over style should be very cheerful and enthusiastic. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
+    const baseNarrationInstruction = `The script must focus on describing the product from the reference image in detail. It should be written in **${finalLang}**. The voice-over style should be very **${finalSpeechStyle}**. CRITICAL: THE NARRATION MUST NOT EXCEED 8 SECONDS IN DURATION.`;
 
     if (promptType === 'hook' && isSingleImage) {
         narrationInstruction = `${baseNarrationInstruction} It should be a complete, self-contained script for a single 8-second video, starting with a compelling HOOK that introduces the product, and ending with a clear Call-To-Action (CTA).`;
@@ -1023,6 +1031,7 @@ The value for the \`NARRATION_SCRIPT.NARRATION\` field MUST be written in the ta
 - **Task:** ${promptTask}
 - **Scene Type:** ${promptType}
 - **Content Vibe:** ${finalVibe}
+- **Speech Style:** ${finalSpeechStyle}
 - **Video Aspect Ratio:** ${settings.aspectRatio}
 - **Context:** ${previousNarrationContext || "This is the first scene."}
 
@@ -1030,7 +1039,7 @@ The value for the \`NARRATION_SCRIPT.NARRATION\` field MUST be written in the ta
 - **STYLE, SUBJECT, ENVIRONMENT, COMPOSITION, LIGHTING, NEGATIVE_PROMPT, AUDIO_MIXING_GUIDE:** Fill these fields with creative and professional descriptions in **English**.
 - **SUBJECT:** Analyze the image to describe the subject. Invent a creative "Character ID" and a "Consistency Key".
 - **NARRATION SCRIPT:** This object contains two fields.
-    - \`INSTRUCTION\`: Write this in **English**. It should give instructions to a voice-over artist.
+    - \`INSTRUCTION\`: Write this in **English**. It should give instructions to a voice-over artist to deliver the narration in a **${finalSpeechStyle}** tone.
     - \`NARRATION\`: This is the script to be spoken. You MUST follow this specific instruction: "${narrationInstruction}"
 
 Output ONLY the raw JSON object, with no markdown, comments, or explanations.

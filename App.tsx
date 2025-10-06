@@ -56,6 +56,8 @@ const initialAffiliateCreatorState: AffiliateCreatorState = {
     aspectRatio: '9:16',
     narratorLanguage: 'en',
     customNarratorLanguage: '',
+    speechStyle: 'joyful',
+    customSpeechStyle: '',
 };
 
 export default function App() {

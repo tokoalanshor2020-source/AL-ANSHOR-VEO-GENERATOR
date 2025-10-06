@@ -94,7 +94,7 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
 
     const [generatingStates, setGeneratingStates] = useState<Record<string, 'regenerating' | 'uploading' | 'prompting'>>({});
     
-    const { generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio, narratorLanguage, customNarratorLanguage } = affiliateCreatorState;
+    const { generatedImages, numberOfImages, model, vibe, customVibe, productDescription, aspectRatio, narratorLanguage, customNarratorLanguage, speechStyle, customSpeechStyle } = affiliateCreatorState;
     
 
     // Sync local state with persisted state when modal opens
@@ -334,7 +334,9 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                 customNarratorLanguage: affiliateCreatorState.customNarratorLanguage,
                 aspectRatio: affiliateCreatorState.aspectRatio,
                 vibe: affiliateCreatorState.vibe,
-                customVibe: affiliateCreatorState.customVibe
+                customVibe: affiliateCreatorState.customVibe,
+                speechStyle: affiliateCreatorState.speechStyle,
+                customSpeechStyle: affiliateCreatorState.customSpeechStyle,
             };
     
             const promptJson = await generateAffiliateVideoPrompt(storyFailover, targetImage, settings, promptType, isSingleImage, previousNarration);
@@ -627,6 +629,27 @@ export const AffiliateCreatorModal: React.FC<AffiliateCreatorModalProps> = ({
                                         value={customNarratorLanguage}
                                         onChange={e => setAffiliateCreatorState(p => ({ ...p, customNarratorLanguage: e.target.value }))}
                                         placeholder={t('affiliateCreator.customNarratorLanguagePlaceholder') as string}
+                                        className="mt-2 w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm"
+                                    />
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-300 mb-1">{t('affiliateCreator.speechStyle') as string}</label>
+                                <select
+                                    value={speechStyle}
+                                    onChange={e => setAffiliateCreatorState(p => ({ ...p, speechStyle: e.target.value }))}
+                                    className="w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm text-gray-200"
+                                >
+                                    {Object.entries(t('affiliateCreator.speechStyles') as {[key: string]: string}).map(([key, name]) => (
+                                        <option key={key} value={key}>{name}</option>
+                                    ))}
+                                </select>
+                                {speechStyle === 'custom' && (
+                                    <input
+                                        type="text"
+                                        value={customSpeechStyle}
+                                        onChange={e => setAffiliateCreatorState(p => ({ ...p, customSpeechStyle: e.target.value }))}
+                                        placeholder={t('affiliateCreator.customSpeechStylePlaceholder') as string}
                                         className="mt-2 w-full bg-base-300 border border-gray-600 rounded-lg p-2.5 text-sm"
                                     />
                                 )}
